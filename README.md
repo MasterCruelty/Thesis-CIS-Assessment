@@ -15,17 +15,17 @@ Connect-VIServer -Server <fqdn-vCenter> -User <username> -Password <password>
 
 # 2. Lancia script
 ### Azure
-.\run_all_checks_azure.ps1
+.\main_azure.ps1
 
 ### VMware
-.\run_all_checks_vmware.ps1
+.\main_vmware.ps1
 
 ### Solo audit, senza scoring/report
-.\run_all_checks_azure.ps1 -AuditOnly
+.\main_azure.ps1 -AuditOnly
 
 ### Pesi personalizzati
-.\run_all_checks_azure.ps1 -Wc 0.5 -Wd 0.3 -Wr 0.2
-.\run_all_checks_vmware.ps1 -Wc 0.5 -Wd 0.3 -Wr 0.2
+.\main_azure.ps1 -Wc 0.5 -Wd 0.3 -Wr 0.2
+.\main_vmware.ps1 -Wc 0.5 -Wd 0.3 -Wr 0.2
 
 
 
