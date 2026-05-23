@@ -28,7 +28,7 @@ Connect-VIServer -Server <fqdn-vCenter> -User <username> -Password <password>
 .\main_vmware.ps1 -Wc 0.5 -Wd 0.3 -Wr 0.2
 
 
-
-
-PER PERMESSI POWERSHELL
-powershell -ExecutionPolicy Bypass -File ".\run_all_checks_azure.ps1"
+### POWERSHELL execution policy
+In caso di problemi sui permessi di esecuzione, lanciare il seguente comando prima di avviare il tool.
+powershell -ExecutionPolicy Bypass -File ".\main_azure.ps1"
+powershell -ExecutionPolicy Bypass -File ".\main_vmware.ps1"
