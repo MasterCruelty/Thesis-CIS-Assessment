@@ -1,0 +1,581 @@
+﻿id,category,name,profile-applicability,description,rationale,impact,audit,remediation,full auto,C,D,R,setting-name,expected-value,operator
+2.4,base,"Host image profile acceptance level must be 
+PartnerSupported or higher ",Level 1,"The acceptance level on ESXi regulates the type of software that can be installed on the 
+system, with four distinct levels: VMwareCertified, VMwareAccepted, PartnerSupported, 
+and CommunitySupported. It's advised to set the acceptance level to PartnerSupported 
+or higher to ensure that only tested and digitally signed vSphere Installation Bundles 
+(VIBs) are allowed for installation. ","The ESXi Image Profile should only allow signed VIBs because an unsigned VIB 
+represents untested code installed on an ESXi host. Also, use of unsigned VIBs will 
+cause hypervisor Secure Boot to fail to configure. Community Supported VIBs do not 
+have digital signatures. To protect the security and integrity of your ESXi hosts, do not 
+allow unsigned (CommunitySupported) VIBs to be installed on your hosts. HINT:  ensure it is set to one of the 
+following - ""VMware Certified"", ""VMware Accepted"", or ""Partner Supported"".","Restricting the acceptance level to PartnerSupported or higher prevents the installation 
+of CommunitySupported packages, which are unsigned and hence, potentially 
+unreliable or insecure. This restriction, while enhancing security, might limit the range of 
+software that can be installed on the ESXi host. ","# List the Software AcceptanceLevel for each host 
+Foreach ($VMHost in Get-VMHost ) { 
+$ESXCli = Get-EsxCli -VMHost $VMHost 
+$VMHost | Select Name, 
+@{N=""AcceptanceLevel"",E={$ESXCli.software.acceptance.get()}} 
+} 
+# List only the vibs which are not at ""VMwareCertified"" or ""VMwareAccepted"" 
+or ""PartnerSupported"" acceptance level  
+Foreach ($VMHost in Get-VMHost ) { 
+$ESXCli = Get-EsxCli -VMHost $VMHost 
+$ESXCli.software.vib.list() | Where { ($_.AcceptanceLevel -ne 
+""VMwareCertified"") -and ($_.AcceptanceLevel -ne ""VMwareAccepted"") -and 
+($_.AcceptanceLevel -ne ""PartnerSupported"") } 
+}","# Set the Software AcceptanceLevel for each host<span> 
+Foreach ($VMHost in Get-VMHost ) { 
+$ESXCli = Get-EsxCli -VMHost $VMHost 
+$ESXCli.software.acceptance.Set(""PartnerSupported"") 
+}",,1,0,1,,VMwareCertified | VMwareAccepted | PartnerSupported,custom
+2.6,base,Host must have reliable time synchronization sources,Level 1,"Ensuring reliable time synchronization is crucial as various functions like cryptography, 
+audit logging, cluster operations, and incident response/forensics are heavily dependent 
+on synchronized time. Utilizing at least four NTP sources is recommended for achieving 
+reliable time synchronization. Alternatively, PTP can be employed for sub-millisecond 
+time accuracy, with NTP configured as a backup to maintain time synchronization 
+resilience in case of primary server failure.  ","Reliable time synchronization supports accurate auditing, cryptographic integrity, cluster 
+operations, and effective incident response/forensics. Having multiple time sources 
+enhances the reliability and accuracy of time synchronization, which is fundamental for 
+secure and efficient system operations. HINT: Verify that the NTP Client is set to Enabled 
+Verify that the NTP Service Status is Running 
+Verify that appropriate NTP servers are set. ","Inadequate time synchronization may lead to erroneous system logs, compromised 
+cryptographic operations, inefficient cluster operations, and hindered incident response 
+efforts. The resilience and accuracy of time synchronization are vital for maintaining 
+operational integrity and security posture. ","# List the NTP Settings for all hosts 
+Get-VMHost | Select Name, @{N=""NTPSetting"",E={$_ | Get-VMHostNtpServer}}","# Set the NTP Settings for all hosts 
+# If an internal NTP server is used, replace pool.ntp.org with  
+# the IP address or the Fully Qualified Domain Name (FQDN) of the internal 
+NTP server 
+$NTPServers = ""pool.ntp.org"", ""pool2.ntp.org"" 
+Get-VMHost | Add-VmHostNtpServer $NTPServers ",,1,1,1,,NTP configurato e ntpd in esecuzione,custom
+2.10,base,Host must restrict inter-VM transparent page sharing,Level 1,"Transparent Page Sharing (TPS) aids in optimizing memory usage among virtual 
+machines but under certain circumstances can be exploited to access data on adjacent 
+virtual machines unauthorizedly. By configuring the Mem.ShareForceSalting parameter, 
+inter-VM TPS is restricted, enhancing isolation and security. The parameter governing 
+this behavior is Mem.ShareForceSalting with a recommended setting of 2.","Restricting inter-VM TPS is crucial to prevent potential unauthorized access to data, 
+ensuring an extra layer of isolation and security between virtual machines which is 
+indispensable especially in a multi-tenant environment. HINT: Verify that it is set to 2","There is no noted functional impact, indicating that restricting inter-VM TPS does not 
+adversely affect the system’s performance or operations while bolstering security 
+against potential data access exploits. ",Get-VMHost | Get-AdvancedSetting -Name Mem.ShareForceSalting,"Get-VMHost | Get-AdvancedSetting -Name Mem.ShareForceSalting | Set
+AdvancedSetting -Value 2 ",,1,0,1,Mem.ShareForceSalting,2,eq
+3.1,management,Host should deactivate SSH ,Level 1,"Secure Shell (SSH) provides remote access to the ESXi shell, enabling direct host 
+console access or remote connectivity. Deactivating SSH is a security measure aimed 
+at minimizing remote access channels to the ESXi host, restricting it to essential 
+connections only through vSphere Client, vCLI/PowerCLI, or published APIs. The 
+service status should be set to ""Stopped"", allowing manual start and stop for 
+troubleshooting or diagnostic activities when necessary. ","Limiting remote access by deactivating SSH reduces potential attack vectors, promoting 
+a secure operating environment. Enabling SSH only for diagnostics or troubleshooting 
+ensures controlled access, aligning with security best practices. HINT:  Verify the Startup Policy is set to Start and Stop Manually. ","There is no functional impact noted, however, the measure requires alternative methods 
+for remote management, such as vSphere Client or command-line tools, which may 
+demand additional configurations or toolset proficiency.","# Check if SSH is running and set to start 
+Get-VMHost | Get-VMHostService | Where { $_.key -eq ""TSM-SSH"" } | Select 
+VMHost, Key, Label, Policy, Running, Required ","# Set SSH to start manually rather than automatically for all hosts 
+Get-VMHost | Get-VMHostService | Where { $_.key -eq ""TSM-SSH"" } | Set
+VMHostService -Policy Off ",,1,1,1,,Running=False, Policy=Off,custom
+3.2,management,Host must deactivate the ESXi shell,Level 1,"The ESXi shell is an interactive command line environment available from the Direct 
+Console User Interface (DCUI) or remotely via SSH. Activities performed from the ESXi 
+Shell bypass all access controls, but are logged. The recommended setting for the ESXi 
+shell is to be stopped and only started manually when needed, such as when running 
+diagnostics or troubleshooting. ","Ensuring non-essential services like the ESXi Shell are deactivated enhances the 
+security posture. HINT: Verify the Startup Policy is set to Start and Stop Manually.","No functional impact is recorded. However, if ESXi shell functionalities are needed, 
+manual activation is required.","# Check if the ESXi shell is running and set to start 
+Get-VMHost | Get-VMHostService | Where { $_.key -eq ""TSM"" } | Select VMHost, 
+Key, Label, Policy, Running, Required ","# Set the ESXi shell to start manually rather than automatically for all 
+hosts 
+Get-VMHost | Get-VMHostService | Where { $_.key -eq ""TSM"" } | Set
+VMHostService -Policy Off",,1,1,1,,Running=False, Policy=Off,custom
+3.3,management,"Host must deactivate the ESXi Managed Object Browser 
+(MOB)",Level 1,"The Managed Object Browser (MOB) is a web-based server application that lets you 
+examine and change system objects and configurations. It is a prudent security 
+measure to deactivate the MOB unless it's essential for operations. The parameter 
+governing this behavior is Config.HostAgent.plugins.solo.enableMob with a 
+recommended setting of False. ","Deactivating non-essential services like MOB adheres to the principle of least 
+functionality, reducing potential attack vectors. HINT:  Verify the value is set to false.","There is no specified functional impact, however, if MOB functionalities are needed 
+later, manual reactivation is required. ","Get-VMHost | Get-AdvancedSetting -Name 
+Config.HostAgent.plugins.solo.enableMob ","You must disable MOB from the vSphere interface not via the vim-cmd  proxysvc/service_list 
+command.",,2,0,2,Config.HostAgent.plugins.solo.enableMob,false,eq
+3.7,management,Host must automatically terminate idle DCUI sessions ,Level 1,"By configuring a session timeout, unattended console sessions are automatically 
+terminated, thereby reducing the potential security risks associated with lingering active 
+sessions. The parameter governing this behavior is UserVars.DcuiTimeOut, with a 
+recommended setting of 600 (10 minutes).","Automated termination of idle DCUI sessions enhances the security posture by 
+minimizing the window of opportunity for unauthorized access through unattended 
+sessions. It enforces a good security hygiene practice by ensuring that inactive sessions 
+do not remain open indefinitely, which is in line with the principle of least privilege. HINT: Verify that the value for this parameter is 600 seconds or less. ","While there's no functional impact specified, setting a timeout value that's too short may 
+inconvenience users by terminating sessions prematurely, possibly interrupting 
+workflow. Conversely, a timeout value that's too long may not adequately mitigate the 
+risks associated with idle sessions. Hence, a balanced approach in configuring the 
+session timeout value, aligned with the organizational security policy and user workflow, 
+is crucial.",Get-VMHost | Get-AdvancedSetting -Name UserVars.DcuiTimeOut,"Get-VMHost | Get-AdvancedSetting -Name UserVars.DcuiTimeOut | Set
+AdvancedSetting -Value 600",,1,0,1,UserVars.DcuiTimeOut,600,le
+3.8,management,Host must automatically terminate idle shells,Level 1,"The host should be configured to automatically terminate idle shell sessions to prevent 
+potential unauthorized access due to forgotten logouts. Setting a timeout for idle SSH 
+connections ensures that any unattended sessions are closed, thereby reducing the 
+security risk. The parameter governing this behavior is UserVars. ","Automatically terminating idle shells minimizes the risks associated with unattended 
+sessions. It is a proactive measure to prevent potential unauthorized access to the host. HINT: Verify that the value for this parameter is set to 300 or less.","There is no identified negative impact associated with enforcing this control as it serves 
+to bolster the host's security posture. ","# List UserVars.ESXiShellInteractiveTimeOut for each host 
+Get-VMHost | Select Name, @{N=""UserVars.ESXiShellInteractiveTimeOut"",E={$_ | 
+Get-AdvancedSetting UserVars.ESXiShellInteractiveTimeOut | Select 
+ExpandProperty Values}}","# Set Remove UserVars.ESXiShellInteractiveTimeOut to 300 on all hosts 
+Get-VMHost | Get-AdvancedSetting -Name 'UserVars.ESXiShellInteractiveTimeOut' 
+| Set-AdvancedSetting -Value ""300"" ",,1,0,1,UserVars.ESXiShellInteractiveTimeOut,300,le
+3.9,management,Host must automatically deactivate shell services,Level 1,"Enabling the automatic deactivation of shell services minimizes the attack surface on 
+the host. The time window for the ESXi Shell and SSH services' availability is defined by 
+UserVars.ESXiShellTimeOut, after which these services are terminated. The 
+recommended setting for this parameter is 3600.","Automatically deactivating shell services after a defined time window helps in reducing 
+the risk associated with potential unauthorized access, ensuring a more secure ESXi 
+host environment. HINT: Verify that the value for this parameter is set to 3600 (1 hour) or less.","There's no negative functional impact identified with this control, it contributes towards 
+enhancing the host's security posture by limiting the availability of shell services. ","# List UserVars.ESXiShellTimeOut in minutes for each host 
+Get-VMHost | Select Name, @{N=""UserVars.ESXiShellTimeOut"",E={$_ | Get
+AdvancedSettings UserVars.ESXiShellTimeOut | Select -ExpandProperty Values}}","# Set UserVars.ESXiShellTimeOut to 3600 on all hosts 
+Get-VMHost | Get-AdvancedSetting -Name 'UserVars.ESXiShellTimeOut' | Set
+AdvancedSetting -Value ""3600"" ",,1,0,1,UserVars.ESXiShellTimeOut,3600,le
+3.12,management,"Host must lock an account after a specified number of 
+failed login attempts",Level 1,"The security control involves restricting account access following a specified number of 
+failed login attempts, acting as a deterrent against brute-force attacks. This control is 
+applicable for SSH and vSphere Web Services SDK access, though not for the Direct 
+Console Interface (DCUI) and the ESXi Shell. A default setting allows five failed 
+attempts before account lockout, with automatic unlock after 15 minutes. The parameter 
+governing this behavior is Security.AccountLockFailures with a recommended setting of 
+5. ","Implementing this control bolsters the host's resilience against unauthorized access 
+attempts, safeguarding system integrity. By thwarting brute-force attacks, it significantly 
+elevates the security posture, making unauthorized access more challenging. HINT: Verify that the value for this parameter is set to 5. ","A potential downside is the inadvertent denial-of-service scenario, especially with a low 
+threshold for login failures. This could be exploited maliciously or trigger accidental 
+lockouts, impacting system accessibility and possibly demanding additional 
+administrative effort for account resets. ",Get-VMHost | Get-AdvancedSetting -Name Security.AccountLockFailures,"Get-VMHost | Get-AdvancedSetting -Name Security.AccountLockFailures | Set
+AdvancedSetting -Value 5 ",,1,0,1,Security.AccountLockFailures,5,eq
+3.13,management,"Host must unlock accounts after a specified timeout 
+period",Level 1,"Ensuring that user accounts on the ESXi host are automatically unlocked after a 
+specified period contributes to a balance between security and operational usability. 
+This mechanism reactivates idle accounts promptly while mitigating potential 
+unauthorized access risks. It's configured through a specific parameter which, when 
+adjusted, defines the duration of the lockout period. The parameter governing this 
+behavior is Security.AccountUnlockTime with a recommended setting of 900 seconds. ","This setting reduces the inconvenience for benign users and the overhead on 
+administrators, while also slowing down brute force credential stuffing attacks. HINT: Verify that the value for this parameter is set to 900. ","No functional impact noted. The parameter’s configuration ensures a security-usability 
+balance, although misconfiguration could either expose the system to unauthorized 
+access or disrupt user operations. ",Get-VMHost | Get-AdvancedSetting -Name Security.AccountUnlockTime,"Get-VMHost | Get-AdvancedSetting -Name Security.AccountUnlockTime | Set
+AdvancedSetting -Value 900",,1,0,1,Security.AccountUnlockTime,900,eq
+3.20,management,Host must enable normal lockdown mode,Level 1,"Implementing normal lockdown mode restricts direct access to ESXi hosts, mandating 
+management via vCenter Server to uphold defined roles and access controls, mitigating 
+risks associated with unauthorized or insufficiently audited activities. Exception Users 
+list serves as an override mechanism, permitting specified users direct access even in 
+lockdown mode. This mode offers a balanced approach between security and 
+operational flexibility compared to the stricter lockdown mode which, if connectivity to 
+vCenter Server is lost, necessitates host rebuilding.","Enabling normal lockdown mode enforces centralized management through vCenter 
+Server, ensuring adherence to organizational access controls and auditing policies. This 
+measure significantly lowers the risk of unauthorized activities by restricting direct host 
+access, promoting a more controlled and auditable operational environment. HINT: Verify that Lockdown Mode is set to Normal.","The activation of lockdown mode may impede direct host access for certain operations 
+like backup and troubleshooting. Although temporary deactivation is an option, ensuring 
+proper reactivation post-operation is crucial to maintain the intended security posture. ","# To check if Lockdown mode is enabled 
+Get-VMHost | Select 
+Name,@{N=""Lockdown"",E={$_.Extensiondata.Config.adminDisabled}}","# Enable lockdown mode for each host 
+Get-VMHost | Foreach { $_.EnterLockdownMode() } ",,2,1,2,,adminDisabled=True,custom
+3.21,management,Host should enable strict lockdown mode,Level 2,"Enabling lockdown mode disables direct local access to an ESXi host, requiring the host 
+be managed remotely from vCenter Server. 
+There are some operations, such as backup and troubleshooting, that require direct 
+access to the host. In these cases, lockdown mode can be disabled on a temporary 
+basis for specific hosts as needed, and then re-enabled when the task is completed. 
+Note: Lockdown mode does not apply to users who log in using authorized keys. Also, 
+users in the DCUI.Access list for each host are allowed to override lockdown mode and 
+log in to the DCUI. By default, the ""root"" user is the only user listed in the DCUI.Access 
+list.","Lockdown mode limits ESXi host access to the vCenter server to ensure the roles and 
+access controls implemented in vCenter are always enforced and users cannot bypass 
+them by logging into a host directly. By forcing all interaction to occur through vCenter 
+Server, the risk of someone inadvertently attaining elevated privileges or performing 
+tasks that are not properly audited is greatly reduced. Additionally strict lockdown move 
+will disabled DCUI - Disabling DCUI prevents all local activity, and thus forces actions to 
+be performed in vCenter Server, where they can be centrally audited and monitored. HINT: Verify that Lockdown Mode is set to Strict. ","With lockdown mode enabled the host will only be accessible through vCenter 
+preventing 'local' access. Disabling the DCUI can create a potential ""lockout"" situation, 
+should the host become isolated from vCenter Server. Recovering from a ""lockout"" 
+scenario requires reinstalling ESXi. Consider leaving DCUI enabled, and instead enable 
+lockdown mode and limit the users allowed to access the DCUI using the DCUI.Access 
+list.","# To check if Lockdown mode is enabled 
+Get-VMHost | Select 
+Name,@{N=""Lockdown"",E={$_.Extensiondata.Config.adminDisabled}}","# Enable lockdown mode for each host 
+Get-VMHost | Foreach { $_.EnterLockdownMode() }",,3,2,3,,LockdownMode=lockdownStrict,custom
+4.2,logging,Host must transmit system logs to a remote log collector ,Level 1,"Transmitting system logs to a remote log collector ensures that ESXi logs are stored in 
+a secure and centralized manner. This centralization not only allows for the streamlined 
+monitoring of all hosts through a single tool but also facilitates aggregate analysis and 
+searching capabilities.","Centralizing log storage on a remote log collector greatly enhances the ability to 
+monitor, search, and analyze logs across multiple hosts. This central repository ensures 
+that logs are protected from potential tampering, while also providing a robust long-term 
+audit trail. By analyzing these logs, coordinated attacks or anomalies that might go 
+unnoticed on individual hosts can be detected. HINT: Verify the Syslog.global.logHost is set to the hostname of the central log 
+server.","There is no immediate functional impact when transmitting logs to a remote log 
+collector. However, it is essential to ensure that the remote log collector is adequately 
+secured and has sufficient storage capacity.","# List Syslog.global.logHost for each host 
+Get-VMHost | Select Name, @{N=""Syslog.global.logHost"",E={$_ | Get
+AdvancedSetting Syslog.global.logHost}}","# Set Syslog.global.logHost for each host 
+Get-VMHost | Foreach { Set-AdvancedSetting -VMHost $_ -Name 
+Syslog.global.logHost -Value ""<NewLocation>"" } ",,2,0,1,Syslog.global.logHost,,notempty
+5.6,network,"Host should reject forged transmits on standard virtual 
+switches and port groups",Level 1,"Setting the ""Forged transmits"" option to ""Reject"" helps prevent MAC impersonation by 
+comparing the source MAC address from the guest operating system with the effective 
+MAC address of its virtual machine adapter. If there's a mismatch, the packet is 
+dropped, preventing potential malicious activities through impersonated MAC 
+addresses.","Rejecting forged transmits enhances network security by preventing unauthorized 
+network access and malicious activities stemming from MAC impersonation. This 
+setting upholds network integrity by ensuring only authorized communications occur 
+within the network. HINT: Verify that Forged transmits is set to Reject in the dropdown.","This setting may affect workloads like clustered applications and network 
+devices/functions that rely on MAC address modifications. Creating a separate port 
+group for authorized virtual machines that require such behavior is recommended to 
+balance operational needs with network security. ","# List all vSwitches and their Security Settings 
+Get-VirtualSwitch -Standard | Select VMHost, Name, ` 
+ @{N=""MacChanges"",E={if ($_.ExtensionData.Spec.Policy.Security.MacChanges) { 
+""Accept"" } Else { ""Reject""} }}, ` 
+ @{N=""PromiscuousMode"",E={if 
+($_.ExtensionData.Spec.Policy.Security.PromiscuousMode) { ""Accept"" } Else { 
+""Reject""} }}, ` 
+ @{N=""ForgedTransmits"",E={if 
+($_.ExtensionData.Spec.Policy.Security.ForgedTransmits) { ""Accept"" } Else { 
+""Reject""} }} ",# esxcli network vswitch standard policy security set -v vSwitch2 -f false,,1,0,1,,ForgedTransmits=Reject,custom
+5.7,network,"Host should reject MAC address changes on standard 
+virtual switches and port groups",Level 1,"Enforcing MAC address stability on standard virtual switches and port groups prevents 
+MAC impersonation by disallowing changes to the MAC address by virtual machines. 
+This mitigates the risk of malicious activities initiated by impersonating authorized 
+network adapters. ","Preventing MAC address changes hinders unauthorized network access and potential 
+malicious acts, contributing to a more secure network environment. This control aids in 
+maintaining network integrity by ensuring only authorized network communications 
+occur. HINT: Verify that MAC address changes is set to Reject in the dropdown.","Certain workloads and operations reliant on MAC address modifications could be 
+affected. Creating a separate port group for authorized virtual machines that require 
+MAC address changes is recommended to balance operational and security needs.","# List all vSwitches and their Security Settings 
+Get-VirtualSwitch -Standard | Select VMHost, Name, ` 
+@{N=""MacChanges"",E={if ($_.ExtensionData.Spec.Policy.Security.MacChanges) { 
+""Accept"" } Else { ""Reject""} }}, ` 
+@{N=""PromiscuousMode"",E={if 
+($_.ExtensionData.Spec.Policy.Security.PromiscuousMode) { ""Accept"" } Else { 
+""Reject""} }}, ` 
+@{N=""ForgedTransmits"",E={if 
+($_.ExtensionData.Spec.Policy.Security.ForgedTransmits) { ""Accept"" } Else { 
+""Reject""} }} ",# esxcli network vswitch standard policy security set -v vSwitch2 -m false,,1,0,1,,MacChanges=Reject,custom
+5.8,network,"Host should reject promiscuous mode requests on 
+standard virtual switches and port groups",Level 1,"Enabling promiscuous mode allows all virtual machines in a port group to read all 
+packets transmitted across it, regardless of the intended recipient. Rejecting 
+promiscuous mode requests on standard virtual switches and port groups prevents 
+unauthorized packet inspection, enhancing network isolation and data privacy. ","Rejecting promiscuous mode requests helps maintain network isolation and data 
+privacy by ensuring packets reach only their intended recipients. This control minimizes 
+the risk of data interception or unauthorized packet inspection. HINT: Verify that Promiscuous mode is set to Reject in the dropdown. ","Some workloads like DHCP servers or security monitoring may require promiscuous 
+mode. In such cases, a separate port group allowing this behavior, with only authorized 
+virtual machines connected, is advisable to balance operational needs with security 
+controls.","# List all vSwitches and their Security Settings 
+Get-VirtualSwitch -Standard | Select VMHost, Name, ` 
+@{N=""MacChanges"",E={if ($_.ExtensionData.Spec.Policy.Security.MacChanges) { 
+""Accept"" } Else { ""Reject""} }}, ` 
+@{N=""PromiscuousMode"",E={if 
+($_.ExtensionData.Spec.Policy.Security.PromiscuousMode) { ""Accept"" } Else { 
+""Reject""} }}, ` 
+@{N=""ForgedTransmits"",E={if 
+($_.ExtensionData.Spec.Policy.Security.ForgedTransmits) { ""Accept"" } Else { 
+""Reject""} }} ",# esxcli network vswitch standard policy security set -v vSwitch2 -p false,,1,0,1,,PromiscuousMode=Reject,custom
+5.9,network,"Host must restrict access to a default or native VLAN on 
+standard virtual switches",Level 1,"ESXi does not use the concept of native VLAN, so do not configure port groups to use 
+the native VLAN ID. If the default value of 1 for the native VLAN is being used, the ESXi 
+Server virtual switch port groups should be configured with any value between 2 and 
+4094. Otherwise, ensure that the port group is not configured to use whatever value is 
+set for the native VLAN. HINT: For each port group on the vSwitch, verify and record the VLAN IDs used. ","Frames with VLAN specified in the port group will have a tag, but frames without a 
+VLAN specified in the port group are not tagged and therefore will end up as belonging 
+to the native VLAN of the physical switch. For example, frames on VLAN 1 from a Cisco 
+physical switch will be untagged, because this is considered as the native VLAN. 
+However, frames from ESXi specified as VLAN 1 will be tagged with a “1”, therefore, 
+traffic from ESXi that is destined for the native VLAN will not be correctly routed 
+(because it is tagged with a “1” instead of being untagged), and traffic from the physical 
+switch coming from the native VLAN will not be visible (because it is not tagged). If the 
+ESXi virtual switch port group uses the native VLAN ID, traffic from those VMs will not 
+be visible to the native VLAN on the switch, because the switch is expecting untagged 
+traffic.",-,"# List all vSwitches, their Portgroups and VLAN IDs 
+Get-VirtualPortGroup -Standard | Select virtualSwitch, Name, VlanID ","1. From the vSphere Web Client, select the host. 
+2. Click Configure then expand Networking. 
+3. Select Virtual switches. 
+4. Expand the Standard vSwitch. 
+5. View the topology diagram of the switch, which shows the various port groups 
+associated with that switch. 
+6. For each port group on the vSwitch, verify and record the VLAN IDs used. 
+7. If a VLAN ID change is needed, click the name of the port group in the topology 
+diagram of the virtual switch. 
+8. Click the Edit settings option. 
+9. In the Properties section, enter an appropriate name in the Network label field. 
+10. In the VLAN ID dropdown select or type a new VLAN. 
+11. Click OK. ",,2,1,2,,Nessun port group con VLAN ID=1,custom
+5.10,network,"Host must restrict the use of Virtual Guest Tagging 
+(VGT) on standard virtual switches",Level 1,"When a port group is set to VLAN 4095 on standard virtual switches, it enables Virtual 
+Guest Tagging (VGT), letting all network frames pass to the attached virtual machines 
+(VMs) without altering the VLAN tags. This requires VMs to process VLAN information 
+themselves via an 802.1Q driver. Only authorized and capable VMs should be allowed 
+to use VGT to prevent potential network issues like denial of service or unauthorized 
+VLAN traffic interaction. HINT: For each port group on the vSwitch, verify and record the VLAN IDs used.","Restricting VGT use helps maintain network security by ensuring controlled VLAN tag 
+management. It mitigates risks associated with denial of service or unauthorized VLAN 
+interactions, contributing to a stable network environment. ","Incorrect VGT configuration can lead to denial of service or unauthorized VLAN traffic 
+interaction. Restricting VGT may require alternative configurations for VMs needing 
+independent VLAN tag management, potentially affecting network operation. ","# List all vSwitches, their Portgroups and VLAN IDs 
+Get-VirtualPortGroup -Standard | Select virtualSwitch, Name, VlanID","1. From the vSphere Web Client, select the host. 
+2. Click Configure then expand Networking. 
+3. Select Virtual switches. 
+4. Expand the Standard vSwitch. 
+5. View the topology diagram of the switch, which shows the various port groups 
+associated with that switch. 
+6. For each port group on the vSwitch, verify and record the VLAN IDs used. 
+7. If a VLAN ID change is needed, click the name of the port group in the topology 
+diagram of the virtual switch. 
+8. Click the Edit settings option. 
+9. In the Properties section, enter an appropriate name in the Network label field. 
+10. In the VLAN ID dropdown select or type a new VLAN. 
+11. Click OK.",,2,1,2,,Nessun port group con VLAN ID=4095,custom
+6.3.1,features,"Host iSCSI client, if enabled, must employ 
+bidirectional/mutual CHAP authentication",Level 1,"Implementing bidirectional CHAP authentication for iSCSI connections elevates security 
+by necessitating mutual verification between the initiator (client) and target (server), 
+ensuring data integrity during transmission. Configuration involves setting the iSCSI 
+storage adapter authentication to ""Use bidirectional CHAP"" and providing the requisite 
+credentials. This setup ensures that all communication between the client and server 
+remains secure and unaltered, significantly reducing the risk of data interception by 
+unauthorized entities. The parameter governing this behavior is set iSCSI storage 
+adapter authentication to ""Use bidirectional CHAP"" with a recommended setting of 
+Enabled. ","Employing bidirectional CHAP authentication significantly minimizes risks associated 
+with data interception or alteration by unauthorized entities during transmissions 
+between the initiator and target. This additional layer of security is crucial in maintaining 
+data integrity and confidentiality in iSCSI connections. HINT: Under Properties verify that the Authentication method is set to Use 
+bidirectional CHAP.","No functional impact is anticipated upon the implementation of this control. However, it's 
+imperative to ensure correct configuration to avoid potential communication disruptions 
+between the iSCSI client and server.","# List Iscsi Initiator and CHAP Name if defined 
+Get-VMHost | Get-VMHostHba | Where {$_.Type -eq ""Iscsi""} | Select VMHost, 
+Device, ChapType, @{N=""CHAPName"",E={$_.AuthenticationProperties.ChapName}}","# Set the Chap settings for the Iscsi Adapter 
+Get-VMHost | Get-VMHostHba | Where {$_.Type -eq ""Iscsi""} | Set-VMHostHba 
+#Use desired parameters here",,2,1,2,,ChapType=Mutual o Required,custom
+7.4,virtual-machines,"Virtual machines should deactivate 3D graphics features 
+when not required",Level 2,"Due to performance reasons, modern graphic rendering is done within a dedicated 
+graphic processing unit (GPU). Virtual machines can use the host-based GPU for such 
+operations as well. Such dedicated hardware is typically accessed by using complex 
+APIs like OpenGL and DirectX. This hardware-based 3D acceleration should be 
+disabled if it is not needed. ","Security flaws within APIs can lead to serious security breaches like memory corruption, 
+denial of service, and remote code execution. HINT: Verify it's False",GPU and Virtual Desktops may require this functionality.,Get-VM -Name $VM | Get-AdvancedSetting mks.enable3d,"Get-VM -Name $VM | Get-AdvancedSetting mks.enable3d | Set-AdvancedSetting 
+Value FALSE ",,1,0,1,mks.enable3d,FALSE,eq
+7.5,virtual-machines,"Virtual machines must be configured to lock when the last 
+console connection is closed",Level 1,"Configuring virtual machines to lock upon closing the last console connection enhances 
+security by mitigating the risk of unauthorized access via open console sessions. This 
+configuration is particularly useful in environments where multiple users have access to 
+the console. The parameter governing this behavior is tools.guest.desktop.autolock with 
+the recommended setting being TRUE.","Implementing this control provides an additional layer of security by ensuring that open 
+console sessions do not remain accessible after the last connection is closed, thus 
+reducing the potential for unauthorized access. HINT: verify it's true","No functional impact is associated with this control, it serves as a proactive measure to 
+prevent unauthorized access through open console sessions. ",Get-VM -Name $VM | Get-AdvancedSetting tools.guest.desktop.autolock ,"Get-VM -Name $VM | New-AdvancedSetting -Name tools.guest.desktop.autolock 
+$True ",,1,0,1,tools.guest.desktop.autolock,True,eq
+7.6,virtual-machines,Virtual machines must limit console sharing.,Level 1,"By default, remote console sessions can be connected to by more than one user at a 
+time. Permit only one remote console connection to a VM at a time. Other attempts will 
+be rejected until the first connection disconnects. ","When multiple sessions are activated, each terminal window gets a notification about 
+the new session. If an administrator in the VM logs in using a VMware remote console 
+during their session, a non-administrator in the VM can connect to the console and 
+observe the administrator's actions. Also, this could result in an administrator losing 
+console access to a VM. For example, if a jump box is being used for an open console 
+session, and the admin loses a connection to that box, the console session remains 
+open. Allowing two console sessions permits debugging via a shared session. For 
+highest security, only one remote console session at a time should be allowed. HINT: Verify that RemoteDisplay.maxConnections is set to 1.",-,"# List the VMs and their current settings 
+Get-VM | Get-AdvancedSetting -Name ""RemoteDisplay.maxConnections"" | Select 
+Entity, Name, Value ","# Add the setting to all VMs 
+Get-VM | New-AdvancedSetting -Name ""RemoteDisplay.maxConnections"" -value 1                                        OPPURE # Add the setting to all VMs 
+Get-VM | New-AdvancedSetting -Name ""RemoteDisplay.maxConnections"" -value 1 
+Force ",,1,0,1,RemoteDisplay.maxConnections,1,eq
+7.7,virtual-machines,"Virtual machines must limit PCI/PCIe device passthrough 
+functionality",Level 1,"DirectPath I/O features provide virtual machines the ability to directly access system 
+hardware, which while advantageous for performance, can impact risk mitigation tools 
+like vMotion, DRS, and High Availability. It also opens up a potential attack vector for 
+privileged hardware access. It is crucial to ensure that only necessary VMs have this 
+privilege and that compensatory measures are taken within the guest OS to enhance 
+security. ","Limiting PCI/PCIe device passthrough functionality is essential for minimizing potential 
+attack vectors and ensuring that risk mitigation tools function as intended. Moreover, 
+audit and documentation of the business need for these VMs are critical for maintaining 
+a secure and compliant environment. HINT: verify that the feature is present.","Passthrough devices, like GPUs, may be adversely affected if disconnected. It's 
+imperative to audit and document the business rationale for VMs requiring this 
+functionality to understand the associated risks and ensure adequate compensatory 
+controls are in place. ","# List the VMs and their current settings 
+Get-VM | Get-AdvancedSetting -Name ""pciPassthru*.present"" | Select Entity, 
+Name, Value 
+``","# Add the setting to all VMs 
+Get-VM | New-AdvancedSetting -Name ""pciPassthru*.present"" -value """" ",,2,2,2,,Nessun dispositivo pciPassthru presente,custom
+7.8,virtual-machines,"Ensure unauthorized modification and disconnection of 
+devices is disabled",Level 1,"In a virtual machine, users and processes without root or administrator privileges can 
+disconnect devices, such as network adapters and CD-ROM drives, and modify device 
+settings within the guest operating system. These actions should be prevented.","Disabling unauthorized modification and disconnection of devices helps prevents 
+unauthorized changes within the guest operating system, which could be used to gain 
+unauthorized access, cause denial of service conditions, and otherwise negatively affect 
+the security of the guest operating system.  HINT: verify that isolation.device.edit.disable 
+is set to TRUE. ",-,"# List the VMs and their current settings 
+Get-VM | Get-AdvancedSetting -Name ""isolation.device.edit.disable"" | Select 
+Entity, Name, Value ","# Add the setting to all VMs 
+Get-VM | New-AdvancedSetting -Name ""isolation.device.edit.disable"" -value 
+$true ",,1,0,1,isolation.device.edit.disable,True,eq
+7.9,virtual-machines,"Virtual machines must prevent unauthorized connection 
+of devices",Level 1,"In a virtual machine, users and processes without root or administrator privileges can 
+connect devices, such as network adapters and CD-ROM drives. This should be 
+prevented. ","Disabling unauthorized connection of devices helps prevents unauthorized changes 
+within the guest operating system, which could be used to gain unauthorized access, 
+cause denial of service conditions, and otherwise negatively affect the security of the 
+guest operating system. HINT:  verify that isolation.device.connectable.disable is set to 
+TRUE.",-,"# List the VMs and their current settings 
+Get-VM | Get-AdvancedSetting -Name ""isolation.device.connectable.disable"" | 
+Select Entity, Name, Value","# Add the setting to all VMs 
+Get-VM | New-AdvancedSetting -Name ""isolation.device.connectable.disable"" 
+value $true ",,1,0,1,isolation.device.connectable.disable,True,eq
+7.12,virtual-machines,"Virtual machines must remove unnecessary USB/XHCI 
+devices",Level 1,"Removing unnecessary devices from virtual machines minimizes the attack surface and 
+reduces potential pathways for data exfiltration or unauthorized data capture. This 
+practice aligns with the principle of least functionality, ensuring that VMs have only the 
+essential components required to perform their designated functions. ","Eliminating unnecessary devices reduces attack surface and streamlines the virtual 
+machine configuration, promoting a cleaner, more manageable, and less vulnerable 
+setup. HINT: confirm that the following parameter is either 
+NOT present or is set to FALSE: usb.present","Careful analysis and understanding of the virtual machine's requirements and 
+dependencies are crucial before implementing this security control to avoid unintended 
+disruptions or degradation of service. ","# Check for USB Devices attached to VMs 
+Get-VM | Get-USBDevice","# Remove all USB Devices attached to VMs 
+Get-VM | Get-USBDevice | Remove-USBDevice",,1,1,2,,Nessun dispositivo USB collegato,custom
+7.13,virtual-machines,"Virtual machines must remove unnecessary serial port 
+devices",Level 1,"Removing unnecessary devices from virtual machines minimizes the attack surface and 
+reduces potential pathways for data exfiltration or unauthorized data capture. This 
+practice aligns with the principle of least functionality, ensuring that VMs have only the 
+essential components required to perform their designated functions. ","Eliminating unnecessary devices reduces attack surface and streamlines the virtual 
+machine configuration, promoting a cleaner, more manageable, and less vulnerable 
+setup.  HINT: confirm that the following parameter is either 
+NOT present or is set to FALSE: serialX.present ","Careful analysis and understanding of the virtual machine's requirements and 
+dependencies are crucial before implementing this security control to avoid unintended 
+disruptions or degradation of service.","# In this Example you will need to add the functions from this post: 
+http://blogs.vmware.com/vipowershell/2012/05/working-with-vm-devices-in
+powercli.html 
+# Check for Serial ports attached to VMs 
+Get-VM | Get-SerialPort ","# In this Example you will need to add the functions from this post: 
+http://blogs.vmware.com/vipowershell/2012/05/working-with-vm-devices-in
+powercli.html 
+# Remove all Serial Ports attached to VMs 
+Get-VM | Get-SerialPort | Remove-SerialPort ",,1,1,2,,Nessuna porta seriale collegata,custom
+7.14,virtual-machines,"Virtual machines must remove unnecessary parallel port 
+devices",Level 1,"Removing unnecessary devices from virtual machines minimizes the attack surface and 
+reduces potential pathways for data exfiltration or unauthorized data capture. This 
+practice aligns with the principle of least functionality, ensuring that VMs have only the 
+essential components required to perform their designated functions.","Eliminating unnecessary devices reduces attack surface and streamlines the virtual 
+machine configuration, promoting a cleaner, more manageable, and less vulnerable 
+setup. HINT:  confirm that the following parameter is either 
+NOT present or is set to FALSE: parallelX.present ","Careful analysis and understanding of the virtual machine's requirements and 
+dependencies are crucial before implementing this security control to avoid unintended 
+disruptions or degradation of service. ","# In this Example you will need to add the functions from this post: 
+http://blogs.vmware.com/vipowershell/2012/05/working-with-vm-devices-in
+powercli.html 
+# Check for Parallel ports attached to VMs 
+Get-VM | Get-ParallelPort ","# In this Example you will need to add the functions from this post: 
+http://blogs.vmware.com/vipowershell/2012/05/working-with-vm-devices-in
+powercli.html 
+# Remove all Parallel Ports attached to VMs 
+Get-VM | Get-ParallelPort | Remove-ParallelPort ",,1,1,2,,Nessuna porta parallela collegata,custom
+7.15,virtual-machines,"Virtual machines must remove unnecessary CD/DVD 
+devices ",Level 2,"Removing unnecessary devices from virtual machines minimizes the attack surface and 
+reduces potential pathways for data exfiltration or unauthorized data capture. This 
+practice aligns with the principle of least functionality, ensuring that VMs have only the 
+essential components required to perform their designated functions.","Eliminating unnecessary devices reduces attack surface and streamlines the virtual 
+machine configuration, promoting a cleaner, more manageable, and less vulnerable 
+setup. HINT:  confirm that the following parameter is 
+either NOT present or is set to FALSE: ideX:Y.present ","Careful analysis and understanding of the virtual machine's requirements and 
+dependencies are crucial before implementing this security control to avoid unintended 
+disruptions or degradation of service. ","# Check for CD/DVD Drives attached to VMs 
+Get-VM | Get-CDDrive","# Remove all CD/DVD Drives attached to VMs 
+Get-VM | Get-CDDrive | Remove-CDDrive ",,1,0,1,,Nessun CD/DVD connesso,custom
+7.16,virtual-machines,"Virtual machines must remove unnecessary floppy 
+devices",Level 1,"Removing unnecessary devices from virtual machines minimizes the attack surface and 
+reduces potential pathways for data exfiltration or unauthorized data capture. This 
+practice aligns with the principle of least functionality, ensuring that VMs have only the 
+essential components required to perform their designated functions.","Eliminating unnecessary devices reduces attack surface and streamlines the virtual 
+machine configuration, promoting a cleaner, more manageable, and less vulnerable 
+setup. HINT: confirm that the following parameter is either 
+NOT present or is set to FALSE: floppyX.present ","Careful analysis and understanding of the virtual machine's requirements and 
+dependencies are crucial before implementing this security control to avoid unintended 
+disruptions or degradation of service. ","# Check for Floppy Devices attached to VMs 
+Get-VM | Get-FloppyDrive | Select Parent, Name, ConnectionState ","# Remove all Floppy drives attached to VMs 
+Get-VM | Get-FloppyDrive | Remove-FloppyDrive",,1,0,1,,Nessun floppy collegato,custom
+7.17,virtual-machines,"Virtual machines must deactivate console drag and drop 
+operations ",Level 1,VM console drag and drop operations should be disabled.,"VM console drag and drop operations are disabled by default (not explicitly specified), 
+however, explicitly disabling this feature enables audit controls to check that this setting 
+is correct. HINT: , verify that 
+isolation.tools.dnd.disable is missing or set to TRUE.",-,"# List the VMs and their current settings 
+Get-VM -Name $VM | Get-AdvancedSetting isolation.tools.dnd.disable ","# Add the setting to all VMs 
+Get-VM -Name $VM | Remove-AdvancedSetting -Name isolation.tools.dnd.disable",,1,0,1,isolation.tools.dnd.disable,True,eq
+7.18,virtual-machines,"Virtual machines must deactivate console copy 
+operations",Level 1,"Deactivating console copy operations is critical for preventing data transfer between the 
+virtual machine and the local client, irrespective of the access method, whether via Web 
+Console, VMRC, or others. The parameter governing this behavior is 
+isolation.tools.copy.disable with a recommended setting of TRUE or Undefined. ","Deactivating console copy operations minimizes the risk of unauthorized data access or 
+leakage, enforcing a higher level of data security and integrity across the virtual 
+environment. HINT: verify that the 
+isolation.tools.copy.disable option is missing or set to TRUE. ","There is no identified functional impact, however, this restriction enhances data security 
+by minimizing unauthorized data transfer channels. ","# List the VMs and their current settings 
+Get-VM | Get-AdvancedSetting -Name ""isolation.tools.copy.disable"" | Select 
+Entity, Name, Value ","# Add the setting to all VMs 
+Get-VM | New-AdvancedSetting -Name ""isolation.tools.copy.disable"" -value 
+$true",,1,0,1,isolation.tools.copy.disable,True,eq
+7.19,virtual-machines,"Virtual machines must deactivate console paste 
+operations",Level 1,"Disabling console paste operations on virtual machines obstructs data transfer from the 
+local client to the VM, irrespective of the access method - be it Web Console, VMRC, or 
+another console. This security measure aims to curtail potential avenues for 
+unauthorized data transfer into the virtual environment. The parameter governing this 
+behavior is isolation.tools.paste.disable with a recommended setting of TRUE or 
+Undefined. ","By disabling console paste operations, organizations add a layer of security that helps 
+in preventing unauthorized data introduction into the VM, which could potentially lead to 
+various security risks. HINT: verify that 
+isolation.tools.paste.disable is missing or set to TRUE.","There is no functional impact identified. The control simply enhances the security 
+posture by reducing possible data transfer channels into the VM. ","# List the VMs and their current settings 
+Get-VM | Get-AdvancedSetting -Name ""isolation.tools.paste.disable""| Select 
+Entity, Name, Value ","# Add the setting to all VMs 
+Get-VM | New-AdvancedSetting -Name ""isolation.tools.paste.disable"" -value 
+$true ",,1,0,1,isolation.tools.paste.disable,True,eq
+7.21,virtual-machines,"Virtual machines must deactivate virtual disk shrinking 
+operations",Level 1,"Disabling virtual disk shrinking on virtual machines prevents potential disk unavailability 
+issues. This operation is usually restricted for non-administrative users within the guest 
+environment. The parameter governing this behavior is isolation.tools.diskShrink.disable 
+with a recommended setting of TRUE or Undefined. ","Shrinking a virtual disk reclaims unused space in it. If there is empty space in the disk, 
+this process reduces the amount of space the virtual disk occupies on the host drive. 
+Normal users and processes—that is, users and processes without root or administrator 
+privileges—within virtual machines have the capability to invoke this procedure. 
+However, if this is done repeatedly, the virtual disk can become unavailable while this 
+shrinking is being performed, effectively causing a denial of service. In most datacenter 
+environments, disk shrinking is not done, so you should disable this feature. Repeated 
+disk shrinking can make a virtual disk unavailable. This capability is available to 
+nonadministrative users in the guest. HINT: Verify that isolation.tools.diskShrink.disable is set to TRUE.",There is no functional impact noted.,"# List the VMs and their current settings 
+Get-VM | Get-AdvancedSetting -Name  ""isolation.tools.diskShrink.disable""| 
+Select Entity, Name, Value ","# Add the setting to all VMs 
+Get-VM | New-AdvancedSetting -Name ""isolation.tools.diskShrink.disable"" 
+value $true",,1,0,1,isolation.tools.diskShrink.disable,True,eq
+7.22,virtual-machines,"Virtual machines must deactivate virtual disk wiping 
+operations ",Level 1,"Wiping a virtual disk reclaims all unused space in it. If there is empty space in the disk, 
+this process reduces the amount of space the virtual disk occupies on the host drive. If 
+virtual disk wiping is done repeatedly, it can cause the virtual disk to become 
+unavailable while wiping occurs. In most datacenter environments, disk wiping is not 
+needed, but normal users and processes--without administrative privileges--can issue 
+disk wipes unless the feature is disabled. ","Deactivating virtual disk wiping operations contributes to maintaining disk availability, 
+which is vital for continuous system operations. HINT:  verify that 
+isolation.tools.diskWiper.disable is set to TRUE. ",There isn't a functional impact noted,"# List the VMs and their current settings 
+Get-VM | Get-AdvancedSetting -Name  ""isolation.tools.diskWiper.disable""| 
+Select Entity, Name, Value ","# Add the setting to all VMs 
+Get-VM | New-AdvancedSetting -Name ""isolation.tools.diskWiper.disable"" -value 
+$true ",,1,0,1,isolation.tools.diskWiper.disable,True,eq
+7.24,virtual-machines,"Virtual machines must not be able to obtain host 
+information from the hypervisor",Level 1,"Configure VMware Tools to disable host information from being sent to guests unless a 
+particular VM requires this information for performance monitoring purposes. ","By enabling a VM to get detailed information about the physical host, an adversary 
+could potentially use this information to inform further attacks on the host. HINT: Verify that tools.guestlib.enableHostInfo is set to FALSE.",-,"# List the VMs and their current settings 
+Get-VM | Get-AdvancedSetting -Name  ""tools.guestlib.enableHostInfo""| Select 
+Entity, Name, Value","# Add the setting to all VMs 
+Get-VM | New-AdvancedSetting -Name ""tools.guestlib.enableHostInfo"" -value 
+$false",,1,0,1,tools.guestlib.enableHostInfo,False,eq
+7.26,virtual-machines,"Virtual machines must limit the number of retained 
+diagnostic logs",Level 1,"Limiting the number of retained diagnostic logs in virtual machines helps in managing 
+datastore space effectively without hampering diagnostic capabilities. The parameter 
+governing this behavior is log.keepOld with a recommended setting of 10 or Undefined. ","Maintaining a sensible limit on the number of diagnostic logs retained helps in avoiding 
+potential issues related to datastore space exhaustion, while still retaining a useful set 
+of recent logs for troubleshooting purposes. ",There is no negative functional impact. ,"# List the VMs and their current settings 
+Get-VM | Get-AdvancedSetting -Name ""log.keepOld""| Select Entity, Name, Value ","# Add the setting to all VMs 
+Get-VM | New-AdvancedSetting -Name ""log.keepOld"" -value ""10""",,1,0,1,log.keepOld,10,eq
+7.27,virtual-machines,Virtual machines must limit the size of diagnostic logs,Level 1,"Limiting the size of diagnostic logs on virtual machines ensures efficient utilization of 
+datastore space, particularly beneficial for long-running VMs. This control assists in 
+maintaining an optimal balance between diagnostic capabilities and storage resources. 
+The parameter governing this behavior is log.rotateSize.","Setting a limit on the size of diagnostic logs helps in preventing excessive space 
+consumption, thus ensuring that ample storage remains available for other essential 
+operations. HINT: Verify that log.rotateSize is set to 1024000.","There is no negative functional impact identified by limiting the size of diagnostic logs. 
+This control facilitates proficient management of storage resources, ensuring other vital 
+functions are not compromised due to space exhaustion.","# List the VMs and their current settings 
+Get-VM | Get-AdvancedSetting -Name  ""log.rotateSize""| Select Entity, Name, 
+Value ","# Add the setting to all VMs 
+Get-VM | New-AdvancedSetting -Name ""log.rotateSize"" -value ""1024000"" ",,1,0,1,log.rotateSize,1024000,eq
