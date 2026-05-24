@@ -105,7 +105,7 @@ $scoringPath = Join-Path $ScriptDir "module_scoring.ps1"
 if (Test-Path $scoringPath) {
     Write-Host ""
     Write-Host ">>> Calcolo scoring effort..." -ForegroundColor Magenta
-    . $scoringPath -CsvPath $CsvPath
+    . $scoringPath -CsvPath $CsvPath -ExportCsv
 } else {
     Write-Warning "module_scoring.ps1 non trovato in: $ScriptDir"
 }
