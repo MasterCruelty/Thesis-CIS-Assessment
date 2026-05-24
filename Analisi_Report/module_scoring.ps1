@@ -11,9 +11,6 @@
 #   MEDIO  -> alfa <= E_i(norm) < beta
 #   ALTO   -> E_i(norm) >= beta
 #
-# Usage:
-#   & .\module_scoring.ps1 [-CsvPath ".\cis_vmware.csv"] [-Wc .4] [-Wd .35] [-Wr .25] [-Alfa .35] [-Beta .70]
-#   & .\module_scoring.ps1 [-CsvPath ".\cis_azure.csv"] [-Wc .4] [-Wd .35] [-Wr .25] [-Alfa .35] [-Beta .70]
 # =============================================================================
 
 param(
@@ -106,14 +103,18 @@ foreach ($row in $csv) {
         ID            = $id
         Category      = $row.category
         Name          = $row.name -replace "`n"," " -replace "`r",""
-        ExpectedValue = if ($row.'expected-value') { $row.'expected-value' } else { "" }
+        Status        = $status
+        #ExpectedValue = if ($row.'expected-value') { $row.'expected-value' } else { "" }
+        Total        = if ($Global:CISAuditResults.ContainsKey($id)) { $Global:CISAuditResults[$id].Total        } else { 0 }
+        NonCompliant = if ($Global:CISAuditResults.ContainsKey($id)) { $Global:CISAuditResults[$id].NonCompliant } else { 0 }
         C             = $C
         D             = $D
         R             = $R
         E_i           = $Ei
         E_norm        = $Ei_norm
         Effort        = $level
-        Status        = $status
+        Objects      = if ($Global:CISAuditResults.ContainsKey($id)) { $Global:CISAuditResults[$id].Objects -join " | " } else { "" }
+        Remediation  = ($row.remediation -replace "`n"," " -replace "`r","").Trim()
     }
 }
 
@@ -202,6 +203,20 @@ if ($nc_all.Count -gt 0) {
 # ---------------------------------------------------------------------------
 if ($ExportCsv) {
     $results | Export-Csv -Path $ExportPath -NoTypeInformation -Encoding UTF8
+
+    # Riepilogo generale in file separato
+    $summaryPath = $ExportPath -replace '\.csv$', '_summary.csv'
+    [PSCustomObject]@{
+        Platform        = $platform
+        CheckTotali     = $results.Count
+        Compliant       = $comp_all.Count
+        NonCompliant    = $nc_all.Count
+        ComplianceRate  = $rate
+        EffortAlto      = $alto.Count
+        EffortMedio     = $medio.Count
+        EffortBasso     = $basso.Count
+    } | Export-Csv -Path $summaryPath -NoTypeInformation -Encoding UTF8
+
     Write-Host "  Report esportato: $ExportPath" -ForegroundColor DarkCyan
     Write-Host ""
 }
