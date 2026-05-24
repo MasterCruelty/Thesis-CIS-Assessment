@@ -54,7 +54,7 @@ foreach ($location in $usedLocations) {
     else    { Write-Host "  [NON-COMPLIANT] '$location': Network Watcher mancante" -ForegroundColor Red; $nc += "Regione $location" }
 }
 Set-CheckResult "7.6" $usedLocations.Count $nc
-Write-CheckFooter "7.6" "regione"
+Write-CheckFooter "7.6" "regioni"
 
 # 7.10  -  WAF su Application Gateway  (data-driven)
 Test-AzPropertyCheck "7.10" "Azure WAF is enabled on Application Gateway" `
