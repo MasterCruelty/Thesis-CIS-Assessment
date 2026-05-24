@@ -211,7 +211,7 @@ function Test-AzPropertyCheck {
         [scriptblock] $GetValueScript,
         [string]      $Operator,
         [string]      $ExpectedValue = "",
-        [scriptblock] $LabelScript   = { $_.name },
+        [scriptblock] $LabelScript = { param($r) $r.name },
         [string]      $ObjectType    = "risorse"
     )
 
@@ -226,8 +226,8 @@ function Test-AzPropertyCheck {
     $nc = @()
 
     foreach ($res in $Resources) {
-        $resLabel = & $LabelScript
-        try   { $val = & $GetValueScript }
+        $resLabel = & $LabelScript $res
+        try { $val = & $GetValueScript $res }
         catch { $val = $null }
 
         $isCompliant = switch ($Operator) {
@@ -240,7 +240,8 @@ function Test-AzPropertyCheck {
         if ($isCompliant) {
             Write-Host "  [COMPLIANT]     $resLabel = $val" -ForegroundColor Green
         } else {
-            Write-Host "  [NON-COMPLIANT] $resLabel = $val (atteso: $ExpectedValue)" -ForegroundColor Red
+            $expectedStr = if ($Operator -eq "notempty") { "(valore assente o nullo)" } else { "(atteso: $ExpectedValue)" }
+            Write-Host "  [NON-COMPLIANT] $resLabel = $val $expectedStr" -ForegroundColor Red
             $nc += "$resLabel (valore: $val)"
         }
     }
