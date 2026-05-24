@@ -272,6 +272,30 @@ function Test-ActivityLogAlert {
 }
 
 # ---------------------------------------------------------------------------
+# Funzione di appoggio per i controlli della sezione networking 7.x
+# ---------------------------------------------------------------------------
+function Test-NsgInternet {
+    param([string]$CheckId, [string]$Label, [string[]]$Ports, [string]$Proto = "Tcp")
+    Write-CheckHeader $CheckId $Label
+    $nc = @()
+    foreach ($nsg in $allNSGs) {
+        $bad = $nsg.securityRules | Where-Object { Test-NsgAllowsInternet $_ $Ports $Proto }
+        if ($bad) {
+            $bad | ForEach-Object {
+                Write-Host "  [NON-COMPLIANT] NSG '$($nsg.name)' regola '$($_.name)'" -ForegroundColor Red
+                $nc += "$($nsg.name)/$($_.name) (porta $($_.destinationPortRange) da Internet)"
+            }
+        } else {
+            Write-Host "  [COMPLIANT]     NSG '$($nsg.name)': nessuna regola aperta" -ForegroundColor Green
+        }
+    }
+    Set-CheckResult $CheckId $allNSGs.Count $nc
+    Write-CheckFooter $CheckId "NSG"
+}
+
+
+
+# ---------------------------------------------------------------------------
 # di seguito le funzioni condivise tra i moduli Azure e VMware
 # ---------------------------------------------------------------------------
 
