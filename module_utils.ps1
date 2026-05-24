@@ -140,7 +140,7 @@ function Test-VMAdvSettingCheck {
 
 # ---------------------------------------------------------------------------
 # Test-HostService
-# Funzione di appoggio per i test sui servizi attivi sugli host ESXi
+# Funzione di appoggio per i test sui servizi attivi sugli host ESXi (modulo 3.x)
 # ---------------------------------------------------------------------------
 function Test-HostService {
     param([string]$CheckId, [string]$ServiceKey, [string]$Label)
@@ -247,6 +247,28 @@ function Test-AzPropertyCheck {
 
     Set-CheckResult $CheckId $Resources.Count $nc
     Write-CheckFooter $CheckId $ObjectType
+}
+
+
+# ---------------------------------------------------------------------------
+# Funzione di appoggio per i controlli 6.1.2.x (Activity Log Alert per operazione specifica)
+# ---------------------------------------------------------------------------
+$activityAlerts = az monitor activity-log alert list 2>$null | ConvertFrom-Json
+
+function Test-ActivityLogAlert {
+    param([string]$CheckId, [string]$Description, [string]$OperationName)
+    Write-CheckHeader $CheckId "Activity Log Alert: $Description"
+    $match = $activityAlerts | Where-Object {
+        $_.condition.allOf | Where-Object { $_.field -eq "operationName" -and $_.equals -eq $OperationName }
+    }
+    if ($match) {
+        Write-Host "  [COMPLIANT]     Alert trovato: '$($match[0].name)'" -ForegroundColor Green
+        Set-CheckResult $CheckId 1 @()
+    } else {
+        Write-Host "  [NON-COMPLIANT] Nessun alert per: $OperationName" -ForegroundColor Red
+        Set-CheckResult $CheckId 1 @("Operazione '$OperationName' - alert mancante")
+    }
+    Write-CheckFooter $CheckId "alert"
 }
 
 # ---------------------------------------------------------------------------
