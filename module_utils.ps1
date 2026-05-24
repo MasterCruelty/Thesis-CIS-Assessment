@@ -159,12 +159,12 @@ function Test-HostService {
 }
 
 # ---------------------------------------------------------------------------
-# Initialize-AzCISEngine
+# Initialize-AzCIS
 # Carica cis_azure.csv in $Global:CISBenchmarkData (stessa struttura hashtable
 # usata dal framework VMware: module_scoring e module_report funzionano
 # senza alcuna modifica) e verifica la sessione Azure CLI.
 # ---------------------------------------------------------------------------
-function Initialize-AzCISEngine {
+function Initialize-AzCIS {
     param(
         [string]$CsvPath = "$PSScriptRoot\cis_azure.csv"
     )
