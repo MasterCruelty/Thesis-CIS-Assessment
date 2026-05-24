@@ -293,6 +293,24 @@ function Test-NsgInternet {
     Write-CheckFooter $CheckId "NSG"
 }
 
+# ---------------------------------------------------------------------------
+# Funzione di appoggio per i controlli della sezione security 8.x
+# ---------------------------------------------------------------------------
+function Test-DefenderPlan {
+    param([string]$CheckId, [string]$PlanName, [string]$DisplayName)
+    Write-CheckHeader $CheckId "Microsoft Defender for $DisplayName is 'On'"
+    $pricing = @(az security pricing show --name $PlanName 2>$null | ConvertFrom-Json)
+    $tier    = if ($pricing -and $pricing.Count -gt 0) { $pricing[0].pricingTier } else { "N/A" }
+    if ($tier -eq "Standard") {
+        Write-Host "  [COMPLIANT]     Defender for ${DisplayName}: pricingTier=$tier" -ForegroundColor Green
+        Set-CheckResult $CheckId 1 @()
+    } else {
+        Write-Host "  [NON-COMPLIANT] Defender for ${DisplayName}: pricingTier=$tier" -ForegroundColor Red
+        Set-CheckResult $CheckId 1 @("$PlanName  -  pricingTier=$tier")
+    }
+    Write-CheckFooter $CheckId "servizio"
+}
+
 
 
 # ---------------------------------------------------------------------------
