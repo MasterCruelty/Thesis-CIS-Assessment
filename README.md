@@ -30,6 +30,6 @@ Per specificare un'altra sottoscrizione:
 
 
 ### POWERSHELL execution policy
-In caso di problemi sui permessi di esecuzione, lanciare il seguente comando prima di avviare il tool.
+In caso di problemi sui permessi di esecuzione, lanciare il seguente comando prima di avviare il tool.<br>
 <code>powershell -ExecutionPolicy Bypass -File ".\main_azure.ps1"</code><br>
 <code>powershell -ExecutionPolicy Bypass -File ".\main_vmware.ps1"</code>
