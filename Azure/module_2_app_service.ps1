@@ -16,7 +16,7 @@ function Get-AppConfig ($app) {
 }
 
 # 2.3.3  -  Basic Auth Publishing Credentials
-Write-CheckHeader "2.3.3" "Basic Authentication Publishing Credentials disabled"
+Write-CheckHeader "2.3.3" 
 $nc = @()
 foreach ($app in $allApps) {
     foreach ($cred in @("ftp","scm")) {
@@ -37,7 +37,7 @@ Set-CheckResult "2.3.3" ($allApps.Count * 2) $nc
 Write-CheckFooter "2.3.3" "credenziali"
 
 # 2.3.4  -  FTP state = FtpsOnly or Disabled
-Write-CheckHeader "2.3.4" "FTP state is 'FTPS Only' or 'Disabled'"
+Write-CheckHeader "2.3.4" 
 $nc = @()
 foreach ($app in $allApps) {
     $val = (Get-AppConfig $app).ftpsState
@@ -52,19 +52,19 @@ Set-CheckResult "2.3.4" $allApps.Count $nc
 Write-CheckFooter "2.3.4" "app"
 
 # 2.3.5  -  HTTP is version 2.0  (data-driven)
-Test-AzPropertyCheck "2.3.5" "HTTP version set to 2.0" `
+Test-AzPropertyCheck "2.3.5"  `
     -Resources $allApps `
     -GetValueScript { (Get-AppConfig $_).http20Enabled } `
     -Operator "eq" -ExpectedValue "True"
 
 # 2.3.6  -  HTTPS Only  (data-driven)
-Test-AzPropertyCheck "2.3.6" "HTTPS Only is 'On'" `
+Test-AzPropertyCheck "2.3.6"  `
     -Resources $allApps `
     -GetValueScript { $_.httpsOnly } `
     -Operator "eq" -ExpectedValue "True"
 
 # 2.3.7  -  Min TLS >= 1.2
-Write-CheckHeader "2.3.7" "Minimum Inbound TLS Version >= 1.2"
+Write-CheckHeader "2.3.7" 
 $nc = @()
 foreach ($app in $allApps) {
     $val = (Get-AppConfig $app).minTlsVersion
@@ -79,7 +79,7 @@ Set-CheckResult "2.3.7" $allApps.Count $nc
 Write-CheckFooter "2.3.7" "app"
 
 # 2.3.8  -  End-to-end TLS
-Write-CheckHeader "2.3.8" "End-to-end TLS encryption enabled"
+Write-CheckHeader "2.3.8" 
 $nc = @()
 foreach ($app in $allApps) {
     $sslOk  = ($app.hostNameSslStates | Where-Object { $_.sslState -ne "Disabled" }).Count -gt 0
@@ -95,13 +95,13 @@ Set-CheckResult "2.3.8" $allApps.Count $nc
 Write-CheckFooter "2.3.8" "app"
 
 # 2.3.9  -  Remote debugging Off  (data-driven)
-Test-AzPropertyCheck "2.3.9" "Remote debugging is 'Off'" `
+Test-AzPropertyCheck "2.3.9" `
     -Resources $allApps `
     -GetValueScript { (Get-AppConfig $_).remoteDebuggingEnabled } `
     -Operator "eq" -ExpectedValue "False"
 
 # 2.3.10  -  Client certificates
-Write-CheckHeader "2.3.10" "Incoming client certificates enabled and required"
+Write-CheckHeader "2.3.10" 
 $nc = @()
 foreach ($app in $allApps) {
     $ok = ($app.clientCertEnabled -eq $true) -and ($app.clientCertMode -in @("Required","OptionalInteractiveUser"))
@@ -116,7 +116,7 @@ Set-CheckResult "2.3.10" $allApps.Count $nc
 Write-CheckFooter "2.3.10" "app"
 
 # 2.3.11  -  App Service authentication
-Write-CheckHeader "2.3.11" "App Service authentication is 'Enabled'"
+Write-CheckHeader "2.3.11" 
 $nc = @()
 foreach ($app in $allApps) {
     $val = (az webapp auth show --name $app.name --resource-group $app.resourceGroup 2>$null | ConvertFrom-Json).enabled
@@ -131,7 +131,7 @@ Set-CheckResult "2.3.11" $allApps.Count $nc
 Write-CheckFooter "2.3.11" "app"
 
 # 2.3.12  -  Managed identities
-Write-CheckHeader "2.3.12" "Managed identities are configured"
+Write-CheckHeader "2.3.12" 
 $nc = @()
 foreach ($app in $allApps) {
     $idType = $app.identity.type
@@ -146,25 +146,25 @@ Set-CheckResult "2.3.12" $allApps.Count $nc
 Write-CheckFooter "2.3.12" "app"
 
 # 2.3.13  -  Public network access disabled  (data-driven)
-Test-AzPropertyCheck "2.3.13" "Public network access is disabled" `
+Test-AzPropertyCheck "2.3.13" `
     -Resources $allApps `
     -GetValueScript { $_.publicNetworkAccess } `
     -Operator "eq" -ExpectedValue "Disabled"
 
 # 2.3.14  -  VNet integration  (data-driven)
-Test-AzPropertyCheck "2.3.14" "Function app integrated with a virtual network" `
+Test-AzPropertyCheck "2.3.14" `
     -Resources $allApps `
     -GetValueScript { $_.virtualNetworkSubnetId } `
     -Operator "notempty"
 
 # 2.3.15  -  Config through VNet  (data-driven)
-Test-AzPropertyCheck "2.3.15" "Configuration is routed through the virtual network" `
+Test-AzPropertyCheck "2.3.15" `
     -Resources $allApps `
     -GetValueScript { (Get-AppConfig $_).vnetRouteAllEnabled } `
     -Operator "eq" -ExpectedValue "True"
 
 # 2.3.16  -  All traffic through VNet
-Write-CheckHeader "2.3.16" "All traffic is routed through the virtual network"
+Write-CheckHeader "2.3.16" 
 $nc = @()
 foreach ($app in $allApps) {
     $cfg    = Get-AppConfig $app
@@ -180,7 +180,7 @@ Set-CheckResult "2.3.16" $allApps.Count $nc
 Write-CheckFooter "2.3.16" "app"
 
 # 2.3.17  -  CORS no all origins
-Write-CheckHeader "2.3.17" "CORS does not allow all origins (*)"
+Write-CheckHeader "2.3.17" 
 $nc = @()
 foreach ($app in $allApps) {
     $origins = (az webapp cors show --name $app.name --resource-group $app.resourceGroup 2>$null | ConvertFrom-Json).allowedOrigins

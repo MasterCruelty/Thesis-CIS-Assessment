@@ -10,6 +10,10 @@ $allNSGs  = az network nsg list 2>$null | ConvertFrom-Json
 $appGws   = az network application-gateway list 2>$null | ConvertFrom-Json
 $wafPolicies  = az network application-gateway waf-policy list 2>$null | ConvertFrom-Json
 
+# =============================================================================
+# funzione di appoggio per verificare se una regola permette traffico da internet
+# verso una porta specifica
+# =============================================================================
 function Test-NsgAllowsInternet {
     param($rule, [string[]]$Ports, [string]$Proto = "*")
     if ($rule.access -ne "Allow" -or $rule.direction -ne "Inbound") { return $false }
@@ -22,12 +26,12 @@ function Test-NsgAllowsInternet {
     return $srcAny -and $portOk -and $protoOk
 }
 
-Test-NsgInternet "7.1" "RDP access from Internet is evaluated and restricted" @("3389")
-Test-NsgInternet "7.2" "SSH access from Internet is evaluated and restricted" @("22")
-Test-NsgInternet "7.3" "UDP access from Internet is evaluated and restricted" @("*") "Udp"
+Test-NsgInternet "7.1"  @("3389")
+Test-NsgInternet "7.2"  @("22")
+Test-NsgInternet "7.3"  @("*") "Udp"
 
 # 7.4  -  HTTP(S) da Internet (warning documentativo)
-Write-CheckHeader "7.4" "HTTP(S) access from Internet is evaluated and restricted"
+Write-CheckHeader "7.4" 
 $nc = @()
 foreach ($nsg in $allNSGs) {
     $bad = $nsg.securityRules | Where-Object { Test-NsgAllowsInternet $_ @("80","443","8080","8443") }
@@ -44,7 +48,7 @@ Set-CheckResult "7.4" $allNSGs.Count $nc
 Write-CheckFooter "7.4" "NSG"
 
 # 7.6  -  Network Watcher per regioni in uso
-Write-CheckHeader "7.6" "Network Watcher is 'Enabled' for Azure Regions in use"
+Write-CheckHeader "7.6" 
 $usedLocations = (az resource list 2>$null | ConvertFrom-Json).location | Sort-Object -Unique
 $watchers  = az network watcher list 2>$null | ConvertFrom-Json
 $nc = @()
@@ -57,13 +61,13 @@ Set-CheckResult "7.6" $usedLocations.Count $nc
 Write-CheckFooter "7.6" "regioni"
 
 # 7.10  -  WAF su Application Gateway  (data-driven)
-Test-AzPropertyCheck "7.10" "Azure WAF is enabled on Application Gateway" `
+Test-AzPropertyCheck "7.10" `
     -Resources $appGws `
     -GetValueScript { $_.webApplicationFirewallConfiguration.enabled } `
     -Operator "eq" -ExpectedValue "True" -ObjectType "App Gateway"
 
 # 7.11  -  Subnet associate a NSG
-Write-CheckHeader "7.11" "Subnets are associated with network security groups"
+Write-CheckHeader "7.11" 
 $allVnets = az network vnet list 2>$null | ConvertFrom-Json
 $nc = @(); $totSub = 0
 $skipSubnets = @("GatewaySubnet","AzureFirewallSubnet","AzureBastionSubnet")
@@ -84,25 +88,25 @@ Set-CheckResult "7.11" $totSub $nc
 Write-CheckFooter "7.11" "subnet"
 
 # 7.12  -  SSL min TLS su App Gateway  (data-driven)
-Test-AzPropertyCheck "7.12" "SSL policy Min TLS Version >= TLS 1.2" `
+Test-AzPropertyCheck "7.12" `
     -Resources $appGws `
     -GetValueScript { $_.sslPolicy.minProtocolVersion } `
     -Operator "eq" -ExpectedValue "TLSv1_2" -ObjectType "App Gateway"
 
 # 7.13  -  HTTP2 su App Gateway  (data-driven)
-Test-AzPropertyCheck "7.13" "HTTP2 is 'Enabled' on Azure Application Gateway" `
+Test-AzPropertyCheck "7.13" `
     -Resources $appGws `
     -GetValueScript { $_.enableHttp2 } `
     -Operator "eq" -ExpectedValue "True" -ObjectType "App Gateway"
 
 # 7.14  -  WAF request body inspection  (data-driven)
-Test-AzPropertyCheck "7.14" "Request body inspection is enabled in Azure WAF" `
+Test-AzPropertyCheck "7.14" `
     -Resources $wafPolicies `
     -GetValueScript { $_.policySettings.requestBodyCheck } `
     -Operator "eq" -ExpectedValue "True" -ObjectType "WAF Policy"
 
 # 7.15  -  WAF bot protection
-Write-CheckHeader "7.15" "Bot protection is enabled in Azure WAF"
+Write-CheckHeader "7.15" 
 $nc = @()
 foreach ($pol in $wafPolicies) {
     $hasBot = $pol.managedRules.managedRuleSets | Where-Object { $_.ruleSetType -like "Microsoft_BotManagerRuleSet*" }

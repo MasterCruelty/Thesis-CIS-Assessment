@@ -11,7 +11,7 @@ $subId = (az account show 2>$null | ConvertFrom-Json).id
 # ---------------------------------------------------------------------------
 # 6.1.1.1 -- Diagnostic Setting esiste per Subscription Activity Log
 # ---------------------------------------------------------------------------
-Write-CheckHeader "6.1.1.1" "Diagnostic Setting exists for Subscription Activity Log"
+Write-CheckHeader "6.1.1.1"
 $diagSettings = az monitor diagnostic-settings list --resource "/subscriptions/$subId" 2>$null | ConvertFrom-Json
 if (-not $diagSettings -or $diagSettings.Count -eq 0) {
     Write-Host "  [NON-COMPLIANT] Nessun Diagnostic Setting configurato" -ForegroundColor Red
@@ -26,7 +26,7 @@ Write-CheckFooter "6.1.1.1" "Diagnostic Setting"
 # 6.1.1.2 -- Categorie appropriate abilitate
 # ---------------------------------------------------------------------------
 $requiredCats = @("Administrative","Security","Alert","Policy")
-Write-CheckHeader "6.1.1.2" "Diagnostic Setting captures appropriate categories"
+Write-CheckHeader "6.1.1.2"
 $nc = @()
 foreach ($ds in $diagSettings) {
     $enabled = ($ds.logs | Where-Object { $_.enabled -eq $true }).category
@@ -45,7 +45,7 @@ Write-CheckFooter "6.1.1.2" "Diagnostic Setting"
 # ---------------------------------------------------------------------------
 # 6.1.1.4 -- Key Vault logging abilitato
 # ---------------------------------------------------------------------------
-Write-CheckHeader "6.1.1.4" "Logging for Azure Key Vault is 'Enabled'"
+Write-CheckHeader "6.1.1.4"
 $keyVaults = az keyvault list 2>$null | ConvertFrom-Json
 $nc = @()
 foreach ($key in $keyVaults) {
@@ -66,21 +66,21 @@ Write-CheckFooter "6.1.1.4" "Key Vault"
 # ---------------------------------------------------------------------------
 # 6.1.2.1 -- 6.1.2.10 Activity Log Alert per operazioni critiche
 # ---------------------------------------------------------------------------
-Test-ActivityLogAlert "6.1.2.1"  "Create Policy Assignment"           "Microsoft.Authorization/policyAssignments/write"
-Test-ActivityLogAlert "6.1.2.2"  "Delete Policy Assignment"           "Microsoft.Authorization/policyAssignments/delete"
-Test-ActivityLogAlert "6.1.2.3"  "Create or Update NSG"               "Microsoft.Network/networkSecurityGroups/write"
-Test-ActivityLogAlert "6.1.2.4"  "Delete NSG"                         "Microsoft.Network/networkSecurityGroups/delete"
-Test-ActivityLogAlert "6.1.2.5"  "Create or Update Security Solution" "Microsoft.Security/securitySolutions/write"
-Test-ActivityLogAlert "6.1.2.6"  "Delete Security Solution"           "Microsoft.Security/securitySolutions/delete"
-Test-ActivityLogAlert "6.1.2.7"  "Create or Update SQL Server"        "Microsoft.Sql/servers/write"
-Test-ActivityLogAlert "6.1.2.8"  "Delete SQL Server"                  "Microsoft.Sql/servers/delete"
-Test-ActivityLogAlert "6.1.2.9"  "Create or Update Public IP"         "Microsoft.Network/publicIPAddresses/write"
-Test-ActivityLogAlert "6.1.2.10" "Delete Public IP"                   "Microsoft.Network/publicIPAddresses/delete"
+Test-ActivityLogAlert "6.1.2.1"  "Microsoft.Authorization/policyAssignments/write"  # Create Policy Assignment           
+Test-ActivityLogAlert "6.1.2.2"  "Microsoft.Authorization/policyAssignments/delete" # Delete Policy Assignment
+Test-ActivityLogAlert "6.1.2.3"  "Microsoft.Network/networkSecurityGroups/write"    # Create or Update NSG
+Test-ActivityLogAlert "6.1.2.4"  "Microsoft.Network/networkSecurityGroups/delete"   # Delete NSG
+Test-ActivityLogAlert "6.1.2.5"  "Microsoft.Security/securitySolutions/write"       # Create or Update Security Solution 
+Test-ActivityLogAlert "6.1.2.6"  "Microsoft.Security/securitySolutions/delete"      # Delete Security Solution
+Test-ActivityLogAlert "6.1.2.7"  "Microsoft.Sql/servers/write"                      # Create or Update SQL Server 
+Test-ActivityLogAlert "6.1.2.8"  "Microsoft.Sql/servers/delete"                     # Delete SQL Server
+Test-ActivityLogAlert "6.1.2.9"  "Microsoft.Network/publicIPAddresses/write"        # Create or Update Public IP
+Test-ActivityLogAlert "6.1.2.10" "Microsoft.Network/publicIPAddresses/delete"       # Delete Public IP
 
 # ---------------------------------------------------------------------------
 # 6.1.2.11 -- Service Health alert
 # ---------------------------------------------------------------------------
-Write-CheckHeader "6.1.2.11" "Activity Log Alert exists for Service Health"
+Write-CheckHeader "6.1.2.11" 
 $sh = $activityAlerts | Where-Object {
     $_.condition.allOf | Where-Object { $_.field -eq "category" -and $_.equals -eq "ServiceHealth" }
 }
@@ -96,7 +96,7 @@ Write-CheckFooter "6.1.2.11" "alert"
 # ---------------------------------------------------------------------------
 # 6.1.3.1 -- Application Insights configurato
 # ---------------------------------------------------------------------------
-Write-CheckHeader "6.1.3.1" "Application Insights are Configured"
+Write-CheckHeader "6.1.3.1" 
 $ai = az resource list --resource-type "microsoft.insights/components" 2>$null | ConvertFrom-Json
 if ($ai -and $ai.Count -gt 0) {
     $ai | ForEach-Object { Write-Host "  [COMPLIANT]     '$($_.name)' in '$($_.resourceGroup)'" -ForegroundColor Green }

@@ -17,13 +17,13 @@ $allDisks = @(
 )
 
 # 20.1  -  Managed Disks  (data-driven)
-Test-AzPropertyCheck "20.1" "Virtual Machines are utilizing Managed Disks" `
+Test-AzPropertyCheck "20.1" `
     -Resources $allVMs `
     -GetValueScript { $_.storageProfile.osDisk.managedDisk.id } `
     -Operator "notempty" -ObjectType "VM"
 
 # 20.2  -  CMK su OS + Data disk
-Write-CheckHeader "20.2" "OS and Data disks encrypted with Customer Managed Key"
+Write-CheckHeader "20.2" 
 $nc = @()
 foreach ($vm in $allVMs) {
     $osDisk = az disk show --ids $vm.storageProfile.osDisk.managedDisk.id 2>$null | ConvertFrom-Json
@@ -44,13 +44,13 @@ Set-CheckResult "20.2" $allVMs.Count $nc
 Write-CheckFooter "20.2" "VM"
 
 # 20.3  -  CMK su dischi scollegati  (data-driven)
-Test-AzPropertyCheck "20.3" "Unattached disks encrypted with Customer Managed Key" `
+Test-AzPropertyCheck "20.3" `
     -Resources ($allDisks | Where-Object { $_.diskState -eq "Unattached" }) `
     -GetValueScript { $_.encryption.type } `
     -Operator "eq" -ExpectedValue "EncryptionAtRestWithCustomerKey" -ObjectType "disco"
 
 # 20.4  -  Disk network access  (data-driven)
-Write-CheckHeader "20.4" "Disk Network Access is NOT set to 'Enable public access from all networks'"
+Write-CheckHeader "20.4" 
 $nc = @()
 foreach ($disk in $allDisks) {
     if ($disk.networkAccessPolicy -eq "AllowAll") {
@@ -64,13 +64,13 @@ Set-CheckResult "20.4" $allDisks.Count $nc
 Write-CheckFooter "20.4" "disco"
 
 # 20.10  -  Trusted Launch  (data-driven)
-Test-AzPropertyCheck "20.10" "Trusted Launch is enabled on Virtual Machines" `
+Test-AzPropertyCheck "20.10" `
     -Resources $allVMs `
     -GetValueScript { $_.securityProfile.securityType } `
     -Operator "eq" -ExpectedValue "TrustedLaunch" -ObjectType "VM"
 
 # 20.11  -  Encryption at host  (data-driven)
-Test-AzPropertyCheck "20.11" "Encryption at host is enabled" `
+Test-AzPropertyCheck "20.11" `
     -Resources $allVMs `
     -GetValueScript { $_.securityProfile.encryptionAtHost } `
     -Operator "eq" -ExpectedValue "True" -ObjectType "VM"
