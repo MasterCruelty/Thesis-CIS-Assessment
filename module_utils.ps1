@@ -138,6 +138,34 @@ function Test-VMAdvSettingCheck {
     Write-CheckFooter $CheckId $ObjectType
 }
 
+
+# Helper locale per device check 
+
+# ---------------------------------------------------------------------------
+# Test-VMDevice
+# Funzione di appoggio per i test sui device attivi sulle macchine virtuali (modulo 7.x)
+# ---------------------------------------------------------------------------
+function Test-VMDevice {
+    param([string]$CheckId, [scriptblock]$GetDevices)
+    Write-CheckHeader $CheckId 
+    $devices = @(& $GetDevices)
+    $nc = @()
+    $ncVMs = @()   # VM uniche non conformi
+    if ($devices.Count -gt 0) {
+        foreach ($item in $devices) {
+            $vmName = try { $item.Parent.Name } catch { "$item" }
+            Write-Host "  [NON-COMPLIANT] VM: $vmName -> $($item.Name)" -ForegroundColor Red
+            $nc += "VM=$vmName Device=$($item.Name)"
+            if ($vmName -notin $ncVMs) { $ncVMs += $vmName }
+        }
+    } else {
+        Write-Host "  [COMPLIANT] Nessun dispositivo trovato." -ForegroundColor Green
+    }
+    # NonCompliant = VM uniche con almeno un dispositivo; Objects = dettaglio per il report
+    Set-CheckResult $CheckId $allVMs.Count $ncVMs -ReportObjects $nc
+    Write-CheckFooter $CheckId "VM"
+}
+
 # ---------------------------------------------------------------------------
 # Test-HostService
 # Funzione di appoggio per i test sui servizi attivi sugli host ESXi (modulo 3.x)
@@ -157,6 +185,30 @@ function Test-HostService {
     Set-CheckResult $CheckId $services.Count $nc
     Write-CheckFooter $CheckId "host"
 }
+
+# ---------------------------------------------------------------------------
+# Test-vSwitchSecurity
+# Funzione di appoggio per i test sulle proprietà di sicurezza dei virtual switches (modulo 5.x)
+# ---------------------------------------------------------------------------
+function Test-vSwitchSecurity {
+    param([string]$CheckId, [string]$Property)
+    Write-CheckHeader $CheckId 
+    $vSwitches  = @(Get-VirtualSwitch -Standard)
+    $nc = @()
+    foreach ($vsw in $vSwitches) {
+        $ok     = (-not $vsw.ExtensionData.Spec.Policy.Security.$Property)
+        $val    = if ($ok) { "Reject" } else { "Accept" }
+        $color  = if ($ok) { "Green" } else { "Red" }
+        $status = if ($ok) { "COMPLIANT" } else { "NON-COMPLIANT" }
+        Write-Host "  [$status] Host: $($vsw.VMHost) | Switch: $($vsw.Name) -> $Property = $val" -ForegroundColor $color
+        if (-not $ok) { $nc += "Host=$($vsw.VMHost) Switch=$($vsw.Name)" }
+    }
+    Set-CheckResult $CheckId $vSwitches.Count $nc
+    Write-CheckFooter $CheckId "vSwitch"
+}
+
+
+
 
 # ---------------------------------------------------------------------------
 # Initialize-AzCIS
@@ -239,10 +291,9 @@ function Test-AzPropertyCheck {
 
         if ($isCompliant) {
             Write-Host "  [COMPLIANT]     $resLabel = $val" -ForegroundColor Green
-        } else {
-            $displayVal  = if ($null -eq $val -or "$val" -eq "") { "(proprietà assente)" } else { $val }
+        } else {                                    
+            $displayVal  = if ($null -eq $val -or "$val" -eq "") { "(proprieta' assente)" } else { $val }
             $expectedStr = if ($Operator -eq "notempty") { "(valore assente o nullo)" } else { "(atteso: $ExpectedValue)" }
-            #Write-Host "  [NON-COMPLIANT] $resLabel = $val $expectedStr" -ForegroundColor Red
             Write-Host "  [NON-COMPLIANT] $resLabel = $displayVal $expectedStr" -ForegroundColor Red
             $nc += "$resLabel (valore: $val)"
         }
