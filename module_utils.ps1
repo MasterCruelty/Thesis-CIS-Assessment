@@ -54,7 +54,7 @@ function Initialize-VMwareCIS {
 # Operatori: eq, le, notempty
 # ---------------------------------------------------------------------------
 function Test-HostAdvSettingCheck {
-    param([string]$CheckId, [string]$Label, [string]$ObjectType = "host")
+    param([string]$CheckId, [string]$ObjectType = "host")
 
     $data = Get-CheckData $CheckId
     if (-not $data) { Write-Warning "dati non trovati per $CheckId"; return }
@@ -63,7 +63,7 @@ function Test-HostAdvSettingCheck {
     $expectedValue = $data.'expected-value'
     $operator    = $data.'operator'
 
-    Write-CheckHeader $CheckId $Label
+    Write-CheckHeader $CheckId 
 
     $settings = @(Get-VMHost | Get-AdvancedSetting -Name $settingName -ErrorAction SilentlyContinue)
     $nc = @()
@@ -91,7 +91,7 @@ function Test-HostAdvSettingCheck {
 # Operatori: eq, le, notempty
 # ---------------------------------------------------------------------------
 function Test-VMAdvSettingCheck {
-    param([string]$CheckId, [string]$Label, [string]$ObjectType = "VM")
+    param([string]$CheckId, [string]$ObjectType = "VM")
 
     $data = Get-CheckData $CheckId
     if (-not $data) { Write-Warning "dati non trovati per $CheckId"; return }
@@ -100,7 +100,7 @@ function Test-VMAdvSettingCheck {
     $expectedValue = $data.'expected-value'
     $operator    = $data.'operator'
 
-    Write-CheckHeader $CheckId $Label
+    Write-CheckHeader $CheckId 
 
     $allVMs   = @(Get-VM)
     $settings = @(Get-VM | Get-AdvancedSetting -Name $settingName -ErrorAction SilentlyContinue)
@@ -144,7 +144,7 @@ function Test-VMAdvSettingCheck {
 # ---------------------------------------------------------------------------
 function Test-HostService {
     param([string]$CheckId, [string]$ServiceKey, [string]$Label)
-    Write-CheckHeader $CheckId $Label
+    Write-CheckHeader $CheckId
     $services = @(Get-VMHost | Get-VMHostService | Where-Object { $_.Key -eq $ServiceKey })
     $nc = @()
     foreach ($item in $services) {
@@ -201,12 +201,10 @@ function Initialize-AzCIS {
 # $Resources     : array di oggetti su cui effettuare il controllo
 # $GetValueScript: scriptblock che riceve $_ e restituisce il valore da verificare
 # $Operator      : opearatore di confronto per il controllo. eq | le | notempty  (custom = logica inline nel modulo chiamante)
-# $LabelScript   : scriptblock che restituisce la label della risorsa per i log
 # ---------------------------------------------------------------------------
 function Test-AzPropertyCheck {
     param(
         [string]      $CheckId,
-        [string]      $Label,
         [array]       $Resources,
         [scriptblock] $GetValueScript,
         [string]      $Operator,
@@ -215,7 +213,7 @@ function Test-AzPropertyCheck {
         [string]      $ObjectType    = "risorse"
     )
 
-    Write-CheckHeader $CheckId $Label
+    Write-CheckHeader $CheckId
 
     if (-not $Resources -or $Resources.Count -eq 0) {
         Write-Host "  [N/A] Nessuna risorsa trovata per questo controllo" -ForegroundColor DarkYellow
@@ -226,6 +224,8 @@ function Test-AzPropertyCheck {
     $nc = @()
 
     foreach ($res in $Resources) {
+        #per debug
+        #Write-Host "DEBUG: $($res | ConvertTo-Json -Depth 2 -Compress)" -ForegroundColor DarkGray
         $resLabel = & $LabelScript $res
         try { $val = & $GetValueScript $res }
         catch { $val = $null }
@@ -240,8 +240,10 @@ function Test-AzPropertyCheck {
         if ($isCompliant) {
             Write-Host "  [COMPLIANT]     $resLabel = $val" -ForegroundColor Green
         } else {
+            $displayVal  = if ($null -eq $val -or "$val" -eq "") { "(proprietà assente)" } else { $val }
             $expectedStr = if ($Operator -eq "notempty") { "(valore assente o nullo)" } else { "(atteso: $ExpectedValue)" }
-            Write-Host "  [NON-COMPLIANT] $resLabel = $val $expectedStr" -ForegroundColor Red
+            #Write-Host "  [NON-COMPLIANT] $resLabel = $val $expectedStr" -ForegroundColor Red
+            Write-Host "  [NON-COMPLIANT] $resLabel = $displayVal $expectedStr" -ForegroundColor Red
             $nc += "$resLabel (valore: $val)"
         }
     }
@@ -257,8 +259,8 @@ function Test-AzPropertyCheck {
 $activityAlerts = az monitor activity-log alert list 2>$null | ConvertFrom-Json
 
 function Test-ActivityLogAlert {
-    param([string]$CheckId, [string]$Description, [string]$OperationName)
-    Write-CheckHeader $CheckId "Activity Log Alert: $Description"
+    param([string]$CheckId, [string]$OperationName)
+    Write-CheckHeader $CheckId 
     $match = $activityAlerts | Where-Object {
         $_.condition.allOf | Where-Object { $_.field -eq "operationName" -and $_.equals -eq $OperationName }
     }
@@ -276,8 +278,8 @@ function Test-ActivityLogAlert {
 # Funzione di appoggio per i controlli della sezione networking 7.x
 # ---------------------------------------------------------------------------
 function Test-NsgInternet {
-    param([string]$CheckId, [string]$Label, [string[]]$Ports, [string]$Proto = "Tcp")
-    Write-CheckHeader $CheckId $Label
+    param([string]$CheckId, [string[]]$Ports, [string]$Proto = "Tcp")
+    Write-CheckHeader $CheckId 
     $nc = @()
     foreach ($nsg in $allNSGs) {
         $bad = $nsg.securityRules | Where-Object { Test-NsgAllowsInternet $_ $Ports $Proto }
@@ -298,8 +300,8 @@ function Test-NsgInternet {
 # Funzione di appoggio per i controlli della sezione security 8.x
 # ---------------------------------------------------------------------------
 function Test-DefenderPlan {
-    param([string]$CheckId, [string]$PlanName, [string]$DisplayName)
-    Write-CheckHeader $CheckId "Microsoft Defender for $DisplayName is 'On'"
+    param([string]$CheckId, [string]$PlanName)
+    Write-CheckHeader $CheckId
     $pricing = @(az security pricing show --name $PlanName 2>$null | ConvertFrom-Json)
     $tier    = if ($pricing -and $pricing.Count -gt 0) { $pricing[0].pricingTier } else { "N/A" }
     if ($tier -eq "Standard") {
@@ -309,7 +311,7 @@ function Test-DefenderPlan {
         Write-Host "  [NON-COMPLIANT] Defender for ${DisplayName}: pricingTier=$tier" -ForegroundColor Red
         Set-CheckResult $CheckId 1 @("$PlanName  -  pricingTier=$tier")
     }
-    Write-CheckFooter $CheckId "servizio"
+    Write-CheckFooter $CheckId "servizi"
 }
 
 
@@ -359,12 +361,13 @@ function Get-CheckData {
 # Write-CheckHeader 
 # ---------------------------------------------------------------------------
 function Write-CheckHeader {
-    param([string]$CheckId, [string]$Label)
+    param([string]$CheckId)
     $data = Get-CheckData $CheckId
+    $name = if ($data -and $data.'name') { $data.'name' } else { "" }
     $expected = if ($data -and $data.'expected-value') { $data.'expected-value' } else { "" }
     $setting  = if ($data -and $data.'setting-name')   { $data.'setting-name' }   else { "" }
 
-    Write-Host "[$CheckId] $Label" -ForegroundColor Yellow
+    Write-Host "[$CheckId] $name" -ForegroundColor Yellow
     if ($setting)  { Write-Host "       Setting : $setting" }
     if ($expected) { Write-Host "       Expected: $expected" }
     Write-Host ""
