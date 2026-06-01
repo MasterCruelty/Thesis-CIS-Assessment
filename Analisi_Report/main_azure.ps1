@@ -34,9 +34,11 @@ $AzureDir  = Join-Path $RootDir "Azure"                             # Framework 
 if (-not $CsvPath) { $CsvPath = Join-Path $RootDir "cis_azure.csv" }
 
 Write-Host ""
-Write-Host "================================================================" -ForegroundColor Cyan
-Write-Host "  CIS Azure Benchmark -- Audit Framework" -ForegroundColor Cyan
-Write-Host "================================================================" -ForegroundColor Cyan
+Write-Host "################################################################" -ForegroundColor Magenta
+Write-Host "  CIS Microsoft Azure Benchmark - Audit Framework" -ForegroundColor Magenta
+Write-Host "  Data: $(Get-Date -Format 'yyyy-MM-dd HH:mm:ss')" -ForegroundColor Magenta
+Write-Host "################################################################" -ForegroundColor Magenta
+
 
 # ---------------------------------------------------------------------------
 # Carica il modulo utils condiviso (Framework CIS\module_utils.ps1)
@@ -55,7 +57,7 @@ $initOk = Initialize-AzCIS -CsvPath $CsvPath
 if (-not $initOk) { exit 1 }
 
 # ---------------------------------------------------------------------------
-# Moduli di audit (Framework CIS\Azure\)
+# Moduli CIS Benchmark selezionati (Framework CIS\Azure\)
 # ---------------------------------------------------------------------------
 $modules = @(
     "module_2_app_service.ps1",
@@ -65,11 +67,11 @@ $modules = @(
     "module_20_virtual_machines.ps1"
 )
 
-foreach ($modFile in $modules) {
-    $modPath = Join-Path $AzureDir $modFile
+foreach ($modules in $modules) {
+    $modPath = Join-Path $AzureDir $modules
     if (Test-Path $modPath) {
         Write-Host ""
-        Write-Host ">>> $modFile" -ForegroundColor Magenta
+        Write-Host ">>> $modules" -ForegroundColor Magenta
         & $modPath
     } else {
         Write-Warning "Modulo non trovato: $modPath"
@@ -88,28 +90,31 @@ Write-Host "================================================================" -F
 Write-Host "  RIEPILOGO: $complianceCount/$tot COMPLIANT ($complianceRate`%)" -ForegroundColor Cyan
 Write-Host "================================================================" -ForegroundColor Cyan
 
-if ($AuditOnly) {
-    Write-Host "  [AuditOnly] Scoring e report saltati." -ForegroundColor DarkYellow
-    exit 0
-}
+#if ($AuditOnly) {
+#    Write-Host "  [AuditOnly] Scoring e report saltati." -ForegroundColor DarkYellow
+#    exit 0
+#}
 
 # ---------------------------------------------------------------------------
-# Scoring e report (Framework CIS\Analisi_Report\)
+# Scoring (Framework CIS\Analisi_Report\)
 # ---------------------------------------------------------------------------
-$Global:Wc    = $Wc
-$Global:Wd    = $Wd
-$Global:Wr    = $Wr
-$Global:Alpha = $Alpha
-$Global:Beta  = $Beta
+#$Global:Wc    = $Wc
+#$Global:Wd    = $Wd
+#$Global:Wr    = $Wr
+#$Global:Alpha = $Alpha
+#$Global:Beta  = $Beta
 
-$scoringPath = Join-Path $ScriptDir "module_scoring.ps1"
-if (Test-Path $scoringPath) {
-    Write-Host ""
-    Write-Host ">>> Calcolo scoring effort..." -ForegroundColor Magenta
-    . $scoringPath -CsvPath $CsvPath -ExportCsv
-} else {
-    Write-Warning "module_scoring.ps1 non trovato in: $ScriptDir"
+if (-not $AuditOnly) {
+    # Scoring
+    $scoringPath = Join-Path $ScriptDir "module_scoring.ps1"
+    if (Test-Path $scoringPath) {
+        & $scoringPath -CsvPath $CsvPath -ExportCsv -Wc $Wc -Wd $Wd -Wr $Wr -Alfa $Alfa -Beta $Beta 
+    } else {
+        Write-Host "[WARN] module_scoring.ps1 non trovato." -ForegroundColor DarkYellow
+    }
 }
 
 Write-Host ""
-Write-Host "  Completato." -ForegroundColor Cyan
+Write-Host "################################################################" -ForegroundColor Magenta
+Write-Host "  Esecuzione completata." -ForegroundColor Magenta
+Write-Host "################################################################" -ForegroundColor Magenta

@@ -47,11 +47,18 @@ if ($ExportLog) {
     Write-Host "Log: $LogFile" -ForegroundColor DarkYellow
 }
 
-# Carica il dataset VMware e inizializza i globali
-. (Join-Path $RootDir "module_engine.ps1")
+
+# ---------------------------------------------------------------------------
+# Carica il modulo utils condiviso (Framework CIS\module_utils.ps1)
+# Inizializza modulo VMware
+# ---------------------------------------------------------------------------
+. (Join-Path $RootDir "module_utils.ps1")
 $ok = Initialize-VMwareCIS -CsvPath $CsvPath
 if (-not $ok) { exit 1 }
 
+# ---------------------------------------------------------------------------
+# Moduli CIS Benchmark selezionati (Framework CIS\VMware\)
+# ---------------------------------------------------------------------------
 $modules = @(
     @{ File = "module_2_base.ps1";            Label = "Modulo 2 - BASE" },
     @{ File = "module_3_management.ps1";       Label = "Modulo 3 - MANAGEMENT" },
@@ -63,7 +70,7 @@ $modules = @(
 
 Write-Host ""
 Write-Host "################################################################" -ForegroundColor Magenta
-Write-Host "  CIS VMware ESXi Benchmark - Full Compliance Run" -ForegroundColor Magenta
+Write-Host "  CIS VMware ESXi Benchmark - Audit Framework" -ForegroundColor Magenta
 Write-Host "  Data: $(Get-Date -Format 'yyyy-MM-dd HH:mm:ss')" -ForegroundColor Magenta
 Write-Host "################################################################" -ForegroundColor Magenta
 
@@ -77,6 +84,12 @@ foreach ($module in $modules) {
         Write-Host "[ERRORE] File non trovato: $modulePath" -ForegroundColor Red
     }
 }
+
+Write-Host ""
+Write-Host "================================================================" -ForegroundColor Cyan
+Write-Host "  RIEPILOGO: $complianceCount/$tot COMPLIANT ($complianceRate`%)" -ForegroundColor Cyan
+Write-Host "================================================================" -ForegroundColor Cyan
+
 
 if (-not $AuditOnly) {
     # Scoring
