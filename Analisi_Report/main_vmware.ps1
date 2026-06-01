@@ -86,16 +86,6 @@ if (-not $AuditOnly) {
     } else {
         Write-Host "[WARN] module_scoring.ps1 non trovato." -ForegroundColor DarkYellow
     }
-
-    # Report HTML + CSV dettaglio
-    $reportPath = Join-Path $ScriptDir "module_report.ps1"
-    if (Test-Path $reportPath) {
-        Write-Host ""
-        Write-Host ">>> Generazione report..." -ForegroundColor Magenta
-        & $reportPath -CsvPath $CsvPath -OutputDir $OutputDir -Wc $Wc -Wd $Wd -Wr $Wr -Alfa $Alfa -Beta $Beta
-    } else {
-        Write-Host "[WARN] module_report.ps1 non trovato." -ForegroundColor DarkYellow
-    }
 }
 
 if ($ExportLog) { Stop-Transcript | Out-Null }

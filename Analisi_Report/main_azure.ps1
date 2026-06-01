@@ -111,14 +111,5 @@ if (Test-Path $scoringPath) {
     Write-Warning "module_scoring.ps1 non trovato in: $ScriptDir"
 }
 
-$reportPath = Join-Path $ScriptDir "module_report.ps1"
-if (Test-Path $reportPath) {
-    Write-Host ""
-    Write-Host ">>> Generazione report HTML e CSV..." -ForegroundColor Magenta
-    . $reportPath -CsvPath $CsvPath
-} else {
-    Write-Warning "module_report.ps1 non trovato in: $ScriptDir"
-}
-
 Write-Host ""
 Write-Host "  Completato." -ForegroundColor Cyan
