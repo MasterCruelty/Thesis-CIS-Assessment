@@ -7,9 +7,9 @@
 #   E_i      = w_c * C_i + w_d * D_i + w_r * R_i
 #   E_i(norm) = (E_i - Emin) / (Emax - Emin)
 #
-#   BASSO  -> E_i(norm) < alfa
-#   MEDIO  -> alfa <= E_i(norm) < beta
-#   ALTO   -> E_i(norm) >= beta
+#   BASSO  -> E_i(norm) < Alpha
+#   MEDIO  -> Alpha <= E_i(norm) < Beta
+#   ALTO   -> E_i(norm) >= Beta
 #
 # =============================================================================
 
@@ -19,7 +19,7 @@ param(
     [double]$Wc       = 0.40,
     [double]$Wd       = 0.35,
     [double]$Wr       = 0.25,
-    [double]$Alfa     = 0.35,
+    [double]$Alpha    = 0.35,
     [double]$Beta     = 0.70,
     [switch]$ExportCsv,
     [string]$ExportPath = ".\cis_scoring_report_$(Get-Date -Format 'yyyyMMdd_HHmmss').csv"
@@ -32,8 +32,8 @@ $weightSum = [Math]::Round($Wc + $Wd + $Wr, 6)
 if ([Math]::Abs($weightSum - 1.0) -gt 0.001) {
     Write-Error "I pesi devono sommare a 1.0 (attuale: $weightSum)"; return
 }
-if ($Alfa -ge $Beta) {
-    Write-Error "alfa ($Alfa) deve essere minore di beta ($Beta)"; return
+if ($Alpha -ge $Beta) {
+    Write-Error "Alpha ($Alpha) deve essere minore di Beta ($Beta)"; return
 }
 if (-not (Test-Path $CsvPath)) {
     Write-Error "CSV non trovato: $CsvPath"; return
@@ -67,7 +67,7 @@ Write-Host "  CIS $platform - EFFORT SCORING" -ForegroundColor Magenta
 Write-Host "================================================================" -ForegroundColor Magenta
 Write-Host ""
 Write-Host "  Modello:  E_i = $Wc * C + $Wd * D + $Wr * R" -ForegroundColor DarkCyan
-Write-Host "  Soglie:   BASSO < $Alfa  |  $Alfa <= MEDIO < $Beta  |  ALTO >= $Beta" -ForegroundColor DarkCyan
+Write-Host "  Soglie:   BASSO < $Alpha  |  $Alpha <= MEDIO < $Beta  |  ALTO >= $Beta" -ForegroundColor DarkCyan
 Write-Host "  E_min = $([Math]::Round($Emin,4))  |  E_max = $([Math]::Round($Emax,4))" -ForegroundColor DarkCyan
 Write-Host "  Sorgente: $CsvPath  ($($csv.Count) check)" -ForegroundColor DarkCyan
 Write-Host ""
@@ -97,7 +97,7 @@ foreach ($row in $csv) {
     $Ei_norm = if ($Emax -eq $Emin) { 0.0 } else {
         [Math]::Round([Math]::Max(0.0, [Math]::Min(1.0, ($Ei - $Emin) / ($Emax - $Emin))), 4)
     }
-    $level = if ($Ei_norm -lt $Alfa) { "BASSO" } elseif ($Ei_norm -lt $Beta) { "MEDIO" } else { "ALTO" }
+    $level = if ($Ei_norm -lt $Alpha) { "BASSO" } elseif ($Ei_norm -lt $Beta) { "MEDIO" } else { "ALTO" }
 
     $results += [PSCustomObject]@{
         ID            = $id
@@ -183,8 +183,8 @@ Write-Host "  Compliance rate: $rate%"              -ForegroundColor $rateColor
 Write-Host ""
 Write-Host "  Non-conformita' per livello:" -ForegroundColor White
 Write-Host "    ALTO  (E_norm >= $Beta)         : $($alto.Count)"  -ForegroundColor $(if ($alto.Count  -gt 0) { "Red" }        else { "Green" })
-Write-Host "    MEDIO ($Alfa <= E_norm < $Beta) : $($medio.Count)" -ForegroundColor $(if ($medio.Count -gt 0) { "DarkYellow" } else { "Green" })
-Write-Host "    BASSO (E_norm < $Alfa)          : $($basso.Count)" -ForegroundColor $(if ($basso.Count -gt 0) { "DarkYellow" } else { "Green" })
+Write-Host "    MEDIO ($Alpha <= E_norm < $Beta) : $($medio.Count)" -ForegroundColor $(if ($medio.Count -gt 0) { "DarkYellow" } else { "Green" })
+Write-Host "    BASSO (E_norm < $Alpha)          : $($basso.Count)" -ForegroundColor $(if ($basso.Count -gt 0) { "DarkYellow" } else { "Green" })
 Write-Host ""
 
 if ($nc_all.Count -gt 0) {

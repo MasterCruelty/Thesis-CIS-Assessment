@@ -3,24 +3,26 @@
 # main_vmware.ps1
 # modulo main per i controlli CIS VMware ESXi.
 # =============================================================================
-# Prerequisito: essere gia' connessi al vCenter con Connect-VIServer
+# Prerequisiti:
+# 1. modulo PowerShell VMware PowerCLI 
+# 2. sessione attiva: essere gia' connessi al vCenter con Connect-VIServer
 #
 # Usage:
-#   .\main_vmware.ps1
+#   .\main_vmware.ps1 -ExportLog
 #   .\main_vmware.ps1 -AuditOnly
-#   .\main_vmware.ps1 -Wc 0.5 -Wd 0.3 -Wr 0.2 -Alfa 0.3 -Beta 0.65
+#   .\main_vmware.ps1 -Wc 0.5 -Wd 0.3 -Wr 0.2 -Alpha 0.3 -Beta 0.65
 #   .\main_vmware.ps1 -OutputDir "C:\reports"
 # =============================================================================
 
 param(
+    [switch]$AuditOnly,
     [double]$Wc        = 0.40,
     [double]$Wd        = 0.35,
     [double]$Wr        = 0.25,
-    [double]$Alfa      = 0.35,
+    [double]$Alpha      = 0.35,
     [double]$Beta      = 0.70,
     [string]$CsvPath   = "",
-    [string]$OutputDir = "",
-    [switch]$AuditOnly,
+    [string]$OutputDir = "",    
     [switch]$ExportLog
 )
 
@@ -42,6 +44,10 @@ if (-not $global:DefaultVIServers -or $global:DefaultVIServers.Count -eq 0) {
 Write-Host ""
 Write-Host "Sessione attiva su: $($global:DefaultVIServers.Name -join ', ')" -ForegroundColor Green
 
+
+# ---------------------------------------------------------------------------
+# Inizia trascrizione file di log
+# ---------------------------------------------------------------------------
 if ($ExportLog) {
     Start-Transcript -Path $LogFile -Append | Out-Null
     Write-Host "Log: $LogFile" -ForegroundColor DarkYellow
@@ -95,7 +101,7 @@ if (-not $AuditOnly) {
     # Scoring
     $scoringPath = Join-Path $ScriptDir "module_scoring.ps1"
     if (Test-Path $scoringPath) {
-        & $scoringPath -CsvPath $CsvPath -ExportCsv -Wc $Wc -Wd $Wd -Wr $Wr -Alfa $Alfa -Beta $Beta 
+        & $scoringPath -CsvPath $CsvPath -ExportCsv -Wc $Wc -Wd $Wd -Wr $Wr -Alpha $Alpha -Beta $Beta 
     } else {
         Write-Host "[WARN] module_scoring.ps1 non trovato." -ForegroundColor DarkYellow
     }

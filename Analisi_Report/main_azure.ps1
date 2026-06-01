@@ -11,6 +11,7 @@
 # USO
 #   .\main_azure.ps1
 #   .\main_azure.ps1 -AuditOnly
+#   .\main_azure.ps1 -ExportLog 
 #   .\main_azure.ps1 -Wc 0.5 -Wd 0.3 -Wr 0.2
 # =============================================================================
 [CmdletBinding(PositionalBinding=$false)]
@@ -20,11 +21,11 @@ param(
     [double]$Wd      = 0.3,
     [double]$Wr      = 0.3,
     [double]$Alpha   = 0.35,
-    [double]$Beta    = 0.65,
-    [string]$CsvPath = ""
+    [double]$Beta    = 0.70,
+    [string]$CsvPath = "",
+    [string]$OutputDir = "", 
+    [switch]$ExportLog
 )
-
-$ErrorActionPreference = "Stop"
 
 # Cartelle chiave
 $ScriptDir = Split-Path -Parent $MyInvocation.MyCommand.Definition  # Analisi_Report\
@@ -32,12 +33,25 @@ $RootDir   = Split-Path -Parent $ScriptDir                          # Framework 
 $AzureDir  = Join-Path $RootDir "Azure"                             # Framework CIS\Vmware\
 
 if (-not $CsvPath) { $CsvPath = Join-Path $RootDir "cis_azure.csv" }
+if (-not $OutputDir) { $OutputDir = $ScriptDir }
+
+$Timestamp = Get-Date -Format 'yyyyMMdd_HHmmss'
+$LogFile   = Join-Path $OutputDir "cis_vmware_log_$Timestamp.txt"
 
 Write-Host ""
 Write-Host "################################################################" -ForegroundColor Magenta
 Write-Host "  CIS Microsoft Azure Benchmark - Audit Framework" -ForegroundColor Magenta
 Write-Host "  Data: $(Get-Date -Format 'yyyy-MM-dd HH:mm:ss')" -ForegroundColor Magenta
 Write-Host "################################################################" -ForegroundColor Magenta
+
+
+# ---------------------------------------------------------------------------
+# Inizia trascrizione file di log
+# ---------------------------------------------------------------------------
+if ($ExportLog) {
+    Start-Transcript -Path $LogFile -Append | Out-Null
+    Write-Host "Log: $LogFile" -ForegroundColor DarkYellow
+}
 
 
 # ---------------------------------------------------------------------------
@@ -90,29 +104,17 @@ Write-Host "================================================================" -F
 Write-Host "  RIEPILOGO: $complianceCount/$tot COMPLIANT ($complianceRate`%)" -ForegroundColor Cyan
 Write-Host "================================================================" -ForegroundColor Cyan
 
-#if ($AuditOnly) {
-#    Write-Host "  [AuditOnly] Scoring e report saltati." -ForegroundColor DarkYellow
-#    exit 0
-#}
-
-# ---------------------------------------------------------------------------
-# Scoring (Framework CIS\Analisi_Report\)
-# ---------------------------------------------------------------------------
-#$Global:Wc    = $Wc
-#$Global:Wd    = $Wd
-#$Global:Wr    = $Wr
-#$Global:Alpha = $Alpha
-#$Global:Beta  = $Beta
-
 if (-not $AuditOnly) {
     # Scoring
     $scoringPath = Join-Path $ScriptDir "module_scoring.ps1"
     if (Test-Path $scoringPath) {
-        & $scoringPath -CsvPath $CsvPath -ExportCsv -Wc $Wc -Wd $Wd -Wr $Wr -Alfa $Alfa -Beta $Beta 
+        & $scoringPath -CsvPath $CsvPath -ExportCsv -Wc $Wc -Wd $Wd -Wr $Wr -Alpha $Alpha -Beta $Beta 
     } else {
         Write-Host "[WARN] module_scoring.ps1 non trovato." -ForegroundColor DarkYellow
     }
 }
+
+if ($ExportLog) { Stop-Transcript | Out-Null }
 
 Write-Host ""
 Write-Host "################################################################" -ForegroundColor Magenta
