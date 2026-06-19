@@ -50,24 +50,20 @@ Test-VMDevice "7.12" { Get-VM | Get-USBDevice -ErrorAction SilentlyContinue }
 
 # 7.13 Virtual machines must remove unnecessary serial port devices
 Write-CheckHeader "7.13"
-#$serialCmd = Get-Command "Get-SerialPort" -ErrorAction SilentlyContinue
-#if ($serialCmd) {
-    #$serial = @(Get-VM | Get-SerialPort -ErrorAction SilentlyContinue)
-    $serial = @(Get-VM | ForEach-Object {
-                $_.ExtensionData.Config.Hardware.Device | 
-                Where-Object { $_ -is [VMware.Vim.VirtualSerialPort] }
-                })
-    $nc_713 = @()
-    foreach ($s in $serial) {
-        Write-Host "  [NON-COMPLIANT] VM: $($s.Parent.Name) -> $($s.Name)" -ForegroundColor Red
-        $nc_713 += "VM=$($s.Parent.Name) Device=$($s.Name)"
+$serial = @(Get-VM | ForEach-Object {
+            $vm = $_
+            $vm.ExtensionData.Config.Hardware.Device |
+            Where-Object { $_ -is [VMware.Vim.VirtualSerialPort] } |
+            ForEach-Object { [PSCustomObject]@{ VMName = $vm.Name; DeviceLabel = $_.DeviceInfo.Label } }
+            })            
+$nc_713 = @()
+foreach ($s in $serial) {
+        Write-Host "  [NON-COMPLIANT] VM: $($s.VMName) -> $($s.DeviceLabel)" -ForegroundColor Red
+        $nc_713 += "VM=$($s.VMName) Device=$($s.DeviceLabel)"
     }
-    if ($serial.Count -eq 0) { Write-Host "  [COMPLIANT] Nessuna porta seriale trovata." -ForegroundColor Green }
-    Set-CheckResult "7.13" $allVMs.Count $nc_713
-#} else {
-#    Write-Host "  [UNKNOWN] Get-SerialPort non disponibile - verificare manualmente." -ForegroundColor DarkYellow
-#    Set-CheckResult "7.13" $allVMs.Count @() "UNKNOWN"
-#}
+if ($serial.Count -eq 0) { Write-Host "  [COMPLIANT] Nessuna porta seriale trovata." -ForegroundColor Green }
+Set-CheckResult "7.13" $allVMs.Count $nc_713
+
 Write-CheckFooter "7.13" "VM"
 
 # 7.14 Virtual machines must remove unnecessary parallel port devices 
