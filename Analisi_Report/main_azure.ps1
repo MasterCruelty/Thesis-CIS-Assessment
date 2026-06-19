@@ -36,7 +36,7 @@ if (-not $CsvPath) { $CsvPath = Join-Path $RootDir "cis_azure.csv" }
 if (-not $OutputDir) { $OutputDir = $ScriptDir }
 
 $Timestamp = Get-Date -Format 'yyyyMMdd_HHmmss'
-$LogFile   = Join-Path $OutputDir "cis_vmware_log_$Timestamp.txt"
+$LogFile   = Join-Path $OutputDir "cis_azure_log_$Timestamp.txt"
 
 Write-Host ""
 Write-Host "################################################################" -ForegroundColor Magenta
