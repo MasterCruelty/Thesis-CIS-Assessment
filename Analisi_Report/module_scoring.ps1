@@ -113,8 +113,10 @@ foreach ($row in $csv) {
         E_i           = $Ei
         E_norm        = $Ei_norm
         Effort        = $level
-        Objects      = if ($Global:CISAuditResults.ContainsKey($id)) { $Global:CISAuditResults[$id].Objects -join " | " } else { "" }
-        Remediation  = ($row.remediation -replace "`n"," " -replace "`r","").Trim()
+        Objects = if ($Global:CISAuditResults.ContainsKey($id)) {
+                        ($Global:CISAuditResults[$id].Objects | ForEach-Object { $_ -replace "`r`n|`n|`r", " " }) -join " | "
+                    } else { "" }
+        Remediation = ($row.remediation -replace "`n"," " -replace "`r","" -replace "<span>","").Trim()
     }
 }
 
@@ -185,6 +187,9 @@ Write-Host "  Non-conformita' per livello:" -ForegroundColor White
 Write-Host "    ALTO  (E_norm >= $Beta)         : $($alto.Count)"  -ForegroundColor $(if ($alto.Count  -gt 0) { "Red" }        else { "Green" })
 Write-Host "    MEDIO ($Alpha <= E_norm < $Beta) : $($medio.Count)" -ForegroundColor $(if ($medio.Count -gt 0) { "DarkYellow" } else { "Green" })
 Write-Host "    BASSO (E_norm < $Alpha)          : $($basso.Count)" -ForegroundColor $(if ($basso.Count -gt 0) { "DarkYellow" } else { "Green" })
+
+
+
 Write-Host ""
 
 if ($nc_all.Count -gt 0) {
