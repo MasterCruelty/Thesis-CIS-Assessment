@@ -37,7 +37,9 @@ $Timestamp = Get-Date -Format 'yyyyMMdd_HHmmss'
 $LogFile   = Join-Path $OutputDir "cis_vmware_log_$Timestamp.txt"
 
 # Verifica sessione attiva
-if (-not $global:DefaultVIServers -or $global:DefaultVIServers.Count -eq 0) {
+$vi = Get-VIServer -ErrorAction SilentlyContinue
+#if (-not $global:DefaultVIServers -or $global:DefaultVIServers.Count -eq 0) {
+if (-not $vi) {
     Write-Error "Nessuna sessione vCenter attiva. Esegui prima: Connect-VIServer -Server <vcenter>"
     exit 1
 }
@@ -90,7 +92,9 @@ foreach ($module in $modules) {
         Write-Host "[ERRORE] File non trovato: $modulePath" -ForegroundColor Red
     }
 }
-
+$tot             = $Global:CISAuditResults.Count
+$complianceCount = ($Global:CISAuditResults.Values | Where-Object { $_.Status -eq "COMPLIANT" }).Count
+$complianceRate  = if ($tot -gt 0) { [math]::Round($complianceCount / $tot * 100, 1) } else { 0 }
 Write-Host ""
 Write-Host "================================================================" -ForegroundColor Cyan
 Write-Host "  RIEPILOGO: $complianceCount/$tot COMPLIANT ($complianceRate`%)" -ForegroundColor Cyan
