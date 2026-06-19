@@ -21,8 +21,11 @@ Per specificare un'altra sottoscrizione:
 ### VMware
 <code>.\main_vmware.ps1</code>
 
-### Solo audit, senza scoring/report
+### Solo audit, senza export di report
 <code>.\main_azure.ps1 -AuditOnly</code>
+
+### Export log di sessione
+<code>.\main_azure.ps1 -ExportLog</code>
 
 ### Pesi personalizzati
 <code>.\main_azure.ps1 -Wc 0.5 -Wd 0.3 -Wr 0.2</code>
@@ -33,3 +36,5 @@ Per specificare un'altra sottoscrizione:
 In caso di problemi sui permessi di esecuzione, lanciare il seguente comando prima di avviare il tool.<br>
 <code>powershell -ExecutionPolicy Bypass -File ".\main_azure.ps1"</code><br>
 <code>powershell -ExecutionPolicy Bypass -File ".\main_vmware.ps1"</code>
+
+
