@@ -54,14 +54,12 @@ Write-CheckFooter "2.3.4" "app"
 # 2.3.5  -  HTTP is version 2.0  (data-driven)
 Test-AzPropertyCheck "2.3.5"  `
     -Resources $allApps `
-    -GetValueScript { (Get-AppConfig $_).http20Enabled } `
-    -Operator "eq" -ExpectedValue "True"
+    -ObjectType "app"
 
 # 2.3.6  -  HTTPS Only  (data-driven)
 Test-AzPropertyCheck "2.3.6"  `
     -Resources $allApps `
-    -GetValueScript { $_.httpsOnly } `
-    -Operator "eq" -ExpectedValue "True"
+    -ObjectType "app"
 
 # 2.3.7  -  Min TLS >= 1.2
 Write-CheckHeader "2.3.7" 
@@ -97,8 +95,7 @@ Write-CheckFooter "2.3.8" "app"
 # 2.3.9  -  Remote debugging Off  (data-driven)
 Test-AzPropertyCheck "2.3.9" `
     -Resources $allApps `
-    -GetValueScript { (Get-AppConfig $_).remoteDebuggingEnabled } `
-    -Operator "eq" -ExpectedValue "False"
+    -ObjectType "app"
 
 # 2.3.10  -  Client certificates
 Write-CheckHeader "2.3.10" 
@@ -148,20 +145,20 @@ Write-CheckFooter "2.3.12" "app"
 # 2.3.13  -  Public network access disabled  (data-driven)
 Test-AzPropertyCheck "2.3.13" `
     -Resources $allApps `
-    -GetValueScript { $_.publicNetworkAccess } `
-    -Operator "eq" -ExpectedValue "Disabled"
+    -ObjectType "app"
+    
 
 # 2.3.14  -  VNet integration  (data-driven)
 Test-AzPropertyCheck "2.3.14" `
     -Resources $allApps `
-    -GetValueScript { $_.virtualNetworkSubnetId } `
-    -Operator "notempty"
+    -ObjectType "app"
+    
 
 # 2.3.15  -  Config through VNet  (data-driven)
 Test-AzPropertyCheck "2.3.15" `
     -Resources $allApps `
-    -GetValueScript { (Get-AppConfig $_).vnetRouteAllEnabled } `
-    -Operator "eq" -ExpectedValue "True"
+    -ObjectType "app"
+    
 
 # 2.3.16  -  All traffic through VNet
 Write-CheckHeader "2.3.16" 

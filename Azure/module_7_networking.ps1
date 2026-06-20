@@ -63,8 +63,7 @@ Write-CheckFooter "7.6" "regioni"
 # 7.10  -  WAF su Application Gateway  (data-driven)
 Test-AzPropertyCheck "7.10" `
     -Resources $appGws `
-    -GetValueScript { $_.webApplicationFirewallConfiguration.enabled } `
-    -Operator "eq" -ExpectedValue "True" -ObjectType "App Gateway"
+    -ObjectType "App Gateway"
 
 # 7.11  -  Subnet associate a NSG
 Write-CheckHeader "7.11" 
@@ -90,20 +89,17 @@ Write-CheckFooter "7.11" "subnet"
 # 7.12  -  SSL min TLS su App Gateway  (data-driven)
 Test-AzPropertyCheck "7.12" `
     -Resources $appGws `
-    -GetValueScript { $_.sslPolicy.minProtocolVersion } `
-    -Operator "eq" -ExpectedValue "TLSv1_2" -ObjectType "App Gateway"
+    -ObjectType "App Gateway"
 
 # 7.13  -  HTTP2 su App Gateway  (data-driven)
 Test-AzPropertyCheck "7.13" `
     -Resources $appGws `
-    -GetValueScript { $_.enableHttp2 } `
-    -Operator "eq" -ExpectedValue "True" -ObjectType "App Gateway"
+    -ObjectType "App Gateway"
 
 # 7.14  -  WAF request body inspection  (data-driven)
 Test-AzPropertyCheck "7.14" `
     -Resources $wafPolicies `
-    -GetValueScript { $_.policySettings.requestBodyCheck } `
-    -Operator "eq" -ExpectedValue "True" -ObjectType "WAF Policy"
+    -ObjectType "WAF Policy"
 
 # 7.15  -  WAF bot protection
 Write-CheckHeader "7.15" 

@@ -256,20 +256,21 @@ function Initialize-AzCIS {
 # ---------------------------------------------------------------------------
 function Test-AzPropertyCheck {
     param(
-        [string]      $CheckId,
-        [array]       $Resources,
-        [scriptblock] $GetValueScript,
-        [string]      $Operator,
-        [string]      $ExpectedValue = "",
-        [scriptblock] $LabelScript = { param($r) $r.name },
-        [string]      $ObjectType    = "risorse"
+        [string]$CheckId,
+        [array] $Resources,
+        [string]$ObjectType = "risorse",
+        [scriptblock]$LabelScript = { $_.name }
     )
 
-    Write-CheckHeader $CheckId
+    $data          = Get-CheckData $CheckId
+    $settingName   = $data.'setting-name'
+    $operator      = $data.'operator'
+    $expectedValue = $data.'expected-value'
 
+    Write-CheckHeader $CheckId
     if (-not $Resources -or $Resources.Count -eq 0) {
         Write-Host "  [N/A] Nessuna risorsa trovata per questo controllo" -ForegroundColor DarkYellow
-        Set-CheckResult $CheckId 0 @()
+        Set-CheckResult $CheckId 0 @() -ForceStatus "N/A"
         return
     }
 
@@ -278,13 +279,14 @@ function Test-AzPropertyCheck {
     foreach ($res in $Resources) {
         #per debug
         #Write-Host "DEBUG: $($res | ConvertTo-Json -Depth 2 -Compress)" -ForegroundColor DarkGray
-        $resLabel = & $LabelScript $res
-        try { $val = & $GetValueScript $res }
+
+        $resLabel = $res | ForEach-Object $LabelScript
+        try { $val = Get-NestedProperty -Object $res -Path $settingName }
         catch { $val = $null }
 
-        $isCompliant = switch ($Operator) {
-            "eq"       { "$val" -eq $ExpectedValue }
-            "le"       { [double]"$val" -le [double]$ExpectedValue }
+        $isCompliant = switch ($operator) {
+            "eq"       { "$val" -eq $expectedValue }
+            "le"       { [double]"$val" -le [double]$expectedValue }
             "notempty" { $null -ne $val -and "$val" -ne "" }
             default    { $false }
         }
@@ -303,6 +305,20 @@ function Test-AzPropertyCheck {
     Write-CheckFooter $CheckId $ObjectType
 }
 
+# ---------------------------------------------------------------------------
+# Funzione di appoggio per risolvere path specifici nelle proprietà delle risorse Azure
+# Utilizzata all'interno di Test-AzPropertyCheck.
+# Le proprietà Azure sono spesso annidate in oggetti JSON profondi.
+# ---------------------------------------------------------------------------
+function Get-NestedProperty {
+    param($Object, [string]$Path)
+    $value = $Object
+    foreach ($part in $Path -split '\.') {
+        if ($null -eq $value) { return $null }
+        $value = $value.$part
+    }
+    return $value
+}
 
 # ---------------------------------------------------------------------------
 # Funzione di appoggio per i controlli 6.1.2.x (Activity Log Alert per operazione specifica)
@@ -356,10 +372,10 @@ function Test-DefenderPlan {
     $pricing = @(az security pricing show --name $PlanName 2>$null | ConvertFrom-Json)
     $tier    = if ($pricing -and $pricing.Count -gt 0) { $pricing[0].pricingTier } else { "N/A" }
     if ($tier -eq "Standard") {
-        Write-Host "  [COMPLIANT]     Defender for ${DisplayName}: pricingTier=$tier" -ForegroundColor Green
+        Write-Host "  [COMPLIANT]     Defender for $PlanName : pricingTier=$tier" -ForegroundColor Green
         Set-CheckResult $CheckId 1 @()
     } else {
-        Write-Host "  [NON-COMPLIANT] Defender for ${DisplayName}: pricingTier=$tier" -ForegroundColor Red
+        Write-Host "  [NON-COMPLIANT] Defender for $PlanName : pricingTier=$tier" -ForegroundColor Red
         Set-CheckResult $CheckId 1 @("$PlanName  -  pricingTier=$tier")
     }
     Write-CheckFooter $CheckId "servizi"

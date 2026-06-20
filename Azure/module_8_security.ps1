@@ -22,6 +22,5 @@ Test-DefenderPlan "8.1.9.1" "Arm"
 
 # 8.5  -  DDoS Protection su VNet  (data-driven)
 Test-AzPropertyCheck "8.5" `
-    -Resources (az network vnet list 2>$null | ConvertFrom-Json) `
-    -GetValueScript { $_.ddosProtectionPlan.id } `
-    -Operator "notempty" -ObjectType "VNet"
+    -Resources (az network vnet list  | ConvertFrom-Json) `
+    -ObjectType "VNet"

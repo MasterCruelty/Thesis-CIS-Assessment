@@ -8,7 +8,6 @@ Write-Host "`n### VIRTUAL MACHINES (20.x) ###" -ForegroundColor Magenta
 
 $allVMs   = az vm list   2>$null | ConvertFrom-Json
 
-
 $allResourceGroups   = az group list 2>$null | ConvertFrom-Json
 $allDisks = @(
     $allResourceGroups | ForEach-Object {
@@ -19,8 +18,7 @@ $allDisks = @(
 # 20.1  -  Managed Disks  (data-driven)
 Test-AzPropertyCheck "20.1" `
     -Resources $allVMs `
-    -GetValueScript { $_.storageProfile.osDisk.managedDisk.id } `
-    -Operator "notempty" -ObjectType "VM"
+    -ObjectType "VM"
 
 # 20.2  -  CMK su OS + Data disk
 Write-CheckHeader "20.2" 
@@ -46,8 +44,7 @@ Write-CheckFooter "20.2" "VM"
 # 20.3  -  CMK su dischi scollegati  (data-driven)
 Test-AzPropertyCheck "20.3" `
     -Resources ($allDisks | Where-Object { $_.diskState -eq "Unattached" }) `
-    -GetValueScript { $_.encryption.type } `
-    -Operator "eq" -ExpectedValue "EncryptionAtRestWithCustomerKey" -ObjectType "disco"
+    -ObjectType "disco"
 
 # 20.4  -  Disk network access  (data-driven)
 Write-CheckHeader "20.4" 
@@ -66,11 +63,9 @@ Write-CheckFooter "20.4" "disco"
 # 20.10  -  Trusted Launch  (data-driven)
 Test-AzPropertyCheck "20.10" `
     -Resources $allVMs `
-    -GetValueScript { $_.securityProfile.securityType } `
-    -Operator "eq" -ExpectedValue "TrustedLaunch" -ObjectType "VM"
+    -ObjectType "VM"
 
 # 20.11  -  Encryption at host  (data-driven)
 Test-AzPropertyCheck "20.11" `
     -Resources $allVMs `
-    -GetValueScript { $_.securityProfile.encryptionAtHost } `
-    -Operator "eq" -ExpectedValue "True" -ObjectType "VM"
+    -ObjectType "VM"
