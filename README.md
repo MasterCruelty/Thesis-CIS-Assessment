@@ -28,7 +28,7 @@ Per specificare un'altra sottoscrizione:
 <code>.\main_azure.ps1 -ExportLog</code>
 
 ### Pesi personalizzati
-<code>.\main_azure.ps1 -Wc 0.5 -Wd 0.3 -Wr 0.2</code>
+<code>.\main_azure.ps1 -Wc 0.5 -Wd 0.3 -Wr 0.2</code><br>
 <code>.\main_vmware.ps1 -Wc 0.5 -Wd 0.3 -Wr 0.2</code>
 
 
