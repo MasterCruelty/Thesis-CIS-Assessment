@@ -1,0 +1,1053 @@
+﻿**********************
+Inizio trascrizione Windows PowerShell
+Ora di inizio: 20260620174717
+Nome utente: DESKTOP-ON8Q5CH\Utente
+Esegui come utente: DESKTOP-ON8Q5CH\Utente
+Nome configurazione: 
+Computer DESKTOP-ON8Q5CH (Microsoft Windows NT 10.0.26200.0)
+Applicazione host: C:\WINDOWS\System32\WindowsPowerShell\v1.0\powershell.exe -ExecutionPolicy Bypass -File .\Analisi_Report\main_azure.ps1 -ExportLog
+ID processo: 2720
+PSVersion: 5.1.26100.8655
+PSEdition: Desktop
+PSCompatibleVersions: 1.0, 2.0, 3.0, 4.0, 5.0, 5.1.26100.8655
+BuildVersion: 10.0.26100.8655
+CLRVersion: 4.0.30319.42000
+WSManStackVersion: 3.0
+PSRemotingProtocolVersion: 2.3
+SerializationVersion: 1.1.0.1
+**********************
+Log: C:\Users\Utente\OneDrive\università\tesi_magistrale\Thesis-CIS-Assessment\Analisi_Report\cis_azure_log_20260620_174717.txt
+  [ENGINE] Dataset Azure caricato: 60 controlli
+  [ENGINE] Account: roberto.antoniello@studenti.unimi.it | Subscription: Azure for Students
+
+>>> module_2_app_service.ps1
+
+### APP SERVICE (2.3.x) ###
+[2.3.3] Ensure 'Basic Authentication Publishing Credentials' are 'Disabled'
+       Setting : properties.allow
+       Expected: false
+
+  [COMPLIANT]     test-web-app (ftp): allow=False
+  [COMPLIANT]     test-web-app (scm): allow=False
+
+  Riepilogo: 2/2 credenziali conformi
+
+  REMEDIATION:
+    az resource update --resource-group <resource-group-name> --name ftp -- namespace Microsoft.Web --resource-type basicPublishingCredentialsPolicies -- parent sites/<function-app-name> --set properties.allow=false // az resource update --resource-group <resource-group-name> --name scm -- namespace Microsoft.Web --resource-type basicPublishingCredentialsPolicies -- parent sites/<function-app-name> --set properties.allow=false
+
+[2.3.4] Ensure 'FTP state' is set to 'FTPS only' or 'Disabled'
+       Setting : ftpsState
+       Expected: FtpsOnly | Disabled
+
+  [COMPLIANT]     test-web-app: ftpsState=FtpsOnly
+
+  Riepilogo: 1/1 app conformi
+
+  REMEDIATION:
+    az functionapp config set --resource-group <resource-group-name> --name <function-app-name> --ftps-state <FtpsOnly|Disabled>
+
+[2.3.5] Ensure 'HTTP version' is set to '2.0' (if in use)
+       Setting : siteConfig.http20Enabled
+       Expected: true
+
+  [NON-COMPLIANT] test-web-app = False (atteso: true)
+
+  Riepilogo: 0/1 app conformi
+
+  REMEDIATION:
+    az functionapp config set --resource-group <resource-group-name> --name <appname> --http20-enabled true
+
+[2.3.6] Ensure 'HTTPS Only' is set to 'On'
+       Setting : httpsOnly
+       Expected: true
+
+  [COMPLIANT]     test-web-app = True
+
+  Riepilogo: 1/1 app conformi
+
+  REMEDIATION:
+    az resource update --resource-group <resource-group-name> --name <functionapp-name> --resource-type "Microsoft.Web/sites" --set properties.httpsOnly=true
+
+[2.3.7] Ensure 'Minimum Inbound TLS Version' is set to '1.2' or higher
+       Setting : siteConfig.minTlsVersion
+       Expected: 1.2
+
+  [COMPLIANT]     test-web-app: minTlsVersion=1.2
+
+  Riepilogo: 1/1 app conformi
+
+  REMEDIATION:
+    az functionapp config set --resource-group <resource-group-name> --name <function-app-name> --min-tls-version <1.2|1.3>
+
+[2.3.8] Ensure end-to-end TLS encryption is enabled
+       Expected: TLS abilitato su backend e listener
+
+  [NON-COMPLIANT] test-web-app: ssl=False, httpsOnly=True
+
+  Riepilogo: 0/1 app conformi
+
+  REMEDIATION:
+    az resource update --resource-group <resource-group-name> --name <functionapp-name> --resource-type "Microsoft.Web/sites" --set properties.endToEndEncryptionEnabled=true
+
+[2.3.9] Ensure 'Remote debugging' is set to 'Off'
+       Setting : siteConfig.remoteDebuggingEnabled
+       Expected: false
+
+  [NON-COMPLIANT] test-web-app = (proprieta' assente) (atteso: false)
+
+  Riepilogo: 0/1 app conformi
+
+  REMEDIATION:
+    az functionapp config set --resource-group <resource-group-name> --name <function-app-name> --remote-debugging-enabled false
+
+[2.3.10] Ensure incoming client certificates are enabled and required (if in use)
+       Setting : clientCertEnabled
+       Expected: true
+
+  [NON-COMPLIANT] test-web-app: clientCertEnabled=False, mode=Required
+
+  Riepilogo: 0/1 app conformi
+
+  REMEDIATION:
+    az resource update --resource-group <resource-group-name> --name <functionapp-name> --resource-type "Microsoft.Web/sites" --set properties.clientCertEnabled=true --set properties.clientCertMode=Required
+
+[2.3.11] Ensure 'App Service authentication' is set to 'Enabled'
+       Setting : auth.enabled
+       Expected: true
+
+  [NON-COMPLIANT] test-web-app: auth.enabled=False
+
+  Riepilogo: 0/1 app conformi
+
+  REMEDIATION:
+    az webapp auth update --resource-group <resource-group-name> --name <function-app-name> --enabled true
+
+[2.3.12] Ensure managed identities are configured
+       Setting : identity.type
+       Expected: SystemAssigned | UserAssigned
+
+  [NON-COMPLIANT] test-web-app: identity.type=
+
+  Riepilogo: 0/1 app conformi
+
+  REMEDIATION:
+    az functionapp identity assign --resource-group <resource-group-name> --name <function-app-name>
+
+[2.3.13] Ensure public network access is disabled
+       Setting : publicNetworkAccess
+       Expected: Disabled
+
+  [COMPLIANT]     test-web-app = Disabled
+
+  Riepilogo: 1/1 app conformi
+
+  REMEDIATION:
+    az resource update --resource-group <resource-group-name> --name <functionapp-name> --resource-type "Microsoft.Web/sites" --set properties.publicNetworkAccess=Disabled
+
+[2.3.14] Ensure function app is integrated with a virtual network
+       Setting : virtualNetworkSubnetId
+
+  [NON-COMPLIANT] test-web-app = (proprieta' assente) (valore assente o nullo)
+
+  Riepilogo: 0/1 app conformi
+
+  REMEDIATION:
+    az functionapp vnet-integration add --resource-group <resource-group-name> -- name <function-app-name> --vnet <virtual-network-name> --subnet <subnet-name>
+
+[2.3.15] Ensure configuration is routed through the virtual network integration
+       Setting : siteConfig.vnetRouteAllEnabled
+       Expected: true
+
+  [NON-COMPLIANT] test-web-app = (proprieta' assente) (atteso: true)
+
+  Riepilogo: 0/1 app conformi
+
+  REMEDIATION:
+    az resource update --resource-group <resource-group-name> --name <functionapp-name> --resource-type "Microsoft.Web/sites" --set properties.vnetImagePullEnabled=true --set properties.vnetContentShareEnabled=true
+
+[2.3.16] Ensure all traffic is routed through the virtual network
+       Expected: Tutto il traffico egress instradato via VNet
+
+  [NON-COMPLIANT] test-web-app: vnetRouteAll=False, subnet=True
+
+  Riepilogo: 0/1 app conformi
+
+  REMEDIATION:
+    az resource update --resource-group <resource-group-name> --name <functionapp-name> --resource-type "Microsoft.Web/sites" --set properties.vnetRouteAllEnabled=true
+
+[2.3.17] Ensure cross-origin resource sharing does not allow all origins
+       Setting : cors.allowedOrigins
+       Expected: Non contiene *
+
+  [COMPLIANT]     test-web-app: nessun wildcard CORS
+
+  Riepilogo: 1/1 app conformi
+
+  REMEDIATION:
+    az functionapp cors remove --resource-group <resource-group-name> --name <function-app-name> --allowed-origins "*" // az functionapp cors add --resource-group <resource-group-name> --name <function-app-name> --allowed-origins <allowed-origins>
+
+
+>>> module_6_management.ps1
+
+### MANAGEMENT & GOVERNANCE (6.1.x) ###
+[6.1.1.1] Ensure that a 'Diagnostic Setting' exists for Subscription Activity Logs
+       Expected: Almeno 1 Diagnostic Setting attivo
+
+  [COMPLIANT]     1 Diagnostic Setting(s) trovati
+
+  Riepilogo: 1/1 Diagnostic Setting conformi
+
+  REMEDIATION:
+    az monitor diagnostic-settings subscription create --subscription <subscription id> --name <diagnostic settings name> --location <location> <[- -event-hub <event hub ID> --event-hub-auth-rule <event hub auth rule ID>] [-- storage-account <storage account ID>] [--workspace <log analytics workspace ID>] --logs "<JSON encoded categories>" (e.g. [{category:Security,enabled:true},{category:Administrative,enabled:true},{cat egory:Alert,enabled:true},{category:Policy,enabled:true}])
+
+[6.1.1.2] Ensure Diagnostic Setting captures appropriate categories
+       Setting : logs[*].category
+       Expected: Administrative;Security;Alert;Policy
+
+  [COMPLIANT]     'subscriptionToLa': tutte le categorie abilitate
+
+  Riepilogo: 1/1 Diagnostic Setting conformi
+
+  REMEDIATION:
+    az monitor diagnostic-settings subscription create --subscription <subscription id> --name <diagnostic settings name> --location <location> <[- -event-hub <event hub ID> --event-hub-auth-rule <event hub auth rule ID>] [-- storage-account <storage account ID>] [--workspace <log analytics workspace ID>] --logs "[{category:Security,enabled:true},{category:Administrative,enabled:true},{ca tegory:Alert,enabled:true},{category:Policy,enabled:true}]"
+
+[6.1.1.4] Ensure that logging for Azure Key Vault is 'Enabled'
+       Setting : logs[0].enabled
+       Expected: true
+
+  [N/A] Nessun Key Vault trovato
+
+  Riepilogo: 0/0 Key Vault conformi
+
+  REMEDIATION:
+    az monitor diagnostic-settings update --name "<diagnostic_setting_name>" -- resource <key_vault_id>
+
+[6.1.2.1] Ensure that Activity Log Alert exists for Create Policy Assignment
+       Setting : condition.allOf[*].equals
+       Expected: Microsoft.Authorization/policyAssignments/write
+
+  [COMPLIANT]     Alert trovato: 'TEST activity log rule name'
+
+  Riepilogo: 1/1 alert conformi
+
+  REMEDIATION:
+    az monitor activity-log alert create --resource-group "<resource group name>" --condition �category=Administrative and operationName=Microsoft.Authorization/policyAssignments/write� --scope "/subscriptions/<subscription ID>" --name "<activity log rule name>" -- subscription <subscription ID> --action-group <action group ID>
+
+[6.1.2.2] Ensure that Activity Log Alert exists for Delete Policy Assignment
+       Setting : condition.allOf[*].equals
+       Expected: Microsoft.Authorization/policyAssignments/delete
+
+  [NON-COMPLIANT] Nessun alert per: Microsoft.Authorization/policyAssignments/delete
+
+  Riepilogo: 0/1 alert conformi
+
+  REMEDIATION:
+    az monitor activity-log alert create --resource-group "<resource group name>" --condition category=Administrative and operationName=Microsoft.Authorization/policyAssignments/delete and level=<verbose | information | warning | error | critical> --scope "/subscriptions/<subscription ID>" --name "<activity log rule name>" -- subscription <subscription id> --action-group <action group ID>
+
+[6.1.2.3] Ensure that Activity Log Alert exists for Create or Update Network Security Group
+       Setting : condition.allOf[*].equals
+       Expected: Microsoft.Network/networkSecurityGroups/write
+
+  [NON-COMPLIANT] Nessun alert per: Microsoft.Network/networkSecurityGroups/write
+
+  Riepilogo: 0/1 alert conformi
+
+  REMEDIATION:
+    az monitor activity-log alert create --resource-group "<resource group name>" --condition category=Administrative and operationName=Microsoft.Network/networkSecurityGroups/write and level=verbose --scope "/subscriptions/<subscription ID>" --name "<activity log rule name>" --subscription <subscription id> --action-group <action group ID>
+
+[6.1.2.4] Ensure that Activity Log Alert exists for Delete Network Security Group
+       Setting : condition.allOf[*].equals
+       Expected: Microsoft.Network/networkSecurityGroups/delete
+
+  [NON-COMPLIANT] Nessun alert per: Microsoft.Network/networkSecurityGroups/delete
+
+  Riepilogo: 0/1 alert conformi
+
+  REMEDIATION:
+    az monitor activity-log alert create --resource-group "<resource group name>" --condition category=Administrative and operationName=Microsoft.Network/networkSecurityGroups/delete and level=<verbose | information | warning | error | critical> --scope "/subscriptions/<subscription ID>" --name "<activity log rule name>" -- subscription <subscription id> --action-group <action group ID>
+
+[6.1.2.5] Ensure that Activity Log Alert exists for Create or Update Security Solution
+       Setting : condition.allOf[*].equals
+       Expected: Microsoft.Security/securitySolutions/write
+
+  [NON-COMPLIANT] Nessun alert per: Microsoft.Security/securitySolutions/write
+
+  Riepilogo: 0/1 alert conformi
+
+  REMEDIATION:
+    az monitor activity-log alert create --resource-group "<resource group name>" --condition category=Administrative and operationName=Microsoft.Security/securitySolutions/write and level=<verbose | information | warning | error | critical> --scope "/subscriptions/<subscription ID>" --name "<activity log rule name>" -- subscription <subscription id> --action-group <action group ID>
+
+[6.1.2.6] Ensure that Activity Log Alert exists for Delete Security Solution
+       Setting : condition.allOf[*].equals
+       Expected: Microsoft.Security/securitySolutions/delete
+
+  [NON-COMPLIANT] Nessun alert per: Microsoft.Security/securitySolutions/delete
+
+  Riepilogo: 0/1 alert conformi
+
+  REMEDIATION:
+    az monitor activity-log alert create --resource-group "<resource group name>" --condition category=Administrative and operationName=Microsoft.Security/securitySolutions/delete and level=<verbose | information | warning | error | critical> --scope "/subscriptions/<subscription ID>" --name "<activity log rule name>" -- subscription <subscription id> --action-group <action group ID>
+
+[6.1.2.7] Ensure that Activity Log Alert exists for Create or Update SQL Server Firewall Rule
+       Setting : condition.allOf[*].equals
+       Expected: Microsoft.Sql/servers/write
+
+  [NON-COMPLIANT] Nessun alert per: Microsoft.Sql/servers/write
+
+  Riepilogo: 0/1 alert conformi
+
+[6.1.2.8] Ensure that Activity Log Alert exists for Delete SQL Server Firewall Rule
+       Setting : condition.allOf[*].equals
+       Expected: Microsoft.Sql/servers/delete
+
+  [NON-COMPLIANT] Nessun alert per: Microsoft.Sql/servers/delete
+
+  Riepilogo: 0/1 alert conformi
+
+  REMEDIATION:
+    az monitor activity-log alert create --resource-group "<resource group name>" --condition category=Administrative and operationName=Microsoft.Sql/servers/firewallRules/delete and level=<verbose | information | warning | error | critical> --scope "/subscriptions/<subscription ID>" --name "<activity log rule name>" -- subscription <subscription id> --action-group <action group ID>
+
+[6.1.2.9] Ensure that Activity Log Alert exists for Create or Update Public IP Address rule
+       Setting : condition.allOf[*].equals
+       Expected: Microsoft.Network/publicIPAddresses/write
+
+  [NON-COMPLIANT] Nessun alert per: Microsoft.Network/publicIPAddresses/write
+
+  Riepilogo: 0/1 alert conformi
+
+  REMEDIATION:
+    az monitor activity-log alert create --resource-group "<resource group name>" --condition category=Administrative and operationName=Microsoft.Network/publicIPAddresses/write and level=<verbose | information | warning | error | critical> --scope "/subscriptions/<subscription ID>" --name "<activity log rule name>" -- subscription <subscription id> --action-group <action group ID>
+
+[6.1.2.10] Ensure that Activity Log Alert exists for Delete Public IP Address rule
+       Setting : condition.allOf[*].equals
+       Expected: Microsoft.Network/publicIPAddresses/delete
+
+  [NON-COMPLIANT] Nessun alert per: Microsoft.Network/publicIPAddresses/delete
+
+  Riepilogo: 0/1 alert conformi
+
+  REMEDIATION:
+    az monitor activity-log alert create --resource-group "<resource group name>" --condition category=Administrative and operationName=Microsoft.Network/publicIPAddresses/delete and level=<verbose | information | warning | error | critical> --scope "/subscriptions/<subscription ID>" --name "<activity log rule name>" -- subscription <subscription id> --action-group <action group ID>
+
+[6.1.2.11] Ensure that an Activity Log Alert exists for Service Health
+       Expected: Service Health alert attivo con notifica email
+
+  [NON-COMPLIANT] Nessun Service Health alert configurato
+
+  Riepilogo: 0/1 alert conformi
+
+  REMEDIATION:
+    az monitor activity-log alert create --subscription <subscription-id> -- resource-group <resource-group> --name <alert-rule> --condition category=ServiceHealth and properties.incidentType=Incident --scope /subscriptions/<subscription-id> --action-group <action-group>
+
+[6.1.3.1] Ensure Application Insights are Configured
+       Expected: Application Insights collegato all'app
+
+  [COMPLIANT]     'test-web-app' in 'Thesis'
+
+  Riepilogo: 1/1 Application Insights conformi
+
+  REMEDIATION:
+    az monitor app-insights component create --app <app name> --resource-group <resource group name> --location <location> --kind "web" --retention-time <INT days to retain logs> --workspace <log analytics workspace ID> -- subscription <subscription ID>
+
+
+>>> module_7_networking.ps1
+
+### NETWORKING SERVICES (7.x) ###
+[7.1] Ensure that RDP access from the Internet is evaluated and restricted
+       Expected: Nessuna regola allow RDP (3389) da Internet
+
+  [COMPLIANT]     NSG 'ubuntu-free-01-nsg': nessuna regola aperta
+  [NON-COMPLIANT] NSG 'ws22-free-01-nsg' regola 'RDP'
+
+  Riepilogo: 1/2 NSG conformi
+
+  REMEDIATION:
+    az network nsg rule delete --resource-group <resource-group> --nsg-name <network-security-group> --name <rule>
+
+[7.2] Ensure that SSH access from the Internet is evaluated and restricted
+       Expected: Nessuna regola allow SSH (22) da Internet
+
+  [NON-COMPLIANT] NSG 'ubuntu-free-01-nsg' regola 'SSH'
+  [COMPLIANT]     NSG 'ws22-free-01-nsg': nessuna regola aperta
+
+  Riepilogo: 1/2 NSG conformi
+
+  REMEDIATION:
+    az network nsg rule delete --resource-group <resource-group> --nsg-name <network-security-group> --name <rule>
+
+[7.3] Ensure that UDP access from the Internet is evaluated and restricted
+       Expected: Nessuna regola allow UDP da Internet
+
+  [COMPLIANT]     NSG 'ubuntu-free-01-nsg': nessuna regola aperta
+  [COMPLIANT]     NSG 'ws22-free-01-nsg': nessuna regola aperta
+
+  Riepilogo: 2/2 NSG conformi
+
+  REMEDIATION:
+    az network nsg rule delete --resource-group <resource-group> --nsg-name <network-security-group> --name <rule>
+
+[7.4] Ensure that HTTP(S) access from the Internet is evaluated and restricted
+       Expected: Accesso HTTP/S documentato o protetto da WAF
+
+  [COMPLIANT]     NSG 'ubuntu-free-01-nsg': nessun accesso HTTP/S non protetto
+  [COMPLIANT]     NSG 'ws22-free-01-nsg': nessun accesso HTTP/S non protetto
+
+  Riepilogo: 2/2 NSG conformi
+
+  REMEDIATION:
+    az network nsg rule delete --resource-group <resource-group> --nsg-name <network-security-group> --name <rule>
+
+[7.6] Ensure that Network Watcher is 'Enabled' for Azure Regions that are in use
+       Setting : provisioningState
+       Expected: Succeeded
+
+  [NON-COMPLIANT] 'global': Network Watcher mancante
+  [COMPLIANT]     'switzerlandnorth': Network Watcher attivo
+
+  Riepilogo: 1/2 regioni conformi
+
+  REMEDIATION:
+    az network watcher configure --locations <region> --enabled true --resourcegroup <resource_group>
+
+[7.10] Ensure Azure Web Application Firewall (WAF) is enabled on Azure Application Gateway
+       Setting : webApplicationFirewallConfiguration.enabled
+
+  [N/A] Nessuna risorsa trovata per questo controllo
+[7.11] Ensure subnets are associated with network security groups
+       Setting : networkSecurityGroup.id
+
+  [NON-COMPLIANT] 'ubuntu-free-01-vnet/default': nessun NSG
+  [NON-COMPLIANT] 'vnet-switzerlandnorth/snet-switzerlandnorth-1': nessun NSG
+  [NON-COMPLIANT] 'ws22-free-01-vnet/default': nessun NSG
+
+  Riepilogo: 0/3 subnet conformi
+
+  REMEDIATION:
+    az network vnet subnet update --resource-group <resource-group> --vnet-name <virtual-network> --name <subnet> --network-security-group <network-securitygroup>
+
+[7.12] Ensure the SSL policy's 'Min protocol version' is set to 'TLSv1_2' or higher on Azure Application Gateway
+       Setting : sslPolicy.minProtocolVersion
+       Expected: TLSv1_2
+
+  [N/A] Nessuna risorsa trovata per questo controllo
+[7.13] Ensure 'HTTP2' is set to 'Enabled' on Azure Application Gateway
+       Setting : enableHttp2
+       Expected: true
+
+  [N/A] Nessuna risorsa trovata per questo controllo
+[7.14] Ensure request body inspection is enabled in Azure Web Application Firewall policy on Azure Application Gateway
+       Setting : policySettings.requestBodyCheck
+       Expected: true
+
+  [N/A] Nessuna risorsa trovata per questo controllo
+[7.15] Ensure bot protection is enabled in Azure Web Application Firewall policy on Azure Application Gateway
+       Setting : managedRules.managedRuleSets[*].ruleSetType
+       Expected: Microsoft_BotManagerRuleSet
+
+
+  Riepilogo: 0/0 WAF Policy conformi
+
+  REMEDIATION:
+    az network application-gateway waf-policy managed-rule rule-set add -- resource-group <resource-group> --policy-name <firewall-policy> --type Microsoft_BotManagerRuleSet --version <0.1|1.0|1.1>
+
+
+>>> module_8_security.ps1
+
+### SECURITY SERVICES (8.x) ###
+[8.1.1.1] Ensure Microsoft Defender CSPM is set to 'On'
+       Setting : pricingTier
+       Expected: Standard
+
+  [NON-COMPLIANT] Defender for : pricingTier=Free
+
+  Riepilogo: 0/1 servizi conformi
+
+  REMEDIATION:
+    az security pricing create --name CloudPosture --tier Standard --extensions name=ApiPosture isEnabled=true
+
+[8.1.2.1] Ensure Microsoft Defender for APIs is set to 'On'
+       Setting : pricingTier
+       Expected: Standard
+
+  [NON-COMPLIANT] Defender for : pricingTier=Free
+
+  Riepilogo: 0/1 servizi conformi
+
+  REMEDIATION:
+    az security pricing create --name Api --tier Standard --subplan <subplan>
+
+[8.1.3.1] Ensure that Defender for Servers is set to 'On'
+       Setting : pricingTier
+       Expected: Standard
+
+  [NON-COMPLIANT] Defender for : pricingTier=Free
+
+  Riepilogo: 0/1 servizi conformi
+
+  REMEDIATION:
+    az security pricing create -n VirtualMachines --tier 'standard'
+
+[8.1.4.1] Ensure That Microsoft Defender for Containers Is Set To 'On'
+       Setting : pricingTier
+       Expected: Standard
+
+  [NON-COMPLIANT] Defender for : pricingTier=Free
+
+  Riepilogo: 0/1 servizi conformi
+
+  REMEDIATION:
+    az security pricing create -n 'Containers' --tier 'standard' --extensions name=ContainerRegistriesVulnerabilityAssessments isEnabled=True --extensions name=AgentlessDiscoveryForKubernetes isEnabled=True --extensions name=AgentlessVmScanning isEnabled=True --extensions name=ContainerSensor isEnabled=True
+
+[8.1.5.1] Ensure That Microsoft Defender for Storage Is Set To 'On'
+       Setting : pricingTier
+       Expected: Standard
+
+  [NON-COMPLIANT] Defender for : pricingTier=Free
+
+  Riepilogo: 0/1 servizi conformi
+
+  REMEDIATION:
+    az security pricing create -n StorageAccounts --tier 'standard'
+
+[8.1.6.1] Ensure That Microsoft Defender for App Services Is Set To 'On'
+       Setting : pricingTier
+       Expected: Standard
+
+  [NON-COMPLIANT] Defender for : pricingTier=Free
+
+  Riepilogo: 0/1 servizi conformi
+
+  REMEDIATION:
+    az security pricing create -n Appservices --tier 'standard'
+
+[8.1.7.1] Ensure That Microsoft Defender for Azure Cosmos DB Is Set To 'On'
+       Setting : pricingTier
+       Expected: Standard
+
+  [NON-COMPLIANT] Defender for : pricingTier=Free
+
+  Riepilogo: 0/1 servizi conformi
+
+  REMEDIATION:
+    az security pricing create -n 'CosmosDbs' --tier 'standard'
+
+[8.1.7.2] Ensure That Microsoft Defender for Open-Source Relational Databases Is Set To 'On'
+       Setting : pricingTier
+       Expected: Standard
+
+  [NON-COMPLIANT] Defender for : pricingTier=Free
+
+  Riepilogo: 0/1 servizi conformi
+
+  REMEDIATION:
+    az security pricing create -n 'OpenSourceRelationalDatabases' --tier 'standard'
+
+[8.1.7.3] Ensure That Microsoft Defender for (Managed Instance) Azure SQL Databases Is Set To 'On'
+       Setting : pricingTier
+       Expected: Standard
+
+  [NON-COMPLIANT] Defender for : pricingTier=Free
+
+  Riepilogo: 0/1 servizi conformi
+
+  REMEDIATION:
+    az security pricing create -n SqlServers --tier 'standard'
+
+[8.1.7.4] Ensure That Microsoft Defender for SQL Servers on Machines Is Set To 'On'
+       Setting : pricingTier
+       Expected: Standard
+
+  [NON-COMPLIANT] Defender for : pricingTier=Free
+
+  Riepilogo: 0/1 servizi conformi
+
+  REMEDIATION:
+    az security pricing create -n SqlServerVirtualMachines --tier 'standard'
+
+[8.1.8.1] Ensure That Microsoft Defender for Key Vault Is Set To 'On'
+       Setting : pricingTier
+       Expected: Standard
+
+  [NON-COMPLIANT] Defender for : pricingTier=Free
+
+  Riepilogo: 0/1 servizi conformi
+
+  REMEDIATION:
+    az security pricing create -n 'KeyVaults' --tier 'Standard'
+
+[8.1.9.1] Ensure That Microsoft Defender for Resource Manager Is Set To 'On'
+       Setting : pricingTier
+       Expected: Standard
+
+  [NON-COMPLIANT] Defender for : pricingTier=Free
+
+  Riepilogo: 0/1 servizi conformi
+
+  REMEDIATION:
+    az security pricing create -n 'Arm' --tier 'Standard'
+
+[8.5] Ensure Azure DDoS Network Protection is enabled on virtual networks
+       Setting : ddosProtectionPlan.id
+
+  [NON-COMPLIANT] ubuntu-free-01-vnet = (proprieta' assente) (valore assente o nullo)
+  [NON-COMPLIANT] vnet-switzerlandnorth = (proprieta' assente) (valore assente o nullo)
+  [NON-COMPLIANT] ws22-free-01-vnet = (proprieta' assente) (valore assente o nullo)
+
+  Riepilogo: 0/3 VNet conformi
+
+  REMEDIATION:
+    az network vnet update --resource-group <resource-group> --name <virtualnetwork> --ddos-protection true --ddos-protection-plan <ddos-protection-plan>
+
+
+>>> module_20_virtual_machines.ps1
+
+### VIRTUAL MACHINES (20.x) ###
+[20.1] Ensure Virtual Machines are utilizing Managed Disks
+       Setting : storageProfile.osDisk.managedDisk.id
+
+  [COMPLIANT]     ubuntu-free-01 = /subscriptions/3507dd50-31cb-4215-92de-011081f724ec/resourceGroups/THESIS/providers/Microsoft.Compute/disks/ubuntu-free-01_disk1_364c9b77fb2e4f8ca9729642bedd968c
+  [COMPLIANT]     ws22-free-01 = /subscriptions/3507dd50-31cb-4215-92de-011081f724ec/resourceGroups/THESIS/providers/Microsoft.Compute/disks/ws22-free-01_OsDisk_1_461c3b8390b14532a2746a5fb4b185c5
+
+  Riepilogo: 2/2 VM conformi
+
+  REMEDIATION:
+    Stop-AzVM -ResourceGroupName $rgName -Name $vmName -Force ConvertTo-AzVMManagedDisk -ResourceGroupName $rgName -VMName $vmName Start-AzVM -ResourceGroupName $rgName -Name $vmName
+
+[20.2] Ensure that 'OS and Data' disks are encrypted with Customer Managed Key (CMK)
+       Setting : encryption.type
+       Expected: EncryptionAtRestWithCustomerKey
+
+  [NON-COMPLIANT] ubuntu-free-01: osEnc=EncryptionAtRestWithPlatformKey, dataOk=True
+  [NON-COMPLIANT] ws22-free-01: osEnc=EncryptionAtRestWithPlatformKey, dataOk=True
+
+  Riepilogo: 0/2 VM conformi
+
+  REMEDIATION:
+    $KVRGname = 'MyKeyVaultResourceGroup'; $VMRGName = 'MyVirtualMachineResourceGroup'; $vmName = 'MySecureVM'; $KeyVaultName = 'MySecureVault'; $KeyVault = Get-AzKeyVault -VaultName $KeyVaultName -ResourceGroupName $KVRGname; $diskEncryptionKeyVaultUrl = $KeyVault.VaultUri; $KeyVaultResourceId = $KeyVault.ResourceId; Set-AzVMDiskEncryptionExtension -ResourceGroupName $VMRGname -VMName $vmName -DiskEncryptionKeyVaultUrl $diskEncryptionKeyVaultUrl - DiskEncryptionKeyVaultId $KeyVaultResourceId;
+
+[20.3] Ensure that 'Unattached disks' are encrypted with 'Customer Managed Key' (CMK)
+       Setting : encryption.type
+       Expected: EncryptionAtRestWithCustomerKey
+
+  [N/A] Nessuna risorsa trovata per questo controllo
+[20.4] Ensure that 'Disk Network Access' is NOT set to 'Enable public access from all networks'
+       Setting : networkAccessPolicy
+       Expected: AllowPrivate | DenyAll
+
+  [NON-COMPLIANT] 'ubuntu-free-01_disk1_364c9b77fb2e4f8ca9729642bedd968c ws22-free-01_OsDisk_1_461c3b8390b14532a2746a5fb4b185c5': networkAccessPolicy=AllowAll
+
+  Riepilogo: 0/1 disco conformi
+
+  REMEDIATION:
+    az disk update --name <managed disk name> --resource-group <resource group name> --network-access-policy AllowPrivate --disk-access <disk access ID>
+
+[20.10] Ensure Trusted Launch is enabled on Virtual Machines
+       Setting : securityProfile.securityType
+       Expected: TrustedLaunch
+
+  [NON-COMPLIANT] ubuntu-free-01 = (proprieta' assente) (atteso: TrustedLaunch)
+  [NON-COMPLIANT] ws22-free-01 = (proprieta' assente) (atteso: TrustedLaunch)
+
+  Riepilogo: 0/2 VM conformi
+
+  REMEDIATION:
+    az vm deallocate --resource-group <resource-group> --name <vm> // az vm update --resource-group <resource-group> --name <vm> --enable-secureboot true --enable-vtpm true --security-type TrustedLaunch // az vm start --resource-group <resource-group> --name <vm>
+
+[20.11] Ensure that encryption at host is enabled
+       Setting : securityProfile.encryptionAtHost
+       Expected: true
+
+  [NON-COMPLIANT] ubuntu-free-01 = (proprieta' assente) (atteso: true)
+  [NON-COMPLIANT] ws22-free-01 = (proprieta' assente) (atteso: true)
+
+  Riepilogo: 0/2 VM conformi
+
+  REMEDIATION:
+    az vm deallocate --resource-group <resource-group> --name <vm> // az vm update --resource-group <resource-group> --name <vm> --set securityProfile.encryptionAtHost=true // az vm start --resource-group <resource-group> --name <vm>
+
+
+================================================================
+  RIEPILOGO: 15/60 COMPLIANT (25%)
+================================================================
+
+================================================================
+  CIS Microsoft Azure - EFFORT SCORING
+================================================================
+
+  Modello:  E_i = 0.4 * C + 0.3 * D + 0.3 * R
+  Soglie:   BASSO < 0.35  |  0.35 <= MEDIO < 0.7  |  ALTO >= 0.7
+  E_min = 0.7  |  E_max = 2.7
+  Sorgente: C:\Users\Utente\OneDrive\università\tesi_magistrale\Thesis-CIS-Assessment\cis_azure.csv  (60 check)
+
+----------------------------------------------------------------
+  APP-SERVICE
+----------------------------------------------------------------
+
+  [
+NON-COMPLIANT
+]  2.3.10   Ensure incoming client certificates are enabled an    Effort:
+BASSO  (E=0.7  norm=0)
+  [
+NON-COMPLIANT
+]  2.3.11   Ensure 'App Service authentication' is set to 'Ena    Effort:
+BASSO  (E=1.1  norm=0.2)
+  [
+NON-COMPLIANT
+]  2.3.12   Ensure managed identities are configured              Effort:
+BASSO  (E=1  norm=0.15)
+  [
+COMPLIANT
+]  2.3.13   Ensure public network access is disabled              Effort:
+-
+  [
+NON-COMPLIANT
+]  2.3.14   Ensure function app is integrated with a virtual n    Effort:
+MEDIO  (E=1.7  norm=0.5)
+  [
+NON-COMPLIANT
+]  2.3.15   Ensure configuration is routed through the virtual    Effort:
+MEDIO  (E=1.7  norm=0.5)
+  [
+NON-COMPLIANT
+]  2.3.16   Ensure all traffic is routed through the virtual n    Effort:
+ALTO  (E=2.7  norm=1)
+  [
+COMPLIANT
+]  2.3.17   Ensure cross-origin resource sharing does not allo    Effort:
+-
+  [
+COMPLIANT
+]  2.3.3    Ensure 'Basic Authentication Publishing Credential    Effort:
+-
+  [
+COMPLIANT
+]  2.3.4    Ensure 'FTP state' is set to 'FTPS only' or 'Disab    Effort:
+-
+  [
+NON-COMPLIANT
+]  2.3.5    Ensure 'HTTP version' is set to '2.0' (if in use)     Effort:
+BASSO  (E=0.7  norm=0)
+  [
+COMPLIANT
+]  2.3.6    Ensure 'HTTPS Only' is set to 'On'                    Effort:
+-
+  [
+COMPLIANT
+]  2.3.7    Ensure 'Minimum Inbound TLS Version' is set to '1.    Effort:
+-
+  [
+NON-COMPLIANT
+]  2.3.8    Ensure end-to-end TLS encryption is enabled           Effort:
+MEDIO  (E=1.4  norm=0.35)
+  [
+NON-COMPLIANT
+]  2.3.9    Ensure 'Remote debugging' is set to 'Off'             Effort:
+BASSO  (E=0.7  norm=0)
+
+----------------------------------------------------------------
+  MANAGEMENT-AND-GOVERNANCE-SERVICES
+----------------------------------------------------------------
+
+  [
+COMPLIANT
+]  6.1.1.1  Ensure that a 'Diagnostic Setting' exists for Subs    Effort:
+-
+  [
+COMPLIANT
+]  6.1.1.2  Ensure Diagnostic Setting captures appropriate cat    Effort:
+-
+  [
+COMPLIANT
+]  6.1.1.4  Ensure that logging for Azure Key Vault is 'Enable    Effort:
+-
+  [
+COMPLIANT
+]  6.1.2.1  Ensure that Activity Log Alert exists for Create P    Effort:
+-
+  [
+NON-COMPLIANT
+]  6.1.2.10  Ensure that Activity Log Alert exists for Delete P    Effort:
+BASSO  (E=0.7  norm=0)
+  [
+NON-COMPLIANT
+]  6.1.2.11  Ensure that an Activity Log Alert exists for Servi    Effort:
+BASSO  (E=1.1  norm=0.2)
+  [
+NON-COMPLIANT
+]  6.1.2.2  Ensure that Activity Log Alert exists for Delete P    Effort:
+BASSO  (E=0.7  norm=0)
+  [
+NON-COMPLIANT
+]  6.1.2.3  Ensure that Activity Log Alert exists for Create o    Effort:
+BASSO  (E=0.7  norm=0)
+  [
+NON-COMPLIANT
+]  6.1.2.4  Ensure that Activity Log Alert exists for Delete N    Effort:
+BASSO  (E=0.7  norm=0)
+  [
+NON-COMPLIANT
+]  6.1.2.5  Ensure that Activity Log Alert exists for Create o    Effort:
+BASSO  (E=0.7  norm=0)
+  [
+NON-COMPLIANT
+]  6.1.2.6  Ensure that Activity Log Alert exists for Delete S    Effort:
+BASSO  (E=0.7  norm=0)
+  [
+NON-COMPLIANT
+]  6.1.2.7  Ensure that Activity Log Alert exists for Create o    Effort:
+BASSO  (E=0.7  norm=0)
+  [
+NON-COMPLIANT
+]  6.1.2.8  Ensure that Activity Log Alert exists for Delete S    Effort:
+BASSO  (E=0.7  norm=0)
+  [
+NON-COMPLIANT
+]  6.1.2.9  Ensure that Activity Log Alert exists for Create o    Effort:
+BASSO  (E=0.7  norm=0)
+  [
+COMPLIANT
+]  6.1.3.1  Ensure Application Insights are Configured            Effort:
+-
+
+----------------------------------------------------------------
+  NETWORKING-SERVICES
+----------------------------------------------------------------
+
+  [
+NON-COMPLIANT
+]  7.1      Ensure that RDP access from the Internet is evalua    Effort:
+MEDIO  (E=1.7  norm=0.5)
+  [
+N/A
+]  7.10     Ensure Azure Web Application Firewall (WAF) is ena    Effort:
+N/A
+  [
+NON-COMPLIANT
+]  7.11     Ensure subnets are associated with network securit    Effort:
+MEDIO  (E=1.4  norm=0.35)
+  [
+N/A
+]  7.12     Ensure the SSL policy's 'Min protocol version' is     Effort:
+N/A
+  [
+N/A
+]  7.13     Ensure 'HTTP2' is set to 'Enabled' on Azure Applic    Effort:
+N/A
+  [
+N/A
+]  7.14     Ensure request body inspection is enabled in Azure    Effort:
+N/A
+  [
+COMPLIANT
+]  7.15     Ensure bot protection is enabled in Azure Web Appl    Effort:
+-
+  [
+NON-COMPLIANT
+]  7.2      Ensure that SSH access from the Internet is evalua    Effort:
+MEDIO  (E=1.7  norm=0.5)
+  [
+COMPLIANT
+]  7.3      Ensure that UDP access from the Internet is evalua    Effort:
+-
+  [
+COMPLIANT
+]  7.4      Ensure that HTTP(S) access from the Internet is ev    Effort:
+-
+  [
+NON-COMPLIANT
+]  7.6      Ensure that Network Watcher is 'Enabled' for Azure    Effort:
+MEDIO  (E=1.4  norm=0.35)
+
+----------------------------------------------------------------
+  SECURITY-SERVICES
+----------------------------------------------------------------
+
+  [
+NON-COMPLIANT
+]  8.1.1.1  Ensure Microsoft Defender CSPM is set to 'On'         Effort:
+BASSO  (E=0.7  norm=0)
+  [
+NON-COMPLIANT
+]  8.1.2.1  Ensure Microsoft Defender for APIs is set to 'On'     Effort:
+BASSO  (E=0.7  norm=0)
+  [
+NON-COMPLIANT
+]  8.1.3.1  Ensure that Defender for Servers is set to 'On'       Effort:
+BASSO  (E=1.1  norm=0.2)
+  [
+NON-COMPLIANT
+]  8.1.4.1  Ensure That Microsoft Defender for Containers Is S    Effort:
+BASSO  (E=0.7  norm=0)
+  [
+NON-COMPLIANT
+]  8.1.5.1  Ensure That Microsoft Defender for Storage Is Set     Effort:
+BASSO  (E=0.7  norm=0)
+  [
+NON-COMPLIANT
+]  8.1.6.1  Ensure That Microsoft Defender for App Services Is    Effort:
+BASSO  (E=0.7  norm=0)
+  [
+NON-COMPLIANT
+]  8.1.7.1  Ensure That Microsoft Defender for Azure Cosmos DB    Effort:
+BASSO  (E=0.7  norm=0)
+  [
+NON-COMPLIANT
+]  8.1.7.2  Ensure That Microsoft Defender for Open-Source Rel    Effort:
+BASSO  (E=0.7  norm=0)
+  [
+NON-COMPLIANT
+]  8.1.7.3  Ensure That Microsoft Defender for (Managed Instan    Effort:
+BASSO  (E=0.7  norm=0)
+  [
+NON-COMPLIANT
+]  8.1.7.4  Ensure That Microsoft Defender for SQL Servers on     Effort:
+BASSO  (E=0.7  norm=0)
+  [
+NON-COMPLIANT
+]  8.1.8.1  Ensure That Microsoft Defender for Key Vault Is Se    Effort:
+BASSO  (E=0.7  norm=0)
+  [
+NON-COMPLIANT
+]  8.1.9.1  Ensure That Microsoft Defender for Resource Manage    Effort:
+BASSO  (E=0.7  norm=0)
+  [
+NON-COMPLIANT
+]  8.5      Ensure Azure DDoS Network Protection is enabled on    Effort:
+MEDIO  (E=1.4  norm=0.35)
+
+----------------------------------------------------------------
+  VIRTUAL-MACHINES
+----------------------------------------------------------------
+
+  [
+COMPLIANT
+]  20.1     Ensure Virtual Machines are utilizing Managed Disk    Effort:
+-
+  [
+NON-COMPLIANT
+]  20.10    Ensure Trusted Launch is enabled on Virtual Machin    Effort:
+ALTO  (E=2.7  norm=1)
+  [
+NON-COMPLIANT
+]  20.11    Ensure that encryption at host is enabled             Effort:
+MEDIO  (E=2  norm=0.65)
+  [
+NON-COMPLIANT
+]  20.2     Ensure that 'OS and Data' disks are encrypted with    Effort:
+MEDIO  (E=1.7  norm=0.5)
+  [
+N/A
+]  20.3     Ensure that 'Unattached disks' are encrypted with     Effort:
+N/A
+  [
+NON-COMPLIANT
+]  20.4     Ensure that 'Disk Network Access' is NOT set to 'E    Effort:
+BASSO  (E=0.7  norm=0)
+
+================================================================
+  RIEPILOGO
+================================================================
+
+  Check totali   : 60
+  N/A            : 5
+  COMPLIANT      : 15
+  NON-COMPLIANT  : 40
+  Compliance rate: 27.3%
+
+  Non-conformita' per livello:
+    ALTO  (E_norm >= 0.7)         : 2
+    MEDIO (0.35 <= E_norm < 0.7) : 10
+    BASSO (E_norm < 0.35)          : 28
+
+  PRIORITA' DI INTERVENTO (E_i decrescente):
+
+    [ALTO ]  2.3.16   E=2.7  norm=1
+Ensure all traffic is routed through the virtual n
+    [ALTO ]  20.10    E=2.7  norm=1
+Ensure Trusted Launch is enabled on Virtual Machin
+    [MEDIO]  20.11    E=2  norm=0.65
+Ensure that encryption at host is enabled
+    [MEDIO]  2.3.15   E=1.7  norm=0.5
+Ensure configuration is routed through the virtual
+    [MEDIO]  7.1      E=1.7  norm=0.5
+Ensure that RDP access from the Internet is evalua
+    [MEDIO]  20.2     E=1.7  norm=0.5
+Ensure that 'OS and Data' disks are encrypted with
+    [MEDIO]  7.2      E=1.7  norm=0.5
+Ensure that SSH access from the Internet is evalua
+    [MEDIO]  2.3.14   E=1.7  norm=0.5
+Ensure function app is integrated with a virtual n
+    [MEDIO]  8.5      E=1.4  norm=0.35
+Ensure Azure DDoS Network Protection is enabled on
+    [MEDIO]  7.11     E=1.4  norm=0.35
+Ensure subnets are associated with network securit
+    [MEDIO]  7.6      E=1.4  norm=0.35
+Ensure that Network Watcher is 'Enabled' for Azure
+    [MEDIO]  2.3.8    E=1.4  norm=0.35
+Ensure end-to-end TLS encryption is enabled
+    [BASSO]  6.1.2.11  E=1.1  norm=0.2
+Ensure that an Activity Log Alert exists for Servi
+    [BASSO]  2.3.11   E=1.1  norm=0.2
+Ensure 'App Service authentication' is set to 'Ena
+    [BASSO]  8.1.3.1  E=1.1  norm=0.2
+Ensure that Defender for Servers is set to 'On'
+    [BASSO]  2.3.12   E=1  norm=0.15
+Ensure managed identities are configured
+    [BASSO]  8.1.5.1  E=0.7  norm=0
+Ensure That Microsoft Defender for Storage Is Set
+    [BASSO]  8.1.7.2  E=0.7  norm=0
+Ensure That Microsoft Defender for Open-Source Rel
+    [BASSO]  8.1.6.1  E=0.7  norm=0
+Ensure That Microsoft Defender for App Services Is
+    [BASSO]  8.1.7.1  E=0.7  norm=0
+Ensure That Microsoft Defender for Azure Cosmos DB
+    [BASSO]  2.3.9    E=0.7  norm=0
+Ensure 'Remote debugging' is set to 'Off'
+    [BASSO]  20.4     E=0.7  norm=0
+Ensure that 'Disk Network Access' is NOT set to 'E
+    [BASSO]  2.3.5    E=0.7  norm=0
+Ensure 'HTTP version' is set to '2.0' (if in use)
+    [BASSO]  8.1.9.1  E=0.7  norm=0
+Ensure That Microsoft Defender for Resource Manage
+    [BASSO]  8.1.7.3  E=0.7  norm=0
+Ensure That Microsoft Defender for (Managed Instan
+    [BASSO]  8.1.7.4  E=0.7  norm=0
+Ensure That Microsoft Defender for SQL Servers on
+    [BASSO]  8.1.8.1  E=0.7  norm=0
+Ensure That Microsoft Defender for Key Vault Is Se
+    [BASSO]  6.1.2.5  E=0.7  norm=0
+Ensure that Activity Log Alert exists for Create o
+    [BASSO]  6.1.2.6  E=0.7  norm=0
+Ensure that Activity Log Alert exists for Delete S
+    [BASSO]  6.1.2.7  E=0.7  norm=0
+Ensure that Activity Log Alert exists for Create o
+    [BASSO]  6.1.2.2  E=0.7  norm=0
+Ensure that Activity Log Alert exists for Delete P
+    [BASSO]  6.1.2.3  E=0.7  norm=0
+Ensure that Activity Log Alert exists for Create o
+    [BASSO]  6.1.2.4  E=0.7  norm=0
+Ensure that Activity Log Alert exists for Delete N
+    [BASSO]  6.1.2.8  E=0.7  norm=0
+Ensure that Activity Log Alert exists for Delete S
+    [BASSO]  8.1.1.1  E=0.7  norm=0
+Ensure Microsoft Defender CSPM is set to 'On'
+    [BASSO]  8.1.2.1  E=0.7  norm=0
+Ensure Microsoft Defender for APIs is set to 'On'
+    [BASSO]  8.1.4.1  E=0.7  norm=0
+Ensure That Microsoft Defender for Containers Is S
+    [BASSO]  6.1.2.9  E=0.7  norm=0
+Ensure that Activity Log Alert exists for Create o
+    [BASSO]  6.1.2.10  E=0.7  norm=0
+Ensure that Activity Log Alert exists for Delete P
+    [BASSO]  2.3.10   E=0.7  norm=0
+Ensure incoming client certificates are enabled an
+
+  Report esportato: .\cis_scoring_report_20260620_174911.csv
+
+================================================================
+  Scoring completato.
+================================================================
+**********************
+Fine trascrizione Windows PowerShell
+Ora di fine: 20260620174911
+**********************
