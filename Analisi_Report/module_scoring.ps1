@@ -16,11 +16,11 @@
 param(
 	[Parameter(Mandatory=$true)]
     [string]$CsvPath,
-    [double]$Wc       = 0.40,
-    [double]$Wd       = 0.35,
-    [double]$Wr       = 0.25,
+    [double]$Wc,
+    [double]$Wd,
+    [double]$Wr,
     [double]$Alpha    = 0.35,
-    [double]$Beta     = 0.70,
+    [double]$Beta     = 0.65,
     [switch]$ExportCsv,
     [string]$ExportPath = ".\cis_scoring_report_$(Get-Date -Format 'yyyyMMdd_HHmmss').csv"
 )

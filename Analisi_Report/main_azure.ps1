@@ -17,11 +17,11 @@
 [CmdletBinding(PositionalBinding=$false)]
 param(
     [switch]$AuditOnly,
-    [double]$Wc      = 0.4,
-    [double]$Wd      = 0.3,
-    [double]$Wr      = 0.3,
+    [double]$Wc = 0.30,
+    [double]$Wd = 0.40,
+    [double]$Wr = 0.30,
     [double]$Alpha   = 0.35,
-    [double]$Beta    = 0.70,
+    [double]$Beta    = 0.65,
     [string]$CsvPath = "",
     [string]$OutputDir = "", 
     [switch]$ExportLog
