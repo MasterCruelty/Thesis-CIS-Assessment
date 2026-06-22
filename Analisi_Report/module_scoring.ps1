@@ -95,9 +95,14 @@ foreach ($row in $csv) {
 
     # Calcolo
     $Ei      = [Math]::Round($Wc * $C + $Wd * $D + $Wr * $R, 4)
-    $Ei_norm = if ($Emax -eq $Emin) { 0.0 } else {
-        [Math]::Round([Math]::Max(0.0, [Math]::Min(1.0, ($Ei - $Emin) / ($Emax - $Emin))), 4)
-    }
+    if ($Emax -eq $Emin) {
+    	$Ei_norm = 0.0
+	} else {
+    	$raw = ($Ei - $Emin) / ($Emax - $Emin)
+    	$clamped = [Math]::Max(0.0, [Math]::Min(1.0, $raw))
+    	$Ei_norm = [Math]::Round($clamped, 4)
+	}
+	
     $level = if ($Ei_norm -lt $Alpha) { "BASSO" } elseif ($Ei_norm -lt $Beta) { "MEDIO" } else { "ALTO" }
 
     $results += [PSCustomObject]@{
