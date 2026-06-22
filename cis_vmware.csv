@@ -73,7 +73,7 @@ demand additional configurations or toolset proficiency.","# Check if SSH is run
 Get-VMHost | Get-VMHostService | Where { $_.key -eq ""TSM-SSH"" } | Select 
 VMHost, Key, Label, Policy, Running, Required ","# Set SSH to start manually rather than automatically for all hosts 
 Get-VMHost | Get-VMHostService | Where { $_.key -eq ""TSM-SSH"" } | Set
-VMHostService -Policy Off ",1,1,1,,Running=False; Policy=Off,custom
+VMHostService -Policy Off ",1,0,1,,Running=False; Policy=Off,custom
 3.2,management,Host must deactivate the ESXi shell,Level 1,"The ESXi shell is an interactive command line environment available from the Direct 
 Console User Interface (DCUI) or remotely via SSH. Activities performed from the ESXi 
 Shell bypass all access controls, but are logged. The recommended setting for the ESXi 
@@ -85,7 +85,7 @@ Get-VMHost | Get-VMHostService | Where { $_.key -eq ""TSM"" } | Select VMHost,
 Key, Label, Policy, Running, Required ","# Set the ESXi shell to start manually rather than automatically for all 
 hosts 
 Get-VMHost | Get-VMHostService | Where { $_.key -eq ""TSM"" } | Set
-VMHostService -Policy Off",1,1,1,,Running=False; Policy=Off,custom
+VMHostService -Policy Off",1,0,1,,Running=False; Policy=Off,custom
 3.3,management,"Host must deactivate the ESXi Managed Object Browser 
 (MOB)",Level 1,"The Managed Object Browser (MOB) is a web-based server application that lets you 
 examine and change system objects and configurations. It is a prudent security 
@@ -296,7 +296,7 @@ diagram of the virtual switch.
 8. Click the Edit settings option. 
 9. In the Properties section, enter an appropriate name in the Network label field. 
 10. In the VLAN ID dropdown select or type a new VLAN. 
-11. Click OK. ",2,1,2,,Nessun port group con VLAN ID=1,custom
+11. Click OK. ",2,0,2,,Nessun port group con VLAN ID=1,custom
 5.10,network,"Host must restrict the use of Virtual Guest Tagging 
 (VGT) on standard virtual switches",Level 1,"When a port group is set to VLAN 4095 on standard virtual switches, it enables Virtual 
 Guest Tagging (VGT), letting all network frames pass to the attached virtual machines 
