@@ -49,9 +49,10 @@ $csv = Import-Csv -Path $CsvPath -Encoding UTF8
 
 # Verifica colonne C/D/R
 $firstRow = $csv | Select-Object -First 1
-if (-not ($firstRow.PSObject.Properties.Name -contains 'C')) {
-    Write-Error "Il CSV non contiene la colonna 'C'. Aggiungere le colonne C, D, R al file."; return
+if (-not ($firstRow.PSObject.Properties.Name -contains 'C' -or $firstRow.PSObject.Properties.Name -contains 'D' -or $firstRow.PSObject.Properties.Name -contains 'R')) {
+    Write-Error "Aggiungere le colonne C, D, R al file."; return
 }
+
 
 # ---------------------------------------------------------------------------
 # upperbounds e lowerbounds teorici
