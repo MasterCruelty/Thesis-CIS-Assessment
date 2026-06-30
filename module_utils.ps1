@@ -42,7 +42,7 @@ function Initialize-VMwareCIS {
     Import-Csv -Path $CsvPath -Encoding UTF8 | ForEach-Object {
         $Global:CISBenchmarkData[$_.id.Trim()] = $_
     }
-    Write-Host "  [ENGINE] Dataset VMware caricato: $($Global:CISBenchmarkData.Count) controlli" -ForegroundColor DarkCyan
+    Write-Host "  [INIT] Dataset VMware caricato: $($Global:CISBenchmarkData.Count) controlli" -ForegroundColor DarkCyan
 
     if (-not $Global:CISAuditResults) { $Global:CISAuditResults = @{} }
     return $true
@@ -238,11 +238,11 @@ function Initialize-AzCIS {
     Import-Csv -Path $CsvPath -Encoding UTF8 | ForEach-Object {
         $Global:CISBenchmarkData[$_.id.Trim()] = $_
     }
-    Write-Host "  [ENGINE] Dataset Azure caricato: $($Global:CISBenchmarkData.Count) controlli" -ForegroundColor DarkCyan
+    Write-Host "  [INIT] Dataset Azure caricato: $($Global:CISBenchmarkData.Count) controlli" -ForegroundColor DarkCyan
 
     if (-not $Global:CISAuditResults) { $Global:CISAuditResults = @{} }
 
-    Write-Host "  [ENGINE] Account: $($account.user.name) | Subscription: $($account.name)" -ForegroundColor DarkCyan
+    Write-Host "  [INIT] Account: $($account.user.name) | Subscription: $($account.name)" -ForegroundColor DarkCyan
     return $true
 }
 
