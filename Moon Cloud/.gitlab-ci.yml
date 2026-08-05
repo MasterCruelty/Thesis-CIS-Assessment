@@ -1,0 +1,13 @@
+build_probe:
+  stage: build
+  variables:
+    CONTAINER_RELEASE_IMAGE: $CI_REGISTRY_IMAGE:latest
+  image: quay.io/podman/stable:latest
+  before_script:
+    - podman login -u gitlab-ci-token -p $CI_JOB_TOKEN $CI_REGISTRY
+  script:
+    - podman build -t $CONTAINER_RELEASE_IMAGE --build-arg GITLAB_TOKEN_USER=gitlab-ci-token --build-arg GITLAB_TOKEN=$CI_JOB_TOKEN .
+    - podman push $CONTAINER_RELEASE_IMAGE
+  interruptible: true
+  artifacts:
+    expire_in: 30 days

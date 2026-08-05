@@ -1,0 +1,41 @@
+{
+  "type": "object",
+  "required": ["config"],
+  "properties": {
+    "config": {
+      "type": "object",
+      "description": "La sonda si collega a una sottoscrizione Azure via API autenticata.",
+      "required": ["subscription_id"],
+      "properties": {
+        "subscription_id": {
+          "type": "string",
+          "description": "ID della subscription Azure da sottoporre ai controlli di conformità."
+        }
+      }
+    },
+    "audit": {
+      "type": "object",
+      "description": "Configurazione della valutazione di conformità",
+      "properties": {
+        "timeout_seconds": {
+          "type": "integer",
+          "minimum": 60,
+          "maximum": 7200,
+          "default": 1800,
+          "description": "Timeout massimo per l'esecuzione"
+        }
+      }
+    },
+    "scoring": {
+      "type": "object",
+      "description": "Parametri del modello di scoring dell'effort di remediation",
+      "properties": {
+        "wc":   { "type": "number", "minimum": 0, "maximum": 1, "default": 0.40, "description": "Peso della complessità strutturale dell'intervento di remediation (C)" },
+        "wd":   { "type": "number", "minimum": 0, "maximum": 1, "default": 0.30, "description": "Peso dell'impatto sulla disponibilità rispetto alla remediation (D)" },
+        "wr":   { "type": "number", "minimum": 0, "maximum": 1, "default": 0.30, "description": "Peso della reversibilità dopo aver eseguito la remediation (R)" },
+        "alfa": { "type": "number", "minimum": 0, "maximum": 1, "default": 0.35, "description": "Soglia BASSO/MEDIO su E_norm" },
+        "beta": { "type": "number", "minimum": 0, "maximum": 1, "default": 0.70, "description": "Soglia MEDIO/ALTO su E_norm" }
+      }
+    }
+  }
+}

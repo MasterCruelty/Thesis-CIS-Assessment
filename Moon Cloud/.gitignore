@@ -1,0 +1,17 @@
+# python virtual environment
+env/
+venv/
+
+# python cache
+__pycache__/
+*.pyc
+
+# ide-related stuff
+.idea/
+.vscode/
+
+# Moon Cloud credential test file
+credential.json
+
+# output locali di test
+*.json.out

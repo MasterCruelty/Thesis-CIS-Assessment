@@ -1,0 +1,7 @@
+# Versione del driver Moon Cloud.
+
+# vecchio link errato
+#git+https://repository.v2.moon-cloud.eu/dev/driver.git@v1.0.2
+
+# nuovo link corretto
+git+https://repository.ricerca.sesar.di.unimi.it/mooncloud/dev/driver.git@v1.0.2

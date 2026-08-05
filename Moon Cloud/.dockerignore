@@ -1,0 +1,22 @@
+# python virtual environment
+env/
+venv/
+
+# python cache
+__pycache__/
+*.pyc
+
+# ide-related stuff
+.idea/
+.vscode/
+
+# git-related files
+.git/
+.gitignore
+
+# documentazione e file non necessari a runtime
+readme.md
+credential.example.json
+
+# Moon Cloud credential test file
+credential.json

@@ -1,0 +1,327 @@
+{
+   "integer_result":1,
+   "pretty_result":"9 controlli CIS su 15 non conformi (40.0% di compliance).",
+   "extra_data":{
+      "refined":{
+         "cve":[
+            
+         ]
+      },
+      "raw":{
+         "Summary":{
+            "Scope":"CIS Azure - Section 2 App Service",
+            "Subscription":"01234ab56-78cd-9012-34ef-567890g123hi",
+            "Benchmark":"CIS Microsoft Azure Foundations v5.0.0 / Compute Services v2.0.0",
+            "ChecksExecuted":15,
+            "Evaluated":15,
+            "Compliant":6,
+            "NonCompliant":9,
+            "NotApplicable":0,
+            "ComplianceRate":"40.0%"
+         },
+         "RemediationEffort":{
+            "Model":"E_i = wc*C + wd*D + wr*R, normalizzato in [0,1]",
+            "Weights":{
+               "wc":0.4,
+               "wd":0.3,
+               "wr":0.3
+            },
+            "Thresholds":{
+               "alfa":0.35,
+               "beta":0.7
+            },
+            "NonCompliantByEffort":{
+               "High":0,
+               "Medium":4,
+               "Low":5
+            }
+         },
+         "Checks":{
+            "CIS 2.3.10":{
+               "Name":"Ensure incoming client certificates are enabled and required (if in use)",
+               "Category":"app-service",
+               "Status":"NON-COMPLIANT",
+               "ObjectsEvaluated":1,
+               "ObjectsNonCompliant":1,
+               "Effort":{
+                  "Level":"BASSO",
+                  "E_norm":0.0,
+                  "Complexity":1,
+                  "Downtime":0,
+                  "Reversibility":1
+               },
+               "AffectedObjects":"test-web-app (clientCertEnabled=False, mode=Required)",
+               "Remediation":"az resource update --resource-group <resource-group-name> --name <functionapp-name> --resource-type \"Microsoft.Web/sites\" --set properties.clientCertEnabled=true --set properties.clientCertMode=Required"
+            },
+            "CIS 2.3.11":{
+               "Name":"Ensure 'App Service authentication' is set to 'Enabled' ",
+               "Category":"app-service",
+               "Status":"NON-COMPLIANT",
+               "ObjectsEvaluated":1,
+               "ObjectsNonCompliant":1,
+               "Effort":{
+                  "Level":"BASSO",
+                  "E_norm":0.2,
+                  "Complexity":2,
+                  "Downtime":0,
+                  "Reversibility":1
+               },
+               "AffectedObjects":"test-web-app (auth.enabled=(assente o nulla))",
+               "Remediation":"az webapp auth update --resource-group <resource-group-name> --name <function-app-name> --enabled true"
+            },
+            "CIS 2.3.12":{
+               "Name":"Ensure managed identities are configured",
+               "Category":"app-service",
+               "Status":"NON-COMPLIANT",
+               "ObjectsEvaluated":1,
+               "ObjectsNonCompliant":1,
+               "Effort":{
+                  "Level":"BASSO",
+                  "E_norm":0.15,
+                  "Complexity":1,
+                  "Downtime":0,
+                  "Reversibility":2
+               },
+               "AffectedObjects":"test-web-app (identity.type=(assente o nulla))",
+               "Remediation":"az functionapp identity assign --resource-group <resource-group-name> --name <function-app-name>"
+            },
+            "CIS 2.3.13":{
+               "Name":"Ensure public network access is disabled",
+               "Category":"app-service",
+               "Status":"COMPLIANT",
+               "ObjectsEvaluated":1,
+               "ObjectsNonCompliant":0,
+               "Effort":{
+                  "Level":"MEDIO",
+                  "E_norm":0.5,
+                  "Complexity":2,
+                  "Downtime":1,
+                  "Reversibility":2
+               }
+            },
+            "CIS 2.3.14":{
+               "Name":"Ensure function app is integrated with a virtual network",
+               "Category":"app-service",
+               "Status":"NON-COMPLIANT",
+               "ObjectsEvaluated":1,
+               "ObjectsNonCompliant":1,
+               "Effort":{
+                  "Level":"MEDIO",
+                  "E_norm":0.5,
+                  "Complexity":2,
+                  "Downtime":1,
+                  "Reversibility":2
+               },
+               "AffectedObjects":"test-web-app (valore: (proprieta' assente))",
+               "Remediation":"az functionapp vnet-integration add --resource-group <resource-group-name> -- name <function-app-name> --vnet <virtual-network-name> --subnet <subnet-name>"
+            },
+            "CIS 2.3.15":{
+               "Name":"Ensure configuration is routed through the virtual network integration",
+               "Category":"app-service",
+               "Status":"NON-COMPLIANT",
+               "ObjectsEvaluated":1,
+               "ObjectsNonCompliant":1,
+               "Effort":{
+                  "Level":"MEDIO",
+                  "E_norm":0.5,
+                  "Complexity":2,
+                  "Downtime":1,
+                  "Reversibility":2
+               },
+               "AffectedObjects":"test-web-app (valore: (proprieta' assente))",
+               "Remediation":"az resource update --resource-group <resource-group-name> --name <functionapp-name> --resource-type \"Microsoft.Web/sites\" --set properties.vnetImagePullEnabled=true --set properties.vnetContentShareEnabled=true"
+            },
+            "CIS 2.3.16":{
+               "Name":"Ensure all traffic is routed through the virtual network",
+               "Category":"app-service",
+               "Status":"NON-COMPLIANT",
+               "ObjectsEvaluated":1,
+               "ObjectsNonCompliant":1,
+               "Effort":{
+                  "Level":"MEDIO",
+                  "E_norm":0.5,
+                  "Complexity":2,
+                  "Downtime":1,
+                  "Reversibility":2
+               },
+               "AffectedObjects":"test-web-app (vnetRouteAll=False)",
+               "Remediation":"az resource update --resource-group <resource-group-name> --name <functionapp-name> --resource-type \"Microsoft.Web/sites\" --set properties.vnetRouteAllEnabled=true"
+            },
+            "CIS 2.3.17":{
+               "Name":"Ensure cross-origin resource sharing does not allow all origins",
+               "Category":"app-service",
+               "Status":"COMPLIANT",
+               "ObjectsEvaluated":1,
+               "ObjectsNonCompliant":0,
+               "Effort":{
+                  "Level":"BASSO",
+                  "E_norm":0.0,
+                  "Complexity":1,
+                  "Downtime":0,
+                  "Reversibility":1
+               }
+            },
+            "CIS 2.3.3":{
+               "Name":"Ensure 'Basic Authentication Publishing Credentials' are 'Disabled'",
+               "Category":"app-service",
+               "Status":"COMPLIANT",
+               "ObjectsEvaluated":2,
+               "ObjectsNonCompliant":0,
+               "Effort":{
+                  "Level":"BASSO",
+                  "E_norm":0.0,
+                  "Complexity":1,
+                  "Downtime":0,
+                  "Reversibility":1
+               }
+            },
+            "CIS 2.3.4":{
+               "Name":"Ensure 'FTP state' is set to 'FTPS only' or 'Disabled'",
+               "Category":"app-service",
+               "Status":"COMPLIANT",
+               "ObjectsEvaluated":1,
+               "ObjectsNonCompliant":0,
+               "Effort":{
+                  "Level":"BASSO",
+                  "E_norm":0.0,
+                  "Complexity":1,
+                  "Downtime":0,
+                  "Reversibility":1
+               }
+            },
+            "CIS 2.3.5":{
+               "Name":"Ensure 'HTTP version' is set to '2.0' (if in use) ",
+               "Category":"app-service",
+               "Status":"NON-COMPLIANT",
+               "ObjectsEvaluated":1,
+               "ObjectsNonCompliant":1,
+               "Effort":{
+                  "Level":"BASSO",
+                  "E_norm":0.0,
+                  "Complexity":1,
+                  "Downtime":0,
+                  "Reversibility":1
+               },
+               "AffectedObjects":"test-web-app (valore: False)",
+               "Remediation":"az functionapp config set --resource-group <resource-group-name> --name <appname> --http20-enabled true"
+            },
+            "CIS 2.3.6":{
+               "Name":"Ensure 'HTTPS Only' is set to 'On'",
+               "Category":"app-service",
+               "Status":"COMPLIANT",
+               "ObjectsEvaluated":1,
+               "ObjectsNonCompliant":0,
+               "Effort":{
+                  "Level":"BASSO",
+                  "E_norm":0.0,
+                  "Complexity":1,
+                  "Downtime":0,
+                  "Reversibility":1
+               }
+            },
+            "CIS 2.3.7":{
+               "Name":"Ensure 'Minimum Inbound TLS Version' is set to '1.2' or higher",
+               "Category":"app-service",
+               "Status":"COMPLIANT",
+               "ObjectsEvaluated":1,
+               "ObjectsNonCompliant":0,
+               "Effort":{
+                  "Level":"BASSO",
+                  "E_norm":0.0,
+                  "Complexity":1,
+                  "Downtime":0,
+                  "Reversibility":1
+               }
+            },
+            "CIS 2.3.8":{
+               "Name":"Ensure end-to-end TLS encryption is enabled",
+               "Category":"app-service",
+               "Status":"NON-COMPLIANT",
+               "ObjectsEvaluated":1,
+               "ObjectsNonCompliant":1,
+               "Effort":{
+                  "Level":"MEDIO",
+                  "E_norm":0.35,
+                  "Complexity":2,
+                  "Downtime":0,
+                  "Reversibility":2
+               },
+               "AffectedObjects":"test-web-app (ssl=False, httpsOnly=True)",
+               "Remediation":"az resource update --resource-group <resource-group-name> --name <functionapp-name> --resource-type \"Microsoft.Web/sites\" --set properties.endToEndEncryptionEnabled=true"
+            },
+            "CIS 2.3.9":{
+               "Name":"Ensure 'Remote debugging' is set to 'Off'",
+               "Category":"app-service",
+               "Status":"NON-COMPLIANT",
+               "ObjectsEvaluated":1,
+               "ObjectsNonCompliant":1,
+               "Effort":{
+                  "Level":"BASSO",
+                  "E_norm":0.0,
+                  "Complexity":1,
+                  "Downtime":0,
+                  "Reversibility":1
+               },
+               "AffectedObjects":"test-web-app (valore: (proprieta' assente))",
+               "Remediation":"az functionapp config set --resource-group <resource-group-name> --name <function-app-name> --remote-debugging-enabled false"
+            }
+         },
+         "SuggestedPriority":{
+            "1":{
+               "Check":"CIS 2.3.10",
+               "Name":"Ensure incoming client certificates are enabled and required (if in use)",
+               "Effort":"BASSO",
+               "AffectedObjects":1
+            },
+            "2":{
+               "Check":"CIS 2.3.5",
+               "Name":"Ensure 'HTTP version' is set to '2.0' (if in use) ",
+               "Effort":"BASSO",
+               "AffectedObjects":1
+            },
+            "3":{
+               "Check":"CIS 2.3.9",
+               "Name":"Ensure 'Remote debugging' is set to 'Off'",
+               "Effort":"BASSO",
+               "AffectedObjects":1
+            },
+            "4":{
+               "Check":"CIS 2.3.12",
+               "Name":"Ensure managed identities are configured",
+               "Effort":"BASSO",
+               "AffectedObjects":1
+            },
+            "5":{
+               "Check":"CIS 2.3.11",
+               "Name":"Ensure 'App Service authentication' is set to 'Enabled' ",
+               "Effort":"BASSO",
+               "AffectedObjects":1
+            },
+            "6":{
+               "Check":"CIS 2.3.8",
+               "Name":"Ensure end-to-end TLS encryption is enabled",
+               "Effort":"MEDIO",
+               "AffectedObjects":1
+            },
+            "7":{
+               "Check":"CIS 2.3.14",
+               "Name":"Ensure function app is integrated with a virtual network",
+               "Effort":"MEDIO",
+               "AffectedObjects":1
+            },
+            "8":{
+               "Check":"CIS 2.3.15",
+               "Name":"Ensure configuration is routed through the virtual network integration",
+               "Effort":"MEDIO",
+               "AffectedObjects":1
+            },
+            "9":{
+               "Check":"CIS 2.3.16",
+               "Name":"Ensure all traffic is routed through the virtual network",
+               "Effort":"MEDIO",
+               "AffectedObjects":1
+            }
+         }
+      }
+   }
+}

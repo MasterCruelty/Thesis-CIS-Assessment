@@ -1,0 +1,15 @@
+{
+  "config": {
+    "subscription_id": "01234ab56-78cd-9012-34ef-567890g123hi"
+  },
+  "audit": {
+    "timeout_seconds": 900
+  },
+  "scoring": {
+    "wc": 0.40,
+    "wd": 0.30,
+    "wr": 0.30,
+    "alfa": 0.35,
+    "beta": 0.70
+  }
+}
