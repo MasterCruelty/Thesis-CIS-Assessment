@@ -62,10 +62,27 @@
 %			CAPITOLO 1: Introduzione
 \chapter{Introduzione}
 
-
 \section{Contesto del problema}
 
+Con il passare degli anni e il susseguirsi delle rivoluzioni tecnologiche che attraversano il periodo contemporaneo, si rende sempre più necessario aumentare i livelli di protezione delle proprie infrastrutture in funzione delle nuove vulnerabilità che vengono scoperte.
+Da questa premessa nasce il problema di dover adeguare i propri sistemi alle buone pratiche istituite dai diversi standard di sicurezza che si affermano e si aggiornano continuamente. \\
+
+Un primo approccio possibile è quello di andare manualmente a verificare componente per componente la conformità rispetto a uno o più standard e rilasciare un risultato dell'analisi effettuata. \\
+
+Questo tipo di metodo però, porta con sè dei limiti quali la bassa efficienza in termini di tempo con cui vengono effettuati i controlli e la non scalabilità rispetto all'aumentare delle supervisioni da dover eseguire. Essenzialmente se in futuro c'è la volontà di voler coprire una quantità elevata di nuove vulnerabilità, il controllo manuale aumenta notevolmente le tempistiche di esecuzione. Un altro caso può essere l'aggiornamento dello standard già utilizzato, per il quale si renderebbe quindi necessario rifare nuovamente l'analisi da zero con lo stesso dispendio di tempo.
+
+
 \section{Obiettivi del lavoro}
+
+Appunti WIP
+
+Automazione della verifica dei controlli CIS Benchmark su due piattaforme eterogenee
+
+Quantificazione dell'effort di remediation tramite un modello di scoring
+
+Produzione di output consultatbile per il team operativo
+
+
 
 
 %			CAPITOLO 2: Standard di riferimento
@@ -73,32 +90,97 @@
 
 \section{Standard CIS Benchmark}
 
+Appunti WIP
+Struttura del benchmark: profili di applicabilità, sezioni, anatomia di un controllo (description, rationale, impact, audit, remediation)
+
+Documenti CIS utilizzati: CIS VMware ESXi 8 Benchmark v1.2.0; CIS Microsoft Azure Foundations Benchmark v5.0.0; CIS Microsoft Azure Compute Services Benchmark v2.0.0
+
+Limiti dello use case(sottoscrizione studente Azure)
+
 \section{Tecnologie}
+
+Appunti WIP
+
+PowerShell come linguaggio core del framework
+
+Azure CLI per l'interrogazione dell'infrastruttura cloud
+
+VMware PowerCLI per l'interrogazione di vSphere
 
 %			CAPITOLO 3: Architettura framework
 \chapter{Architettura del framework}
 
+
+
 \section{Schema architetturale del tool}
+Appunti WIP
+
+disegno funzionamento pipeline di esecuzione
+
 
 \section{Dataset estratto dai documenti CIS Benchmark}
 
+Appunti WIP
+
+Struttura e costruzione del dataset
+
+utilizzo di input per il framework
+
 \section{Requisiti e gestione del flusso}
+
+Appunti WIP
+
+Flusso di esecuzione VMware e Azure
+
+Gestione della sessione e privilegi esecuzione(Connect-VIServer, az login)
+
+Parametrizzazione possibile da riga di comando
 
 %			CAPITOLO 4: Implementazione moduli di audit
 \chapter{Implementazione dei moduli di audit}
 
 \section{Moduli Azure}
 
+Appunti WIP
+
+Casi rappresentativi per categoria: app service, management, networking, security, virtual machines. (sezioni 2, 6, 7, 8, 20)
+
 \section{Moduli VMware}
 
+Appunti WIP
+
+Casi rappresentativi per categoria: base, management, logging, network, features, virtual machines (sezioni 2-7)
+
 \section{Decisioni implementative rilevanti}
+
+Appunti WIP
+
+Gestione dello stato N/A distinto da COMPLIANT
+
+Autenticazione esterna all’esecuzione framework (Azure) e prompt interattivo(VMware)
 
 %			CAPITOLO 5: modello di scoring
 \chapter{Il modello di scoring}
 
 \section{Definizione delle dimensioni di effort: C, D, R}
 
+Appunti WIP
+
+definizione e valori ammissibili
+
+Assegnazione dei valori: metodo (analisi testo CIS qualitativo)
+
 \section{Calcolo e normalizzazione della metrica di effort}
+
+Appunti WIP
+
+Ei = wc*C + wd*D + wr*R
+
+Normalizzazione min-max: Enorm = (Ei - Emin) / (Emax - Emin)
+
+denominatore sempre pari a 2 per profili bilanciati
+
+Conseguenza: punti fissi 0, 0.5, 1 per profili simmetrici robustezza rispetto ai pesi
 
 
 %			CAPITOLO 6: esecuzione e analisi risultati
@@ -106,9 +188,36 @@
 
 \section{Ambienti di test cloud e on-premise}
 
+Appunti WIP
+
+Infrastruttura VMware: ambiente di laboratorio aziendale, 14 host ESXi, ~1000 VM
+
+Infrastruttura Azure: subscription studente, risorse minimali per copertura dei controlli
+
 \section{Analisi risultati}
 
+Appunti WIP
+
+Statistiche descrittive di C, D, R, Enorm
+
+Test di normalità (Shapiro-Wilk): distribuzione di Enorm non normale — motivazione tecnica
+
+Distribuzione dell'effort per categoria: box plot e confronto tra categorie (Kruskal-Wallis)
+
+Analisi di sensibilità ai pesi: stabilità della classificazione
+
+Matrice Effort vs Impatto: identificazione dei quick win per la remediation
+
 \section{Differenze strutturali nei benchmark Azure e VMware}
+
+Appunti WIP
+
+
+Distribuzione Enorm sui due benchmark: confronto tra strutture dei due standard
+
+Test di Mann-Whitney: differenza statisticamente significativa?
+
+Limite: confronto del compliance rate non comparabile tra ambienti — dichiarazione esplicita
 
 % 			CAPITOLO 7: conclusioni e possibili miglioramenti
 \chapter{Conclusioni e possibili miglioramenti}
@@ -116,9 +225,35 @@
 
 \section{Contributi apportati}
 
+Appunti WIP
+
+Framework di audit automatizzato su due piattaforme con engine condiviso
+
+Modello di scoring quantitativo per la prioritizzazione della remediation
+
+Dataset CIS strutturato con valori C/D/R validati contro il testo ufficiale
+
 \section{Limiti}
 
+Appunti WIP
+
+Assegnazione C/D/R: inevitabile componente di expert judgement per check senza Impact esplicito nel documento CIS
+
+Operatore custom: logica di verifica non riducibile a confronto parametrico — limite del paradigma data-driven
+
+Ambiente Azure: subscription studente non rappresentativa di un ambiente di produzione
+
 \section{Possibili miglioramenti}
+
+Appunti WIP
+
+Adozione di VIKOR multi-criterio (Anisetti et al., 2023) per la matrice Effort/Impatto multi-dimensionale
+
+Analisi temporale: rilevamento del drift di configurazione su esecuzioni periodiche
+
+Estensione a ulteriori piattaforme (AWS, Kubernetes) tramite il pattern engine condiviso + dataset CSV
+
+Aggiunta di test unitari Pester sulle funzioni core di moduleengine
 
 
 %
