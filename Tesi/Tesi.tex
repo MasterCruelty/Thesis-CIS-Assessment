@@ -1,0 +1,154 @@
+%
+% Tesi D.S.I. - modello preso da
+% Stanford University PhD thesis style -- modifications to the report style
+%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%                                                                         %
+%			TESI DOTTORATO                                                   %
+%			______________                                                   %
+%                                                                         %
+%			AUTORE: Elena Pagani                                             %
+%                                                                         %
+%			Ultima revisione: 7.X.1998                                       %
+%           correzioni atrent                                             %
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%
+%
+\documentclass[a4paper,12pt]{report}
+%    \renewcommand{\baselinestretch}{1.6}      % interline spacing
+%
+% \includeonly{}
+%
+%			PREAMBOLO
+%
+\usepackage[a4paper]{geometry}
+\usepackage{amssymb,amsmath,amsthm}
+\usepackage{graphicx}
+\usepackage{url}
+\usepackage{hyperref}
+\usepackage{epsfig}
+\usepackage[italian]{babel}
+\usepackage{setspace}
+\usepackage{tesi}
+
+% per le accentate
+\usepackage[utf8]{inputenc}
+%
+\newtheorem{myteor}{Teorema}[section]
+%
+\newenvironment{teor}{\begin{myteor}\sl}{\end{myteor}}
+%
+%
+%			TITOLO
+%
+\begin{document}
+\begin{center}
+\includegraphics[width=\textwidth]{Logo.jpg}
+\title{Valutazione della compliance ai CIS Benchmark in ambienti Cloud e on-premise mediante sviluppo di un tool di analisi}
+\end{center}
+\author{Roberto Antoniello}
+\dept{Corso di Laurea magistrale in Informatica} 
+\anno{2025-2026}
+\matricola{47891A}
+\relatore{Prof. Claudio Agostino Ardagna}
+\correlatore{Prof. Marco Anisetti}
+
+
+
+\beforepreface
+\afterpreface
+% 
+% 
+%			CAPITOLO 1: Introduzione
+\chapter{Introduzione}
+
+
+\section{Contesto del problema}
+
+\section{Obiettivi del lavoro}
+
+
+%			CAPITOLO 2: Standard di riferimento
+\chapter{Standard di riferimento e tecnologie utilizzate}
+
+\section{Standard CIS Benchmark}
+
+\section{Tecnologie}
+
+%			CAPITOLO 3: Architettura framework
+\chapter{Architettura del framework}
+
+\section{Schema architetturale del tool}
+
+\section{Dataset estratto dai documenti CIS Benchmark}
+
+\section{Requisiti e gestione del flusso}
+
+%			CAPITOLO 4: Implementazione moduli di audit
+\chapter{Implementazione dei moduli di audit}
+
+\section{Moduli Azure}
+
+\section{Moduli VMware}
+
+\section{Decisioni implementative rilevanti}
+
+%			CAPITOLO 5: modello di scoring
+\chapter{Il modello di scoring}
+
+\section{Definizione delle dimensioni di effort: C, D, R}
+
+\section{Calcolo e normalizzazione della metrica di effort}
+
+
+%			CAPITOLO 6: esecuzione e analisi risultati
+\chapter{Esecuzione framework e analisi risultati}
+
+\section{Ambienti di test cloud e on-premise}
+
+\section{Analisi risultati}
+
+\section{Differenze strutturali nei benchmark Azure e VMware}
+
+% 			CAPITOLO 7: conclusioni e possibili miglioramenti
+\chapter{Conclusioni e possibili miglioramenti}
+
+
+\section{Contributi apportati}
+
+\section{Limiti}
+
+\section{Possibili miglioramenti}
+
+
+%
+%
+
+%
+%			BIBLIOGRAFIA
+%
+\begin{thebibliography}{00}
+%
+\bibitem{CIS_Azure_1_25}
+Center for Internet Security, CIS Microsoft Azure Foundations Benchmark, Version 5.0.0, 2025
+%
+\bibitem{CIS_Azure_2_25}
+Center for Internet Security, CIS Microsoft Azure Compute Services Benchmark, Version 2.0.0, 2025
+%
+\bibitem{CIS_VMware_25}
+Center for Internet Security, CIS VMware ESXi Benchmark, Version 1.2.0, 2025
+%
+\bibitem{Ardagna2015}
+Claudio A. Ardagna, Rasool Asal, Ernesto Damiani, Quang Hieu Vu: From Security to Assurance in the Cloud: A Survey.
+ACM Comput. Surv. 48(1): 2:1-2:50 (2015)
+%
+\bibitem{Anisetti2023}
+Marco Anisetti, Claudio Agostino Ardagna Nicola Bena: Multi-Dimensional Certification of Modern Distributed Systems.
+IEEE Trans. Serv. Comput. 16(3): 1999-2012 (2023)
+%
+\end{thebibliography}
+% 
+\end{document}
+
+
+ 
