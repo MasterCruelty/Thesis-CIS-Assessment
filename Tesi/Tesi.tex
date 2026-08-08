@@ -64,24 +64,47 @@
 
 \section{Contesto del problema}
 
-Con il passare degli anni e il susseguirsi delle rivoluzioni tecnologiche che attraversano il periodo contemporaneo, si rende sempre più necessario aumentare i livelli di protezione delle proprie infrastrutture in funzione delle nuove vulnerabilità che vengono scoperte.
-Da questa premessa nasce il problema di dover adeguare i propri sistemi alle buone pratiche istituite dai diversi standard di sicurezza che si affermano e si aggiornano continuamente. \\
+La verifica di conformità alle buone pratiche di un'infrastruttura IT rispetto ad uno standard di sicurezza come i CIS Benchmark richiede il controllo di numerosi parametri di configurazione, ciascuno documentato con criteri specifici. Questo porta al fatto che all'aumentare della dimensione dell'infrastruttura e del numero di controlli di conformità da verificare, l'approccio manuale per questo tipo di lavoro diventa velocemente non sostenibile. \\
 
-Un primo approccio possibile è quello di andare manualmente a verificare componente per componente la conformità rispetto a uno o più standard e rilasciare un risultato dell'analisi effettuata. \\
-
-Questo tipo di metodo però, porta con sè dei limiti quali la bassa efficienza in termini di tempo con cui vengono effettuati i controlli e la non scalabilità rispetto all'aumentare delle supervisioni da dover eseguire. Essenzialmente se in futuro c'è la volontà di voler coprire una quantità elevata di nuove vulnerabilità, il controllo manuale aumenta notevolmente le tempistiche di esecuzione. Un altro caso può essere l'aggiornamento dello standard già utilizzato, per il quale si renderebbe quindi necessario rifare nuovamente l'analisi da zero con lo stesso dispendio di tempo.
+Questo tipo di metodo porta quindi con sè dei limiti quali la bassa efficienza in termini di tempo con cui vengono effettuati i controlli e la non scalabilità rispetto all'aumentare delle supervisioni da dover eseguire. Ad esempio se ad un certo punto vi è un aggiornamento dello standard già utilizzato, la conseguenza in tal caso sarebbe rifare nuovamente l'analisi da zero con lo stesso dispendio di tempo.
 
 
 \section{Obiettivi del lavoro}
 
-Appunti WIP
+Questo progetto si è quindi posto i seguenti obiettivi:
+\begin{itemize}
+\item Formalizzazione delle buone pratiche di uno standard in forma eseguibile.
+\item Quantificazione dell'effort di remediation mediante un modello di scoring
+\item Produzione di output dei risultati dell'analisi consultabile per il team operativo.
+\end{itemize}
 
-Automazione della verifica dei controlli CIS Benchmark su due piattaforme eterogenee
+Dunque l'obiettivo è quello di trasformare le raccomandazioni di uno standard di sicurezza in parametri e regole che un tool è in grado di leggere e comprendere in forma automatica senza bisogno di controlli manuali. \\
+Non tutti gli oggetti non conformi individuati hanno però lo stesso peso in termini di intervento operativo. Ad esempio alcuni possono richiedere un intervento immediato come la modifica di un semplice parametro di configurazione a impatto zero, mentre altri potrebbero invece richiedere delle attività più complesse con un fermo del servizio necessario. \\
+Da qui nasce la necessità di introdurre una metrica di effort normalizzata per gli oggetti che risultano non conformi alle buone pratiche. Quindi un valore che rappresenti la complessità, l'impatto sui servizi e la reversibilità di ogni intervento necessario a rendere conformi gli stessi oggetti. \\
+Questo porta a poter confrontare gli oggetti e dare un livello di priorità diverso tra i diversi interventi.\\
+Quanto detto sopra è chiaramente in funzione del fatto che si riesca ad avere un output finale ben strutturato in modo tale che sia consultabile da chi deve poi andare a eseguire i suddetti interventi. \\
 
-Quantificazione dell'effort di remediation tramite un modello di scoring
+Gli ambienti presi in considerazione durante questo lavoro sono Micorosft Azure per la parte Cloud e VMware per la parte on-premises.
 
-Produzione di output consultatbile per il team operativo
+\section{Struttura del lavoro svolto}
 
+Il lavoro svolto in questo progetto è stato eseguito in diverse fasi che verranno descritte in modo più approfondito nei successivi capitoli.\\
+
+Inizialmente vi è stato uno studio dello standard di riferimento che in questo caso è il CIS(Center for Internet Security) Benchmark. I documenti presi in considerazione sono stati i seguenti:
+\begin{itemize}
+\item CIS Microsoft Azure Foundations Benchmark \cite{CIS_Azure_1}
+\item CIS Microsoft Azure Compute Services Benchmark \cite{CIS_Azure_2}
+\item CIS VMware ESXi Benchmark \cite{CIS_VMware} \\
+\end{itemize}
+
+il CIS Benchmark come standard si presta bene al tipo di lavoro che si pone questo progetto per il fatto che nei documenti CIS i controlli sono descritti e formalizzati in modo tale che per la maggior parte dei controlli descritti vi siano dei criteri di valutazione direttamente traducibili in comandi a livello di codice e quindi automatizzabili mediante lo sviluppo di uno strumento apposito. \\
+
+Da questi documenti sono stati poi estratti un sottoinsieme di controlli di conformità che vengono implementati nello strumento di analisi. \\
+Una volta costruito il dataset, il passo successivo è stato andare a progettare lo schema del framework così da definirne in principio i requisiti e il suo funzionamento. \\
+Questo ordine di fasi di sviluppo è in funzione del fatto che la progettazione dell'architettura del framework dipende dalla struttura e dal formato del dataset prodotto a priori partendo dai documenti CIS e non il viceversa. \\
+In questa fase è stato definito anche il modello di scoring rispetto agli interventi di remediation per i controlli che risultano non conformi. \\
+Solo successivamente vi è stata la stesura del codice necessario all'implementazione. \\
+Infine vi è stata l'analisi dei risultati ottenuti e un resoconto di quanto realizzato.
 
 
 
@@ -264,13 +287,13 @@ Aggiunta di test unitari Pester sulle funzioni core di moduleengine
 %
 \begin{thebibliography}{00}
 %
-\bibitem{CIS_Azure_1_25}
+\bibitem{CIS_Azure_1}
 Center for Internet Security, CIS Microsoft Azure Foundations Benchmark, Version 5.0.0, 2025
 %
-\bibitem{CIS_Azure_2_25}
+\bibitem{CIS_Azure_2}
 Center for Internet Security, CIS Microsoft Azure Compute Services Benchmark, Version 2.0.0, 2025
 %
-\bibitem{CIS_VMware_25}
+\bibitem{CIS_VMware}
 Center for Internet Security, CIS VMware ESXi Benchmark, Version 1.2.0, 2025
 %
 \bibitem{Ardagna2015}
