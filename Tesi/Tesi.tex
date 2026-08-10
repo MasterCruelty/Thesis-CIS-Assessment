@@ -25,11 +25,33 @@
 \usepackage{amssymb,amsmath,amsthm}
 \usepackage{graphicx}
 \usepackage{url}
+\graphicspath{{./img/}}
 \usepackage{hyperref}
 \usepackage{epsfig}
 \usepackage[italian]{babel}
 \usepackage{setspace}
 \usepackage{tesi}
+
+\usepackage{tcolorbox}
+\tcbuselibrary{skins,breakable}
+
+\usepackage{listings}
+\usepackage{xcolor}
+
+\lstdefinestyle{azcli}{
+    backgroundcolor=\color{yellow!10!white},
+    basicstyle=\ttfamily\small,
+    frame=single,
+    framerule=0.8pt,
+    rulecolor=\color{black},
+    breaklines=true,
+    columns=fullflexible,
+    xleftmargin=0pt,
+    xrightmargin=0pt,
+    aboveskip=8pt,
+    belowskip=8pt
+}
+
 
 % per le accentate
 \usepackage[utf8]{inputenc}
@@ -73,18 +95,18 @@ Questo tipo di metodo porta quindi con sè dei limiti quali la bassa efficienza 
 
 Questo progetto si è quindi posto i seguenti obiettivi:
 \begin{itemize}
-\item Formalizzazione delle buone pratiche di uno standard in forma eseguibile.
+\item Formalizzazione delle buone pratiche di uno standard di sicurezza in forma eseguibile.
 \item Quantificazione dell'effort di remediation mediante un modello di scoring
 \item Produzione di output dei risultati dell'analisi consultabile per il team operativo.
 \end{itemize}
 
 Dunque l'obiettivo è quello di trasformare le raccomandazioni di uno standard di sicurezza in parametri e regole che un tool è in grado di leggere e comprendere in forma automatica senza bisogno di controlli manuali. \\
-Non tutti gli oggetti non conformi individuati hanno però lo stesso peso in termini di intervento operativo. Ad esempio alcuni possono richiedere un intervento immediato come la modifica di un semplice parametro di configurazione a impatto zero, mentre altri potrebbero invece richiedere delle attività più complesse con un fermo del servizio necessario. \\
+Non tutti gli oggetti non conformi individuati hanno però lo stesso peso in termini di intervento operativo. Ad esempio alcuni possono richiedere un intervento immediato come la modifica di un semplice parametro di configurazione a impatto zero, mentre altri potrebbero invece richiedere delle attività più complesse che rende necessario un fermo del servizio. \\
 Da qui nasce la necessità di introdurre una metrica di effort normalizzata per gli oggetti che risultano non conformi alle buone pratiche. Quindi un valore che rappresenti la complessità, l'impatto sui servizi e la reversibilità di ogni intervento necessario a rendere conformi gli stessi oggetti. \\
 Questo porta a poter confrontare gli oggetti e dare un livello di priorità diverso tra i diversi interventi.\\
 Quanto detto sopra è chiaramente in funzione del fatto che si riesca ad avere un output finale ben strutturato in modo tale che sia consultabile da chi deve poi andare a eseguire i suddetti interventi. \\
 
-Gli ambienti presi in considerazione durante questo lavoro sono Micorosft Azure per la parte Cloud e VMware per la parte on-premises.
+Gli ambienti presi in considerazione durante questo lavoro sono Microsoft Azure per la parte Cloud e VMware per la parte on-premises.
 
 \section{Struttura del lavoro svolto}
 
@@ -99,9 +121,9 @@ Inizialmente vi è stato uno studio dello standard di riferimento che in questo 
 
 il CIS Benchmark come standard si presta bene al tipo di lavoro che si pone questo progetto per il fatto che nei documenti CIS i controlli sono descritti e formalizzati in modo tale che per la maggior parte dei controlli descritti vi siano dei criteri di valutazione direttamente traducibili in comandi a livello di codice e quindi automatizzabili mediante lo sviluppo di uno strumento apposito. \\
 
-Da questi documenti sono stati poi estratti un sottoinsieme di controlli di conformità che vengono implementati nello strumento di analisi. \\
-Una volta costruito il dataset, il passo successivo è stato andare a progettare lo schema del framework così da definirne in principio i requisiti e il suo funzionamento. \\
-Questo ordine di fasi di sviluppo è in funzione del fatto che la progettazione dell'architettura del framework dipende dalla struttura e dal formato del dataset prodotto a priori partendo dai documenti CIS e non il viceversa. \\
+Da questi documenti sono stati poi estratti un sottoinsieme di controlli di conformità che sono stati implementati nello strumento di analisi. \\
+Una volta costruito il dataset, il passo successivo è stato andare a progettare lo schema del framework così da definirne subito i requisiti e il suo funzionamento. \\
+Questo ordine di fasi di sviluppo è in funzione del fatto che la progettazione dell'architettura del framework dipende dalla struttura e dal formato del dataset prodotto durante la fase di studio dei documenti CIS e non il viceversa. \\
 In questa fase è stato definito anche il modello di scoring rispetto agli interventi di remediation per i controlli che risultano non conformi. \\
 Solo successivamente vi è stata la stesura del codice necessario all'implementazione. \\
 Infine vi è stata l'analisi dei risultati ottenuti e un resoconto di quanto realizzato.
@@ -113,22 +135,91 @@ Infine vi è stata l'analisi dei risultati ottenuti e un resoconto di quanto rea
 
 \section{Standard CIS Benchmark}
 
-Appunti WIP
-Struttura del benchmark: profili di applicabilità, sezioni, anatomia di un controllo (description, rationale, impact, audit, remediation)
+I benchmark di sicurezza utilizzati in questo progetto sono sviluppati dal CIS(Center for Internet Security).\\
+Trattasi di un'organizzazione no-profit riconosciuta a livello globale la cui mission è aiutare le persone, le aziende e i governi delle nazioni a proteggersi meglio dalle vulnerabilità informatiche. \cite{CIS} \\
+I sistemi coperti da questa organizzazione sono molteplici, tra i quali anche Microsoft Azure e VMware i cui documenti utilizzati sono stati citati in precedenza.\\ \\ \\
+\begin{figure}[h]
+	\centering
+	\includegraphics[width=0.6\textwidth]{CIS_logo}
+    \caption{Logo del Center for Internet Security (CIS) \cite{CIS}}
+    \label{fig:CIS_logo}
+\end{figure}
 
-Documenti CIS utilizzati: CIS VMware ESXi 8 Benchmark v1.2.0; CIS Microsoft Azure Foundations Benchmark v5.0.0; CIS Microsoft Azure Compute Services Benchmark v2.0.0
 
-Limiti dello use case(sottoscrizione studente Azure)
+
+Generalmente i documenti sono un'insieme di buone pratiche che se applicate, vanno a minimizzare il rischio di sicurezza sull'utilizzo dei propri sistemi. Ognuno dei tre documenti utilizzati è suddiviso in diverse sezioni in base alla tipologia di componenti infrastrutturali che vanno a trattare. \\
+
+Di seguito si illustrano i principali campi presenti  nella struttura dei controlli di sicurezza del benchmark: \\
+\begin{itemize}
+\item Titolo
+\item Profile Applicability \\
+Diviso tra livello 1 e livello 2. Il primo tratta generalmente le raccomandazioni di sicurezza minima, il secondo invece controlli più approfonditi che potrebbero richiedere attività di riconfigurazione più complesse.
+\item Description
+\item Rationale \\
+Qui vi è una breve descrizione sulla ragione per la quale è rilevante questa raccomandazione di sicurezza.
+\item Impact \\
+Qui viene descritto l'impatto che la propria infrastruttura può subire nel caso in cui non venga adottata alcuna misura per risultare conformi a questa buona pratica.
+\item Audit \\
+Qui viene descritto come andare a verificare lo stato dell'arte sui propri sistemi per sapere se si è conformi o meno
+\item Remediation \\
+Qui invece viene descritto come operare per risolvere il problema e risultare conformi.
+\item Default Value \\
+Qui semplicemente viene indicato qual è il valore di default che detiene la configurazione, spesso quello corretto in termini di sicurezza.
+\end{itemize}
+
+
+Di seguito vi è un esempio di un controllo estratto da uno dei documenti dedicati a Microsoft Azure. \\ \\
+
+\begin{tcolorbox}[
+    colback=gray!8,
+    colframe=gray!40,
+    boxrule=0.5pt,
+    arc=0pt,
+    breakable,
+    left=8pt, right=8pt, top=6pt, bottom=6pt
+]
+\textbf{2.3.4 Ensure 'FTP state' is set to 'FTPS only' or 'Disabled' (Automated)}
+
+\begin{itemize}
+    \item \textbf{Profile Applicability:}\\ Level 1
+    \item \textbf{Description:}\\ By default, App Service supports deployment over FTP. If FTP is essential for a deployment workflow, FTPS should be enforced for all function apps.
+If FTPS is not explicitly required, the recommended setting is \textcolor{red}{Disabled}.
+    \item \textbf{Rationale:}\\ FTP is an unencrypted network protocol that transmits data—including passwords—in clear text. The use of this protocol can lead to both data and credential compromise and can present opportunities for exfiltration, persistence, and lateral movement.
+    \item \textbf{Impact:} \\
+    \textbf{Audit from Azure Portal}
+    \begin{enumerate}
+    \item Go to App Services or Function App.
+    \item Click the name of a function app.
+    \item Under Settings, click Configuration.
+    \item In the General settings pane, under Platform settings, ensure that FTP state is set to FTPS only or Disabled.
+    \item Repeat steps 1-4 for each function app.
+    \end{enumerate}
+	\textbf{Audit from Azure CLI} \\
+	Run the following command to list function apps: \\
+	
+	\begin{lstlisting}[style=azcli]
+	az functionapp list
+	\end{lstlisting}
+
+
+For each function app, run the following command to get the FTPS state setting:
+	\begin{lstlisting}[style=azcli]
+	az functionapp show --resource-group <resource-group-name> --name <function-app-name> --query siteConfig.ftpsState
+	\end{lstlisting}
+Ensure that \textcolor{red}{"FtpsOnly"} or \textcolor{red}{"Disabled"} is returned.
+\end{itemize}
+\end{tcolorbox}
+
+I test eseguiti durante lo svolgimento del lavoro si sono limitati a tutti quei controlli compatibili con la sottoscrizione Azure a disposizione: Azure For Student. \\
+Per quanto riguarda invece VMware è stato possibile utilizzare ai fini del progetto un'infrastruttura di laboratorio aziendale presso Lutech S.p.A.
 
 \section{Tecnologie}
 
-Appunti WIP
-
-PowerShell come linguaggio core del framework
-
-Azure CLI per l'interrogazione dell'infrastruttura cloud
-
-VMware PowerCLI per l'interrogazione di vSphere
+Data la natura degli ambienti e della struttura dei benchmark, il linguaggio di programmazione scelto è stato PowerShell. \\
+Questo linguaggio è risultato il più funzionale rispetto a questo lavoro poiché all'interno dei documenti CIS tutti gli automatismi di audit e di remediation sono scritti in PowerShell. \\
+Dunque non vi è stato necessario adattare i comandi per farli eseguire da un'altra tecnologia, ma sono stati utilizzati i suggerimenti ufficiali dettati dal Center for Internet Security. \\ \\
+Per quanto riguarda Azure la componente principale è Azure CLI, utilizzata per interagire con l'infrastruttura cloud.\\
+Per quanto riguarda VMware viene utilizzato il modulo VMware PowerCLI per interrogare il vCenter.
 
 %			CAPITOLO 3: Architettura framework
 \chapter{Architettura del framework}
@@ -303,6 +394,9 @@ ACM Comput. Surv. 48(1): 2:1-2:50 (2015)
 \bibitem{Anisetti2023}
 Marco Anisetti, Claudio Agostino Ardagna Nicola Bena: Multi-Dimensional Certification of Modern Distributed Systems.
 IEEE Trans. Serv. Comput. 16(3): 1999-2012 (2023)
+%
+\bibitem{CIS}
+Wikipedia, Center for Internet Security(CIS). \url{https://en.wikipedia.org/wiki/Center_for_Internet_Security}
 %
 \end{thebibliography}
 % 
