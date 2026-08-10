@@ -94,21 +94,8 @@ acceptable looking results, but it may be omitted to get smaller print.
 \def\thetable{\@arabic\c@table}
 \def\theequation{\arabic{equation}}
 
-\def\@xfloat#1[#2]{\ifhmode \@bsphack\@floatpenalty -\@Mii\else
-   \@floatpenalty-\@Miii\fi\def\@captype{#1}\ifinner
-      \@parmoderr\@floatpenalty\z@
-    \else\@next\@currbox\@freelist{\@tempcnta\csname ftype@#1\endcsname
-       \multiply\@tempcnta\@xxxii\advance\@tempcnta\sixt@@n
-       \@tfor \@tempa :=#2\do
-                        {\if\@tempa h\advance\@tempcnta \@ne\fi
-                         \if\@tempa t\advance\@tempcnta \tw@\fi
-                         \if\@tempa b\advance\@tempcnta 4\relax\fi
-                         \if\@tempa p\advance\@tempcnta 8\relax\fi
-         }\global\count\@currbox\@tempcnta}\@fltovf\fi
-    \global\setbox\@currbox\vbox\bgroup 
-    \def\baselinestretch{1}\@normalsize
-    \boxmaxdepth\z@
-    \hsize\columnwidth \@parboxrestore}
+% \@xfloat originale (Stanford, anni '90) RIMOSSO: incompatibile con gli
+% hook moderni di color/hyperref sui float. Si usa la versione del kernel LaTeX corrente.
 
 \long\def\@footnotetext#1{\insert\footins{\def\baselinestretch{1}\footnotesize
     \interlinepenalty\interfootnotelinepenalty 
