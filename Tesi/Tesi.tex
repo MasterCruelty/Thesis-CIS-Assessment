@@ -361,20 +361,15 @@ Foreach ($ESXHost in Get-VMHost) {
 
 \section{Requisiti e gestione del flusso}
 
-I requisiti di esecuzione sono chiaramente diversi tra i due ambienti e sono i seguenti. \\
+I requisiti di esecuzione sono chiaramente diversi tra i due ambienti trattati e sono i seguenti. \\
 Su Microsoft Azure è necessario essere in possesso di una sottoscrizione valida ai fini dell'autenticazione mediante il comando \textit{"az login"}. \\
 Per VMware invece è necessario essere in possesso delle credenziali di amministratore per potersi autenticare su un vCenter mediante il comando \textit{"Connect-VIServer"}.\\
 
-È possibile parametrizzare il lancio del framework come ad esempio aggiungere i flag che permettono di salvare come log ogni output del terminale.
+È possibile parametrizzare il lancio del framework come ad esempio aggiungere il flag che permette di salvare come log in un file di testo ogni output del terminale. Sempre da linea di comando è possibile la personalizzazione dei pesi dei già citati parametri C, D, R che verranno poi approfonditi in seguito. \\
 
 
-Appunti WIP 
+Le uniche differenze nel flusso di esecuzione tra Azure e VMware riguardano l'inizializzazione del programma, il quale andrà a caricare in memoria il rispettivo dataset. Fatto questo viene chiamato il relativo main in funzione dell'ambiente e come detto in precedenza, vengono eseguiti sequenzialmente i controlli.
 
-Flusso di esecuzione VMware e Azure
-
-Gestione della sessione e privilegi esecuzione(Connect-VIServer, az login)
-
-Parametrizzazione possibile da riga di comando
 
 %			CAPITOLO 4: Implementazione moduli di audit
 \chapter{Implementazione dei moduli di audit}
