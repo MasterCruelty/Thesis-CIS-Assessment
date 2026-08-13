@@ -52,6 +52,16 @@
     belowskip=8pt
 }
 
+\usepackage{tcolorbox}
+\tcbuselibrary{skins,breakable}
+
+\newtcolorbox{datasetrow}[1]{
+    colback=blue!5, colframe=blue!40!black, boxrule=0.6pt, arc=2pt,
+    breakable, left=8pt, right=8pt, top=6pt, bottom=6pt,
+    title={\textbf{#1}}, fonttitle=\bfseries,
+    coltitle=white, colbacktitle=blue!40!black
+}
+
 
 % per le accentate
 \usepackage[utf8]{inputenc}
@@ -151,19 +161,19 @@ Generalmente i documenti sono un'insieme di buone pratiche che se applicate, van
 
 Di seguito si illustrano i principali campi presenti  nella struttura dei controlli di sicurezza del benchmark: \\
 \begin{itemize}
-\item Titolo
-\item Profile Applicability \\
+\item \textbf{Titolo}
+\item \textbf{Profile Applicability} \\
 Diviso tra livello 1 e livello 2. Il primo tratta generalmente le raccomandazioni di sicurezza minima, il secondo invece controlli più approfonditi che potrebbero richiedere attività di riconfigurazione più complesse.
-\item Description
-\item Rationale \\
+\item \textbf{Description}
+\item \textbf{Rationale} \\
 Qui vi è una breve descrizione sulla ragione per la quale è rilevante questa raccomandazione di sicurezza.
-\item Impact \\
+\item \textbf{Impact} \\
 Qui viene descritto l'impatto che la propria infrastruttura può subire nel caso in cui non venga adottata alcuna misura per risultare conformi a questa buona pratica.
-\item Audit \\
+\item \textbf{Audit} \\
 Qui viene descritto come andare a verificare lo stato dell'arte sui propri sistemi per sapere se si è conformi o meno
-\item Remediation \\
+\item \textbf{Remediation} \\
 Qui invece viene descritto come operare per risolvere il problema e risultare conformi.
-\item Default Value \\
+\item \textbf{Default Value} \\
 Qui semplicemente viene indicato qual è il valore di default che detiene la configurazione, spesso quello corretto in termini di sicurezza.
 \end{itemize}
 
@@ -225,24 +235,140 @@ Per quanto riguarda VMware viene utilizzato il modulo VMware PowerCLI per interr
 \chapter{Architettura del framework}
 
 
-
 \section{Schema architetturale del tool}
-Appunti WIP
 
-disegno funzionamento pipeline di esecuzione
+In questo paragrafo ci soffermiamo brevemente su come è stato progettato il flusso delle operazioni svolte dal tool di analisi. \\
+
+Gli schemi concettuali mostrati di seguito sono speculari per quanto riguarda Azure e VMware, differendo sostanzialmente nelle rispettive sezioni dei documenti CIS coperte.\\
+L'esecuzione è stata strutturata in tre fasi diverse:
+\begin{itemize}
+\item \textbf{Connessione infrastruttura.} \\
+L'utente si autentica su Azure o VMware collegandosi alla propria infrastruttura di riferimento sulla quale vuole eseguire l'analisi di conformità ai CIS benchmark.
+\item \textbf{Esecuzione.} \\
+Sequenzialmente avviene l'analisi sezione dopo sezione mostrando in tempo reale la conformità o non dei controlli eseguiti. Allo stesso tempo, i risultati dei test vengono salvati in memoria per la terza e ultima fase.
+\item \textbf{Export report.} \\
+Una volta completati tutti i controlli, il software va a riepilogare a schermo i risultati e successivamente li esporta in un file di report in formato .csv. Da qui comincia la consultazione per il team operativo. \\\\\\\\\\\\\\\\\\\\
+\end{itemize}
+
+
+
+\begin{figure}[h]
+	\centering
+	\includegraphics[width=0.9\textwidth]{architettura_script_cis_Azure}
+    \caption{Schema concettuale della funzionalità per Azure}
+    \label{fig:architettura_script_cis_Azure}
+\end{figure}
+
+\begin{figure}[h]
+	\centering
+	\includegraphics[width=0.9\textwidth]{architettura_script_cis_VMware}
+    \caption{Schema concettuale della funzionalità per VMware}
+    \label{fig:architettura_script_cis_Azure}
+\end{figure}
+
 
 
 \section{Dataset estratto dai documenti CIS Benchmark}
 
-Appunti WIP
+La costruzione del dataset è stata fondamentale per riuscire ad avere un input strutturato da poter sottoporre al framework. \\
+L'estrazione del sottoinsieme di controlli è avvenuto andando a verificare ciò che poteva essere rilevante mostrare come test dimostrativo, oltre a escludere ciò di cui non era possibile computare l'analisi a causa della sottoscrizione \textit{Azure for Student}. \\
 
-Struttura e costruzione del dataset
+Ogni riga del dataset è composta dalla maggior parte dei campi di un controllo CIS, già citati nel capitolo precedente. \\
+In aggiunta a questi, vi sono i seguenti attributi:
+\begin{itemize}
+ \item C
+ \item D
+ \item R
+ \item setting-name
+ \item expected-value
+ \item operator 
+ \end{itemize} 
+ 
+ I primi 3 riguardano la complessità, indisponibilità e reversibilità rispetto all'eventuale intervento di remediation degli oggetti non conformi. Verranno approfonditi nel capitolo 5 dedicato al modello di scoring ideato e utilizzato. \\
+Gli altri tre attributi riguardano invece rispettivamente il nome del parametro di configurazione, il suo valore atteso e l'operatore di comparazione che verranno utilizzati per verificare la conformità. \\
+In questo modo tutti quei controlli che sono standardizzabili, forniranno i dati per il controllo direttamente dal dataset. \\
+Tutto ciò che sfortunatamente non è possibile standardizzare, avrà il valore \textit{"custom"} sull'attributo operator e una funzione dedicata nel sorgente. \\
 
-utilizzo di input per il framework
+Qui di seguito un esempio di una riga estratta dal dataset per Azure e VMware in formato scheda per leggibilità. \\
+
+\begin{datasetrow}{(Azure)2.3.3 --- Ensure 'Basic Authentication Publishing Credentials' are 'Disabled'}
+
+\begin{description}
+    \item[Category] app-service
+    \item[Profile Applicability] Level 1
+    \item[Description] Basic Authentication Publishing Credentials provides the ability to publish---or deploy to---a function app without a centralized Identity Provider. For a more effective, capable, and secure solution for Identity, Authentication, Authorization, and Accountability, a centralized Identity Provider such as Entra ID is strongly advised.
+    \item[Rationale] Basic Authentication introduces an identity silo for privileged access to a resource and produces logging which may not provide a full chain of accountability. This can be exploited in numerous ways and represents a significant vulnerability and attack vector.
+    \item[Impact] Disabling 'Basic Auth Publishing Credentials' will prevent the following deployment methods from working: FTP $\cdot$ FTPS $\cdot$ FTPS SCM Basic Auth Publishing Credentials $\cdot$ Local Git $\cdot$ GitHub $\cdot$ Azure Repos $\cdot$ Bitbucket $\cdot$ Visual Studio (Version 17.12 and earlier). If this recommendation cannot be implemented because one of the above listed deployment methods is necessary and cannot be adapted, compensating controls (e.g. using FTPS only and disabling only "SCM Basic Auth Publishing Credentials") are recommended to reduce potential attack surface.
+    \item[Audit] \texttt{az functionapp list} \\
+    \texttt{az resource show --resource-group <resource-group-name> --name <function-app-name> --resource-type "Microsoft.Web/sites" --query basicPublishingCredentialsPolicies}
+    \item[Remediation] \texttt{az resource update --resource-group <resource-group-name> --name <function-app-name> --resource-type "Microsoft.Web/sites" --set properties.allow=false}
+\end{description}
+
+\vspace{4pt}
+\noindent
+\textbf{C} = 1 \quad
+\textbf{D} = 0 \quad
+\textbf{R} = 1 \quad
+\textbf{setting-name} = \texttt{properties.allow} \quad
+\textbf{expected-value} = \texttt{false} \quad
+\textbf{operator} = \texttt{custom}
+
+\end{datasetrow}
+
+
+
+
+\begin{datasetrow}{(VMware)2.4 --- Host image profile acceptance level must be 'PartnerSupported' or higher}
+
+\begin{description}
+    \item[Category] base
+    \item[Profile Applicability] Level 1
+    \item[Description] The acceptance level on ESXi regulates the type of software that can be installed on the system, with four distinct levels: VMwareCertified, VMwareAccepted, PartnerSupported, and CommunitySupported. It's advised to set the acceptance level to PartnerSupported or higher to ensure that only tested and digitally signed vSphere Installation Bundles (VIBs) are allowed for installation.
+    \item[Rationale] Restricting the acceptance level to PartnerSupported or higher prevents the installation of CommunitySupported packages, which are unsigned and hence, potentially unreliable or insecure. This restriction, while enhancing security, might limit the range of software that can be installed on the ESXi host.
+    \item[Impact] The acceptance level on ESXi regulates the type of software that can be installed on the system, with four distinct levels: VMwareCertified, VMwareAccepted, PartnerSupported, and CommunitySupported. It's advised to set the acceptance level to PartnerSupported or higher to ensure that only tested and digitally signed vSphere Installation Bundles (VIBs) are allowed for installation.
+\end{description}
+
+\vspace{2pt}
+\noindent\textbf{Audit:}
+\begin{lstlisting}[style=azcli]
+# List only the vibs which are not at "VMwareCertified" or
+# "VMwareAccepted" acceptance level
+Foreach ($ESXCli in Get-VMHost | Get-EsxCli -VMHost $VMHost) {
+    $ESXCli.software.acceptance.Get("PartnerSupported")
+}
+\end{lstlisting}
+
+\noindent\textbf{Remediation:}
+\begin{lstlisting}[style=azcli]
+# Set the Software AcceptanceLevel for each host
+Foreach ($ESXHost in Get-VMHost) {
+    $ESXCli = Get-EsxCli -VMHost $ESXHost
+    $ESXCli.software.acceptance.Set("PartnerSupported")
+}
+\end{lstlisting}
+
+\vspace{4pt}
+\noindent
+\textbf{C} = 1 \quad
+\textbf{D} = 0 \quad
+\textbf{R} = 1 \quad
+\textbf{setting-name} = \texttt{VMwareCertified | VMwareAccepted | PartnerSupported} \quad
+\textbf{expected-value} = --- \quad
+\textbf{operator} = \texttt{custom}
+
+\end{datasetrow}
+
 
 \section{Requisiti e gestione del flusso}
 
-Appunti WIP
+I requisiti di esecuzione sono chiaramente diversi tra i due ambienti e sono i seguenti. \\
+Su Microsoft Azure è necessario essere in possesso di una sottoscrizione valida ai fini dell'autenticazione mediante il comando \textit{"az login"}. \\
+Per VMware invece è necessario essere in possesso delle credenziali di amministratore per potersi autenticare su un vCenter mediante il comando \textit{"Connect-VIServer"}.\\
+
+È possibile parametrizzare il lancio del framework come ad esempio aggiungere i flag che permettono di salvare come log ogni output del terminale.
+
+
+Appunti WIP 
 
 Flusso di esecuzione VMware e Azure
 
