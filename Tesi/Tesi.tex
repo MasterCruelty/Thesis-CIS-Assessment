@@ -376,9 +376,25 @@ Le uniche differenze nel flusso di esecuzione tra Azure e VMware riguardano l'in
 
 \section{Moduli Azure}
 
-Appunti WIP
+In questo paragrafo andremo a soffermarci su alcuni casi rappresentativi tra le sezioni del documento CIS Azure coperte. \\
 
-Casi rappresentativi per categoria: app service, management, networking, security, virtual machines. (sezioni 2, 6, 7, 8, 20)
+All'interno della sezione \textbf{App Service}, il controllo \textit{2.3.15 (Ensure configuration is routed through the virtual network integration (Automated) )} è rappresentativo del problema dei path annidati all'interno delle risorse Azure. La proprietà vnetRouteAllEnabled non si trova al primo livello nel percorso dell'oggetto App Service, ma annidata sotto SiteConfig, il che ha richiesto lo sviluppo di una funzione dedicata in grado di risolvere i path annidati per raggiungere la risorsa al livello corretto. \\
+
+All'interno della sezione \textbf{Management and Governance Services}, i casi rappresentativi sono una decina della sottosezione 6.1.2.x.\\
+Ognuno valuta l'esistenza di un Activity Log Alert configurato per un'operazione specifica. L'implementazione ha adottato una singola funzione d'appoggio condivisa parametrizzata sull'id del controllo e sul nome dell'operazione da verificare. \\
+La lista degli alert viene recuperata una sola volta e mantenuta in cache per le successive valutazioni in modo tale da non dover rifare 10 interrogazioni con Azure CLI. \\
+
+All'interno della sezione \textbf{Networking Services} i casi rappresentativi sono i controlli 7.1 e 7.2. \\
+Rispettivamente vanno a valutare che le regole dei Security Group non espongano le porte dedicate a SSH e RDP al traffico proveniente da Internet. \\
+L'implementazione è adottata con una funzione di analisi condivisa tra i controlli che mira a risolvere l'eterogeneità con cui Azure rappresenta l'origine del traffico consentito da una singola regola. Questo poichè il campo può comparire come una proprietà singola(\textit{sourceAddressPrefix}) o come una lista(\textit{sourceAddressPrefixes}).\\
+
+All'interno della sezione \textbf{Security Services} i casi rappresentativi fanno parte della sotto sezione 8.1.x dedicati a Microsoft Defender for Cloud. \\
+Questi controlli vanno a verificare che ciascun piano sia a pagamento e non gratuito. Come nei casi precedenti vi è una funzione di appoggio dove l'unico parametro variabile è il nome del piano. La funzione interroga il pricing tier corrente e va a confrontarlo con quello atteso. \\
+
+All'interno della sezione \textbf{Virtual Machines} il caso rappresentativo è sul controllo \textit{20.2 ( Ensure that 'OS and Data' disks are encrypted with Customer Managed Key (CMK) (Automated) )}. \\
+Questo controllo verifica che i dischi collegati alle macchine virtuali siano cifrati. \\
+Immaginando una lista di numerose macchine virtuali, l'approccio è stato quello di andare a interrogare direttamente il disco tramite il suo identificativo rispetto a iterare sulle macchine stesse. La complessità risulta così minore al costo di una chiamata aggiuntiva su Azure CLI per ogni VM rispetto a un'unica chiamata cumulativa.
+
 
 \section{Moduli VMware}
 
