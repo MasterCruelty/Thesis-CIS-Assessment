@@ -254,14 +254,14 @@ Una volta completati tutti i controlli, il software va a riepilogare a schermo i
 
 \begin{figure}[h]
 	\centering
-	\includegraphics[width=0.9\textwidth]{architettura_script_cis_Azure}
+	\includegraphics[width=1.0\textwidth]{architettura_script_cis_Azure}
     \caption{Schema concettuale della funzionalità per Azure}
     \label{fig:architettura_script_cis_Azure}
 \end{figure}
 
 \begin{figure}[h]
 	\centering
-	\includegraphics[width=0.9\textwidth]{architettura_script_cis_VMware}
+	\includegraphics[width=1.0\textwidth]{architettura_script_cis_VMware}
     \caption{Schema concettuale della funzionalità per VMware}
     \label{fig:architettura_script_cis_Azure}
 \end{figure}
@@ -377,38 +377,59 @@ Le uniche differenze nel flusso di esecuzione tra Azure e VMware riguardano l'in
 \section{Moduli Azure}
 
 In questo paragrafo andremo a soffermarci su alcuni casi rappresentativi tra le sezioni del documento CIS Azure coperte. \\
+In particolare i controlli implementati fanno parte delle sezioni 2 e 20 per il documento Azure Compute Services Benchmark \cite{CIS_Azure_2}, in aggiunta alle sezioni 6, 7 e 8 del documento Azure Foundations Benchmark \cite{CIS_Azure_1} \\
 
-All'interno della sezione \textbf{App Service}, il controllo \textit{2.3.15 (Ensure configuration is routed through the virtual network integration (Automated) )} è rappresentativo del problema dei path annidati all'interno delle risorse Azure. La proprietà vnetRouteAllEnabled non si trova al primo livello nel percorso dell'oggetto App Service, ma annidata sotto SiteConfig, il che ha richiesto lo sviluppo di una funzione dedicata in grado di risolvere i path annidati per raggiungere la risorsa al livello corretto. \\
+All'interno della sezione 2 \textbf{App Service}, il controllo \textit{2.3.15 (Ensure configuration is routed through the virtual network integration (Automated) )} è rappresentativo del problema dei path annidati all'interno delle risorse Azure. La proprietà vnetRouteAllEnabled non si trova al primo livello nel percorso dell'oggetto App Service, ma annidata sotto SiteConfig, il che ha richiesto lo sviluppo di una funzione dedicata in grado di risolvere i path annidati per raggiungere la risorsa al livello corretto. \\
 
-All'interno della sezione \textbf{Management and Governance Services}, i casi rappresentativi sono una decina della sottosezione 6.1.2.x.\\
+All'interno della sezione 6 \textbf{Management and Governance Services}, i casi rappresentativi sono una decina della sottosezione 6.1.2.x.\\
 Ognuno valuta l'esistenza di un Activity Log Alert configurato per un'operazione specifica. L'implementazione ha adottato una singola funzione d'appoggio condivisa parametrizzata sull'id del controllo e sul nome dell'operazione da verificare. \\
 La lista degli alert viene recuperata una sola volta e mantenuta in cache per le successive valutazioni in modo tale da non dover rifare 10 interrogazioni con Azure CLI. \\
 
-All'interno della sezione \textbf{Networking Services} i casi rappresentativi sono i controlli 7.1 e 7.2. \\
+All'interno della sezione 7 \textbf{Networking Services} i casi rappresentativi sono i controlli 7.1 e 7.2. \\
 Rispettivamente vanno a valutare che le regole dei Security Group non espongano le porte dedicate a SSH e RDP al traffico proveniente da Internet. \\
 L'implementazione è adottata con una funzione di analisi condivisa tra i controlli che mira a risolvere l'eterogeneità con cui Azure rappresenta l'origine del traffico consentito da una singola regola. Questo poichè il campo può comparire come una proprietà singola(\textit{sourceAddressPrefix}) o come una lista(\textit{sourceAddressPrefixes}).\\
 
-All'interno della sezione \textbf{Security Services} i casi rappresentativi fanno parte della sotto sezione 8.1.x dedicati a Microsoft Defender for Cloud. \\
+All'interno della sezione 8 \textbf{Security Services} i casi rappresentativi fanno parte della sotto sezione 8.1.x dedicati a Microsoft Defender for Cloud. \\
 Questi controlli vanno a verificare che ciascun piano sia a pagamento e non gratuito. Come nei casi precedenti vi è una funzione di appoggio dove l'unico parametro variabile è il nome del piano. La funzione interroga il pricing tier corrente e va a confrontarlo con quello atteso. \\
 
-All'interno della sezione \textbf{Virtual Machines} il caso rappresentativo è sul controllo \textit{20.2 ( Ensure that 'OS and Data' disks are encrypted with Customer Managed Key (CMK) (Automated) )}. \\
+All'interno della sezione 20 \textbf{Virtual Machines} il caso rappresentativo è sul controllo \textit{20.2 ( Ensure that 'OS and Data' disks are encrypted with Customer Managed Key (CMK) (Automated) )}. \\
 Questo controllo verifica che i dischi collegati alle macchine virtuali siano cifrati. \\
 Immaginando una lista di numerose macchine virtuali, l'approccio è stato quello di andare a interrogare direttamente il disco tramite il suo identificativo rispetto a iterare sulle macchine stesse. La complessità risulta così minore al costo di una chiamata aggiuntiva su Azure CLI per ogni VM rispetto a un'unica chiamata cumulativa.
 
 
 \section{Moduli VMware}
 
-Appunti WIP
+Analogamente a quanto appena citato per i moduli Azure, descriviamo lo stesso per i moduli VMware. \\
+Qui i controlli implementati sono tutti contenuti all'interno dello stesso documento VMware ESXi Benchmark \cite{CIS_VMware} andando a coprire le sezioni 2,3,4,5,6 e 7. \\
 
-Casi rappresentativi per categoria: base, management, logging, network, features, virtual machines (sezioni 2-7)
+All'interno della sezione 2 \textbf{Base}, il caso rappresentativo è dato dal controllo 2.4 \textit{((L1) Host image profile acceptance level must be PartnerSupported or higher (Automated))}, il quale va a verificare il livello di attendibilità richiesto per l'installazione dei pacchetti sia impostato su PartnerSupported o superiore. \\
+Per effettuare tale controllo è necessario eseguire una chiamata diretta all'API ESXCLI contenuta all'interno del modulo PowerCLI, rendendo necessaria una funzione dedicata. \\
+
+All'interno della sezione 3 \textbf{Management}, il caso rappresentativo è dato dal controllo 3.3 \textit{((L1) Host must deactivate the ESXi Managed Object Browser (MOB) (Automated))}. \\
+Qui viene verificato che il Managed Object Browser sia disattivato. La documentazione CIS in merito dichiara che la sua eventuale disattivazione debba essere eseguite mediante l'interfaccia web vSphere Client, non possibile quindi tramite linea di comando. A tal proposito, la sola verifica della conformità è stata eseguita con PowerCLI. Per quanto riguarda il suggerimento per rimediare alla possibile non conformità, non è stato quindi possibile fornire un comando analogo per risolvere in maniera automatizzata, ma solamente un rimando a dover operare sull'interfaccia web. \\
+
+All'interno della sezione 4 \textbf{Logging}, il caso mostrato è dato dal controllo 4.2 \textit{((L1) Host must transmit system logs to a remote log collector (Automated))}, il quale mira a verificare la configurazione di un syslog remoto per la raccolta centralizzata dei log dell'host. \\
+L'intera logica di verifica è delegata a una funzione generica alla quale , come in altri casi, viene passato solamente l'identificativo del controllo. Il nome del parametro ESXi da interrogare, il valore atteso e l'operatore di confronto sono letti direttamente dal dataset csv, senza alcuna codifica specifica. \\
+Trattasi di uno degli esempi rappresentativi di come il framework, ove possibile, standardizza la struttura della documentazione CIS utilizzando l'id come indice e popolando l'input con gli attributi della riga. \\
+
+ 
+All'interno della sezione 6 \textbf{Features}, il caso rappresentativo è dato dal controllo 6.3.1 \textit{((L1) Host iSCSI client, if enabled, must employ bidirectional/mutual CHAP authentication (Automated))}. \\
+Qui deve essere verificato che sugli adapter ISCSI di ogni host sia attiva l'autenticazione CHAP bidirezionale. \\
+Se non viene rilevato alcun adapter, il tutto viene valutato N/A e quindi risulta rappresentativo di come il framework tratti la non applicabilità dei controlli senza valutare come conforme o non conforme. Questo evita che un controllo privo di oggetto da valutare venga valutato in automatico come conforme.
 
 \section{Decisioni implementative rilevanti}
 
-Appunti WIP
+In questo paragrafo vengono evidenziate alcune scelte implementative rilevanti adottate durante lo sviluppo della soluzione. \\
+Come citato alla fine del paragrafo precedente, è stato scelto di distinguere lo stato di non applicabilità del controllo rispetto alla conformità a prescindere. \\
+Questa distinzione è resa esplicita nel report tramite un terzo stato dedicato, distinto da conforme e non conforme, ed escluso dal calcolo del tasso di conformità complessivo.\\
+Questo perché essenzialmente il fatto di non avere nella propria infrastruttura oggetti valutabili per quello specifico controllo non implica la conformità o non conformità rispetto alla documentazione CIS. \\
+Il risultato è che il tasso di conformità non venga ridotto artificialmente da controlli che non hanno prodotto una valutazione reale. \\
 
-Gestione dello stato N/A distinto da COMPLIANT
+La gestione della sessione di autenticazione è stata gestita diversamente per i due ambienti.\\
+Su Azure viene effettuata esternamente prima dell'esecuzione dello script principale, delegando l'autenticazione ai meccanismi nativi di Azure CLI, pensati per non richiedere che uno script terzo maneggi username e password. Il framework si limita a verificare che una sessione Azure sia già attiva, senza mai gestire credenziali direttamente. \\
 
-Autenticazione esterna all’esecuzione framework (Azure) e prompt interattivo(VMware)
+Su VMware il discorso è diverso in quanto ci si collega durante l'esecuzione con un prompt interattivo. Questo perché è stato osservato durante lo sviluppo che la variabile globale \textit{\$global:DefaultVIServers}, utilizzata per verificare la presenza di una sessione attiva, non è risultata affidabile per lo scopo di questo progetto.
+
 
 %			CAPITOLO 5: modello di scoring
 \chapter{Il modello di scoring}
