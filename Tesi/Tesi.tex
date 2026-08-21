@@ -381,9 +381,51 @@ In particolare i controlli implementati fanno parte delle sezioni 2 e 20 per il 
 
 All'interno della sezione 2 \textbf{App Service}, il controllo \textit{2.3.15 (Ensure configuration is routed through the virtual network integration (Automated) )} è rappresentativo del problema dei path annidati all'interno delle risorse Azure. La proprietà vnetRouteAllEnabled non si trova al primo livello nel percorso dell'oggetto App Service, ma annidata sotto SiteConfig, il che ha richiesto lo sviluppo di una funzione dedicata in grado di risolvere i path annidati per raggiungere la risorsa al livello corretto. \\
 
+La seguente porzione di codice \textbf{\ref{lst:get-nested-property}} mostra l'implementazione della funzione che risolve il percorso annidato sulle risorse Azure.
+
+\begin{lstlisting}[style=azcli, caption={Funzione \texttt{Get-NestedProperty} per la risoluzione di percorsi annidati}, label={lst:get-nested-property}]
+function Get-NestedProperty {
+    param($Object, [string]$Path)
+    $value = $Object
+    foreach ($part in $Path -split '\.') {
+        if ($null -eq $value) { return $null }
+        $value = $value.$part
+    }
+    return $value
+}
+\end{lstlisting}
+
 All'interno della sezione 6 \textbf{Management and Governance Services}, i casi rappresentativi sono una decina della sottosezione 6.1.2.x.\\
 Ognuno valuta l'esistenza di un Activity Log Alert configurato per un'operazione specifica. L'implementazione ha adottato una singola funzione d'appoggio condivisa parametrizzata sull'id del controllo e sul nome dell'operazione da verificare. \\
 La lista degli alert viene recuperata una sola volta e mantenuta in cache per le successive valutazioni in modo tale da non dover rifare 10 interrogazioni con Azure CLI. \\
+
+La seguente porzione di codice \textbf{\ref{lst:activity-log-alert}} mostra la definizione della funzione condivisa e un paio delle invocazioni a titolo di esempio dimostrativo. \\
+
+
+\begin{lstlisting}[style=azcli, caption={Funzione condivisa dedicata \texttt{Test-ActivityLogAlert}}, label={lst:activity-log-alert}]
+$Script:ActivityAlertsCache = $null
+
+function Test-ActivityLogAlert {
+    param([string]$CheckId, [string]$OperationName)
+    Write-CheckHeader $CheckId 
+    $match = $activityAlerts | Where-Object {
+        $_.condition.allOf | Where-Object { $_.field -eq "operationName" -and $_.equals -eq $OperationName }
+    }
+    if ($match) {
+        Write-Host "  [COMPLIANT]     Alert trovato: '$($match[0].name)'" -ForegroundColor Green
+        Set-CheckResult $CheckId 1 @()
+    } else {
+        Write-Host "  [NON-COMPLIANT] Nessun alert per: $OperationName" -ForegroundColor Red
+        Set-CheckResult $CheckId 1 @("Operazione '$OperationName' - alert mancante")
+    }
+    Write-CheckFooter $CheckId "alert"
+}
+
+# esempi invocazioni
+Test-ActivityLogAlert "6.1.2.1" "Microsoft.Authorization/policyAssignments/write"
+Test-ActivityLogAlert "6.1.2.4" "Microsoft.Network/networkSecurityGroups/delete"
+\end{lstlisting}
+
 
 All'interno della sezione 7 \textbf{Networking Services} i casi rappresentativi sono i controlli 7.1 e 7.2. \\
 Rispettivamente vanno a valutare che le regole dei Security Group non espongano le porte dedicate a SSH e RDP al traffico proveniente da Internet. \\
@@ -415,7 +457,56 @@ Trattasi di uno degli esempi rappresentativi di come il framework, ove possibile
  
 All'interno della sezione 6 \textbf{Features}, il caso rappresentativo è dato dal controllo 6.3.1 \textit{((L1) Host iSCSI client, if enabled, must employ bidirectional/mutual CHAP authentication (Automated))}. \\
 Qui deve essere verificato che sugli adapter ISCSI di ogni host sia attiva l'autenticazione CHAP bidirezionale. \\
-Se non viene rilevato alcun adapter, il tutto viene valutato N/A e quindi risulta rappresentativo di come il framework tratti la non applicabilità dei controlli senza valutare come conforme o non conforme. Questo evita che un controllo privo di oggetto da valutare venga valutato in automatico come conforme.
+Se non viene rilevato alcun adapter, il tutto viene valutato N/A e quindi risulta rappresentativo di come il framework tratti la non applicabilità dei controlli senza valutare come conforme o non conforme. Questo evita che un controllo privo di oggetto da valutare venga valutato in automatico come conforme.\\
+
+All'interno della sezione 7 \textbf{Virtual Machines}, i casi rappresentativi sono dati dai controlli 7.13 e 7.14 \textit{((L1) Virtual machines must remove unnecessary \textbf{serial port devices}/\textbf{parallel port devices} (Automated))}. \\
+Questa serie di verifica puntano a valutare l'assenza di dispositivi porte seriali e porte parallele superflue sulle macchine virtuali presenti sugli host ESXi. \\
+
+Sono esempi rappresentativi poiché in questi casi PowerCLI non disponeva di comandi dedicati per l'interrogazione sulla presenza di questi dispositivi hardware. L'implementazione ha quindi richiesto un accesso diretto alla configurazione hardware della VM, andando a filtrare per tipo ad esempio \\ (\texttt{VMware.Vim.VirtualSerialPort},\texttt{VMware.Vim.VirtualParallelPort}).
+
+La seguente porzione di codice mostra l'implementazione dei suddetti due controlli della sezione 7.
+
+\begin{lstlisting}[style=azcli, caption={Controlli \texttt{7.13} e \texttt{7.14} -- rilevamento di porte seriali e parallele tramite \texttt{ExtensionData}}, label={lst:serial-parallel-check}]
+# 7.13 Virtual machines must remove unnecessary serial port devices
+Write-CheckHeader "7.13"
+$serial = @(Get-VM | ForEach-Object {
+            $vm = $_
+            $vm.ExtensionData.Config.Hardware.Device |
+            Where-Object { $_ -is [VMware.Vim.VirtualSerialPort] } |
+            ForEach-Object { [PSCustomObject]@{ VMName = $vm.Name; DeviceLabel = $_.DeviceInfo.Label } }
+            })            
+$nc_713 = @()
+foreach ($s in $serial) {
+        Write-Host "  [NON-COMPLIANT] VM: $($s.VMName) -> $($s.DeviceLabel)" -ForegroundColor Red
+        $nc_713 += "VM=$($s.VMName) Device=$($s.DeviceLabel)"
+    }
+if ($serial.Count -eq 0) { Write-Host "  [COMPLIANT] Nessuna porta seriale trovata." -ForegroundColor Green }
+Set-CheckResult "7.13" $allVMs.Count $nc_713
+
+Write-CheckFooter "7.13" "VM"
+-------------------------------------------------------------------
+# 7.14 Virtual machines must remove unnecessary parallel port devices 
+Write-CheckHeader "7.14" 
+#$parallelCmd = Get-Command "Get-ParallelPort" -ErrorAction SilentlyContinue
+#if ($parallelCmd) {
+    #$parallel = @(Get-VM | Get-ParallelPort -ErrorAction SilentlyContinue)
+    $parallel = @(Get-VM | ForEach-Object {
+                $_.ExtensionData.Config.Hardware.Device |
+                Where-Object { $_ -is [VMware.Vim.VirtualParallelPort] }
+                })
+    $nc_714 = @()
+    foreach ($p in $parallel) {
+        Write-Host "  [NON-COMPLIANT] VM: $($p.Parent.Name) -> $($p.Name)" -ForegroundColor Red
+        $nc_714 += "VM=$($p.Parent.Name) Device=$($p.Name)"
+    }
+    if ($parallel.Count -eq 0) { Write-Host "  [COMPLIANT] Nessuna porta parallela trovata." -ForegroundColor Green }
+    Set-CheckResult "7.14" $allVMs.Count $nc_714
+#} else {
+#    Write-Host "  [UNKNOWN] Get-ParallelPort non disponibile - verificare manualmente." -ForegroundColor DarkYellow
+#    Set-CheckResult "7.14" $allVMs.Count @() "UNKNOWN"
+#}
+Write-CheckFooter "7.14" "VM"
+\end{lstlisting}
 
 \section{Decisioni implementative rilevanti}
 
