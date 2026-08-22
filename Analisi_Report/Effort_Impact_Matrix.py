@@ -47,8 +47,7 @@ ax.scatter(x, y, c=colors, s=80, edgecolors="white", linewidth=0.6, zorder=3)
 ax.axvline(x_soglia, color="gray", linestyle="--", linewidth=0.8, zorder=1)
 ax.axhline(y_soglia, color="gray", linestyle="--", linewidth=0.8, zorder=1)
 
-# Le etichette vengono posizionate automaticamente senza sovrapporsi,
-# con una sottile linea di collegamento al punto reale se necessario.
+# Le etichette vengono posizionate automaticamente senza sovrapporsi.
 texts = [
     ax.text(xi, yi, lab, fontsize=7)
     for xi, yi, lab in zip(x, y, labels)
