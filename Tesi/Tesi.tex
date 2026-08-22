@@ -31,6 +31,7 @@
 \usepackage[italian]{babel}
 \usepackage{setspace}
 \usepackage{tesi}
+\usepackage{enumitem}
 
 \usepackage{tcolorbox}
 \tcbuselibrary{skins,breakable}
@@ -541,6 +542,56 @@ Su VMware il discorso è diverso in quanto ci si collega durante l'esecuzione co
 \chapter{Il modello di scoring}
 
 \section{Definizione delle dimensioni di effort: C, D, R}
+
+Il modello di scoring utilizzato è stato definito durante la fase di progettazione e mira a valutare quantitativamente lo sforzo teorico necessario per risolvere la non conformità di un oggetto valutato dal tool. La valutazione si basa su tre valori che sono stati costruiti ad hoc e sono spiegati qui di seguito: C, D, R.\\
+
+\begin{itemize}
+\item C: complessità dell'intervento.\\
+Questo parametro punta a quantificare quanto sia alto il costo in termini di procedure da svolgere per rendere l'oggetto conforme rispetto alla documentazione CIS. \\
+L'intervallo dei valori ammissibili per C è \{1,2,3\}. La semantica dei valori è la seguente:
+\begin{enumerate}
+\item il tipo di operazioni coinvolte possono essere la semplice modifica di una proprietà di un oggetto che non alterano alcun componente dell'infrastruttura. Quindi una modifica parametrica locale.
+\item l'intervento richiede di coordinare più componenti come ad esempio la creazione di una risorsa e il suo collegamento.
+\item L'operazione qui è di tipo strutturale come ad esempio dover ricreare una virtual machine da zero per poter abilitare una certa funzionalità.
+\end{enumerate}
+\item D: indisponibilità. \\
+Qui l'obiettivo è quantificare se l'intervento di remediation renda necessario o meno un fermo di qualche servizio.\\
+L'intervallo dei valori ammissibili per D è \{0,1,2\}. La semantica dei valori è la seguente:
+\begin{enumerate}[start=0]
+\item Nessuna interruzione di servizio.
+\item A seguito dell'intervento, è necessario un riavvio del servizio.
+\item Per eseguire l'intervento è necessario un downtime di durata variabile, come ad esempio lo spegnimento di una virtual machine e il suo avvio da zero successivamente.
+\end{enumerate}
+\item R: reversibilità del rimedio. \\
+Il terzo e ultimo parametro punta a quantificare la possibilità di fare rollback rispetto all'intervento di rimedio nel caso in cui si renda necessario per qualsiasi motivo(ad esempio un servizio che smette di funzionare). \\
+L'intevento dei valori ammissibili per R è \{1,2,3\}. La semantica dei valori è la seguente:
+\begin{enumerate}
+\item Reversibilità immediata. Ad esempio un singolo comando.
+\item Reversibile con procedura strutturata. Può richiedere più passaggi e verifica di eventuali dipendenze.
+\item Potenzialmente irreversibile. Può richiedere ricostruzione della risorsa da zero oppure il ripristino esatto non è garantito.
+\end{enumerate}
+\end{itemize}
+
+
+L'assegnazione dei valori per ogni controllo CIS implementato è avvenuta mediante un'analisi qualitativa della documentazione. I parametri sono stati quindi inseriti, come già citato in precedenza, all'interno del dataset. In questo modo, al termine dell'esecuzione della valutazione, il software è in grado di attribuire lo sforzo per il rimedio a tutti gli oggetti non conformi leggendo i valori direttamente dal file csv di partenza. \\
+
+\textit{A titolo dimostrativo, si mostrano tre esempi concreti tratti dal dataset Azure.} \\
+
+\textbf{Controllo 2.3.6 -- Ensure 'HTTPS Only' is set to 'On' ($C=1$, $D=0$, $R=1$)}: in caso di non conformità l'intervento consiste nella modifica di una singola proprietà booleana (\texttt{httpsOnly}); non coinvolge quindi altre risorse, non richiede interruzione del servizio e può essere immediatamente invertito impostando nuovamente il valore precedente. \\
+
+\textbf{Controllo 2.3.12 -- Ensure managed identities are configured ($C=1$, $D=0$, $R=2$)}: si tratta di un'operazione parametrica semplice ($C=1$), senza impatto sulla disponibilità del servizio ($D=0$). La reversibilità è tuttavia non banale. La rimozione dell'identità, se già utilizzata da altre risorse per l'accesso (ad esempio un Key Vault), può interrompere silenziosamente quelle integrazioni, rendendo necessaria una verifica delle dipendenze prima del rollback. \\
+
+\textbf{Controllo 20.10 -- Ensure Trusted Launch is enabled on Virtual Machines ($C=3$, $D=2$, $R=3$)}: l'assegnazione qui dipende dalle assunzioni di partenza. Nel caso in cui la VM non fosse di gen 2, l'abilitazione di Trusted Launch su una macchina virtuale già esistente non è possibile, ma richiede la ricreazione della macchina con un nuovo profilo di sicurezza ($C=3$). Questo comporta chiaramente un'interruzione completa del servizio ($D=2$) e un eventuale rollback che equivale, a sua volta, a una nuova ricostruzione della macchina nello stato precedente ($R=3$).Tuttavia se invece la virtual machine fosse di gen 2 il valore di C scenderebbe a 2 poiché l'operazione richiederebbe la deallocazione della macchina e riconfigurazione, ma non la totale distruzione e ricreazione.\\
+
+\textit{Analogamente, si riportano tre casi rappresentativi tratti dal dataset VMware.} \\
+
+
+\textbf{Controllo 4.2 -- Host must transmit system logs to a remote log collector ($C=1$, $D=0$, $R=1$)}: la configurazione di un syslog remoto è un intervento che richiede tipicamente di configurare più impostazioni coordinate sull'host. L'operazione è priva di impatto sulla disponibilità delle macchine virtuali e immediatamente reversibile rimuovendo la configurazione impostata. \\
+
+\textbf{Controllo 6.3.1 -- Host iSCSI client, if enabled, must employ bidirectional/mutual CHAP authentication ($C=2$, $D=1$, $R=2$)}: questo intervento richiede la configurazione coordinata delle credenziali sia sull'host ESXi sia sul target storage ($C=2$). La documentazione CIS segnala esplicitamente il rischio di interruzioni della comunicazione iSCSI qualora le credenziali configurate sui due lati non coincidano ($D=1$); il ripristino della configurazione precedente richiede una procedura strutturata di verifica su entrambi i lati della connessione ($R=2$). \\
+
+\textbf{Controllo 3.21 -- Host should enable strict lockdown mode ($C=3$, $D=2$, $R=3$)}: questo esempio rappresenta il caso di effort massimo del dataset VMware. L'abilitazione di questa modalità provoca l'impossibilità di accesso diretto all'host tramite Direct Console User Interface (DCUI), alterando la topologia di accesso amministrativo all'host ($C=3$) e potendo comportare un downtime critico ($D=2$) se non correttamente pianificata. Per quanto riguarda la reversibilità, la documentazione CIS segnala esplicitamente che il recupero da uno scenario simile può richiedere la reinstallazione dell'host ESXi. In determinati casi, il rollback può richiedere persino la presenza di un sistemista in datacenter per poter procedere alla reinstallazione dell'host ($R=3$).
+
 
 Appunti WIP
 
