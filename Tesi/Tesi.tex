@@ -32,6 +32,7 @@
 \usepackage{setspace}
 \usepackage{tesi}
 \usepackage{enumitem}
+\usepackage{float}
 
 \usepackage{tcolorbox}
 \tcbuselibrary{skins,breakable}
@@ -636,6 +637,23 @@ La conseguenza di questa proprietà è che i controlli il cui profilo di effort 
 
 Possiamo quindi dire che per i profili simmetrici rispetto ai tre valori di effort, il modello di scoring si dimostra robusto rispetto ai pesi.
 
+\subsection{Classificazione dell'effort in funzione di $E_{norm}$}
+
+$E_{norm}$, una volta computato, viene tradotto in una classificazione a tre livelli tramite l'utilizzo di due soglie, $\alpha$ e $\beta$.\\
+
+
+\begin{equation}
+\text{Effort} =
+\begin{cases}
+\text{BASSO} & \text{se } E_{norm} < \alpha \\
+\text{MEDIO} & \text{se } \alpha \leq E_{norm} < \beta \\
+\text{ALTO}  & \text{se } E_{norm} \geq \beta
+\end{cases}
+\end{equation}
+
+In questo caso di studio sono stati adottati i valori $\alpha = 0.35$ e $\beta = 0.7$. \\
+Entrambe le soglie possono essere modificate in base alle proprie necessità, rendendo così più alto o più basso l'effort classificato dal framework. Questa classificazione a tre livelli è stata ideata per dare una lettura immediata sul costo del lavoro da svolgere, in combinazione al valore di $E_{norm}$. \\
+Fondamentalmente BASSO indica un intervento di carattere contenuto e a basso impatto, MEDIO un intervento che richiede pianificazione e ALTO un intervento complesso con un impatto non indifferente.
 
 %			CAPITOLO 6: esecuzione e analisi risultati
 \chapter{Esecuzione framework e analisi risultati}
@@ -653,19 +671,70 @@ L'ambiente dispone di 14 host ESXi disposti su 4 cluster diversi su un vCenter, 
 Considerata l'ampiezza dell'infrastruttura, l'esito della reportistica per VMware ha coinvolto un numero di oggetti significativamente maggiore rispetto ad Azure, rendendo l'analisi statistica sulla distribuzione dell'effort più solida su questa piattaforma.
 
 
-\section{Analisi risultati}
+\section{Analisi dei risultati}
 
-Appunti WIP
+L'esecuzione del framework su Azure ha valutato una totalità di 60 controlli previsti dal dataset popolato. È stato riscontrato un tasso di conformità del 28.3\%, con 17 controlli conformi su 60. \\
+La distribuzione dei controlli non conformi è concentrata nella fascia di effort BASSO con 29 controlli, seguita dalla fascia MEDIO con 11 occorrenze e infine ALTO con sole tre verifiche non conformi. \\
+In questa casistica specifica possiamo evincere che la maggioranza degli interventi di remediation che si rendono necessari per risultare conformi richieda un costo basso e ragionevole.\\ 
 
-Statistiche descrittive di C, D, R, Enorm
+\begin{figure}[H]
+	\centering
+	\includegraphics[width=1.0\textwidth]{report_azure}
+    \caption{Estratto del riepilogo finale di esecuzione su Azure}
+    \label{fig:report_azure}
+\end{figure}
 
-Test di normalità (Shapiro-Wilk): distribuzione di Enorm non normale — motivazione tecnica
 
-Distribuzione dell'effort per categoria: box plot e confronto tra categorie (Kruskal-Wallis)
+Per quanto riguarda invece l'esecuzione su VMware, sono stati valutati una totalità di 39 controlli sempre previsti dal dataset costruito inizialmente. Qui è stato registrato un tasso di conformità del 41\%, con 16 controlli conformi su 39.\\
+Anche in questo la maggior parte degli interventi necessari sono rientrati nella fascia BASSO, con solo due non conformità nella fascia MEDIO e uno su ALTO.\\ 
 
-Analisi di sensibilità ai pesi: stabilità della classificazione
+\begin{figure}[H]
+	\centering
+	\includegraphics[width=1.0\textwidth]{report_vmware}
+    \caption{Estratto del riepilogo finale di esecuzione su VMware}
+    \label{fig:report_vmware}
+\end{figure}
 
-Matrice Effort vs Impatto: identificazione dei quick win per la remediation
+Per approfondire la lettura dei risultati finora presentati, è stato costruito un diagramma che incrocia l'effort di remediation calcolato con $E_{norm}$ con l'impatto reale di ciascun controllo, inteso come il numero di oggetti coinvolti dalla non conformità sull'infrastruttura.\\
+Grazie a questa rappresentazione è possibile distinguere dei controlli che a parità di effort coinvolgono un numero diverso di risorse.\\
+Ad esempio un controllo che richiede interventi a basso costo che però vede coinvolte molte risorse rappresenta in questo grafico un intervento di priorità più alta, poiché facilmente risolvibile per molti oggetti. Viceversa un controllo che richiede interventi complessi ma con poche risorse coinvolte, in questo grafico ha minore priorità in quanto andrebbe pianificato con più cura.\\
+
+Il grafico è suddiviso in quattro quadranti da  due soglie. La linea tratteggiata verticale rappresenta la soglia $\beta$ introdotta nel corso del capitolo 5, mentre la linea tratteggiata orizzontale rappresenta la mediana del numero di oggetti non conformi riscontrati. \\
+
+Incrociando le due linee, i quadranti sono divisi come segue:
+\begin{itemize}
+\item Primo quadrante. \\
+In alto a destra vi sono i punti con effort alto e impatto alto. Qui vi cadono quei controlli non conformi che richiedono interventi complessi, ma che allo stesso tempo hanno rilevato molte risorse non in linea con i benchmark. In questo caso il team operativo dovrebbe pianificare con cura la risoluzione programmando una finestra di manutenzione.
+\item Secondo quadrante. \\
+In alto a sinistra troviamo molti controlli non conformi con costo basso di remediation.
+\item Terzo quadrante. \\
+Qui troviamo controlli non conformi il cui effort di risoluzione è basso, ma anche il numero di oggetti coinvolti è basso.
+\item Quarto quadrante. \\
+In questa area del grafico troviamo le valutazioni non conformi meno convenienti da risolvere nell'immediato. Questo poichè abbiamo pochi oggetti con costo di intervento alto.
+\end{itemize}
+
+
+La Figura \ref{fig:diagramma-azure} riporta il diagramma prodotto per l'ambiente Azure. Dato il numero esiguo di risorse create sull'infrastruttura di test con la sottoscrizione da studente, l'asse delle y rappresentativo dell'impatto risulta chiaramente contenuto(compreso tra 1 e 3 oggetti). \\
+
+
+\begin{figure}[H]
+	\centering
+	\includegraphics[width=1\textwidth]{Effort_Impact_Matrix_azure}
+    \caption{Diagramma di confronto tra effort e impatto -- ambiente Azure}
+    \label{fig:diagramma-azure}
+\end{figure}
+
+
+La Figura \ref{fig:diagramma-vmware} riporta il diagramma prodotto per l'ambiente VMware. A differenza di Azure, avendo avuto qui un'infrastruttura molto più grande, l'impatto della non conformità raggiunge di conseguenza valori significativamente più elevati. Questo fa si che la dimensione dell'impatto sia più rilevante rispetto al grafico precedente per quanto riguarda l'identificazione delle priorità di intervento. \\
+
+
+\begin{figure}[H]
+	\centering
+	\includegraphics[width=1\textwidth]{Effort_Impact_Matrix_vmware}
+    \caption{Diagramma di confronto tra effort e impatto -- ambiente VMware}
+    \label{fig:diagramma-vmware}
+\end{figure}
+
 
 \section{Differenze strutturali nei benchmark Azure e VMware}
 
