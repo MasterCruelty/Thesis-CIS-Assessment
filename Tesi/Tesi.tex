@@ -593,23 +593,48 @@ L'assegnazione dei valori per ogni controllo CIS implementato è avvenuta median
 \textbf{Controllo 3.21 -- Host should enable strict lockdown mode ($C=3$, $D=2$, $R=3$)}: questo esempio rappresenta il caso di effort massimo del dataset VMware. L'abilitazione di questa modalità provoca l'impossibilità di accesso diretto all'host tramite Direct Console User Interface (DCUI), alterando la topologia di accesso amministrativo all'host ($C=3$) e potendo comportare un downtime critico ($D=2$) se non correttamente pianificata. Per quanto riguarda la reversibilità, la documentazione CIS segnala esplicitamente che il recupero da uno scenario simile può richiedere la reinstallazione dell'host ESXi. In determinati casi, il rollback può richiedere persino la presenza di un sistemista in datacenter per poter procedere alla reinstallazione dell'host ($R=3$).
 
 
-Appunti WIP
+\section{Definizione della metrica di effort E}
 
-definizione e valori ammissibili
 
-Assegnazione dei valori: metodo (analisi testo CIS qualitativo)
+Le tre dimensioni definite nel paragrafo precedente sono state utilizzate per definire come segue una metrica di effort denominata $E$ per ogni controllo $i$ all'interno del dataset. \\
 
-\section{Calcolo e normalizzazione della metrica di effort}
 
-Appunti WIP
+\begin{equation}
+E_i = w_c \cdot C + w_d \cdot D + w_r \cdot R
+\end{equation}
 
-Ei = wc*C + wd*D + wr*R
 
-Normalizzazione min-max: Enorm = (Ei - Emin) / (Emax - Emin)
+$w_c, w_d, w_r$ sono i valori dei pesi attribuiti ai tre valori C,D,R.\\
+La somma di questi pesi deve essere tale che $w_c + w_d + w_r = 1$. \\
 
-denominatore sempre pari a 2 per profili bilanciati
+È quindi possibile modellare la metrica in funzione delle proprie necessità, come ad esempio pesare di più l'indisponibilità di servizio rispetto alla complessità procedurale dell'intervento. \\
 
-Conseguenza: punti fissi 0, 0.5, 1 per profili simmetrici robustezza rispetto ai pesi
+La conseguenza di E definita in questo modo è che al variare dei pesi, le misurazioni non sono confrontabili tra loro. Di seguito viene mostrata una versione normalizzata della metrica, così che il suo valore sia sempre all'interno dell'intervallo [0,1] e confrontabile anche se vengono modificati i pesi. \\
+
+\begin{equation}
+E_{norm} = \frac{E_i - E_{min}}{E_{max} - E_{min}}
+\end{equation}
+
+$E_{min}$ ed $E_{max}$ sono i valori teorici minimi e massimi possibili.\\
+$E_{min}$ rappresenta il caso più semplice possibile mentre $E_{max}$ rappresenta il caso più oneroso possibile. \\
+
+\begin{equation}
+E_{min} = w_c \cdot 1 + w_d \cdot 0 + w_r \cdot 1 
+\end{equation}
+\begin{equation}
+E_{max} = w_c \cdot 3 + w_d \cdot 2 + w_r \cdot 3
+\end{equation}
+
+
+Si dimostra inoltre che il denominatore della normalizzazione è costante e pari a 2 indipendentemente dalla scelta dei pesi, essendo $w_c+w_d+w_r=1$ per costruzione.\\
+\begin{align}
+E_{max} - E_{min} &= w_c(3-1) + w_d(2-0) + w_r(3-1) \\
+&= 2w_c + 2w_d + 2w_r = 2(w_c+w_d+w_r) = 2
+\end{align}
+
+La conseguenza di questa proprietà è che i controlli il cui profilo di effort soddisfa $(C-1)=D=(R-1)$ producono un valore di $E_{norm}$ costante, rispettivamente $0$, $0.5$ e $1$. Questo accade indipendentemente dalla scelta dei pesi sulle tre dimensioni C,D,R.\\
+
+Possiamo quindi dire che per i profili simmetrici rispetto ai tre valori di effort, il modello di scoring si dimostra robusto rispetto ai pesi.
 
 
 %			CAPITOLO 6: esecuzione e analisi risultati
