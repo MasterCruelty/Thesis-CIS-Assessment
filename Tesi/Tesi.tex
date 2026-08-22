@@ -642,11 +642,16 @@ Possiamo quindi dire che per i profili simmetrici rispetto ai tre valori di effo
 
 \section{Ambienti di test cloud e on-premise}
 
-Appunti WIP
+In questo paragrafo ci si soffermerà brevemente sugli ambienti di test utilizzati durante lo sviluppo.\\
 
-Infrastruttura VMware: ambiente di laboratorio aziendale, 14 host ESXi, ~1000 VM
+Su \textbf{Microsoft Azure} è stata sfruttata la sottoscrizione Azure for Student grazie alle credenziali di ateneo. Una volta abilitato il profilo le operazioni eseguite sono state quelle di creare un numero limitato di risorse (Virtual Machines, Activity Log Alert, Web App, etc.etc.) con impostazioni minimali o di default ai soli fini di popolamento per poter essere poi sottoposte a valutazione dallo strumento sviluppato. \\
 
-Infrastruttura Azure: subscription studente, risorse minimali per copertura dei controlli
+Su \textbf{VMware} invece come citato in un capitolo precedente è stato possibile utilizzare come ambiente di valutazione un'infrastruttura di laboratorio aziendale collocata presso Lutech S.p.A.\\
+Si tratta di un ambiente non di produzione dedicato esclusivamente a sperimentazione di nuove soluzioni e/o per testare degli approcci prima dell'attività effettiva presso cliente. \\
+Il sottoscritto stesso ha partecipato alla sua realizzazione sia nell'installazione fisica in datacenter che nella successiva configurazione degli host.\\
+L'ambiente dispone di 14 host ESXi disposti su 4 cluster diversi su un vCenter, al momento con circa 1000 virtual machines.\\
+Considerata l'ampiezza dell'infrastruttura, l'esito della reportistica per VMware ha coinvolto un numero di oggetti significativamente maggiore rispetto ad Azure, rendendo l'analisi statistica sulla distribuzione dell'effort più solida su questa piattaforma.
+
 
 \section{Analisi risultati}
 
