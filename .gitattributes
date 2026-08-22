@@ -1,4 +1,4 @@
 *.yml linguist-detectable=true
 *.sty linguist-detectable=false
 *.tex linguist-detectable=true
-*.sql linguist-detectable=true
+*.ipynb linguist-detectable=true
