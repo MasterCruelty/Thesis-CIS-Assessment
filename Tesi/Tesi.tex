@@ -738,20 +738,38 @@ La Figura \ref{fig:diagramma-vmware} riporta il diagramma prodotto per l'ambient
 
 \section{Differenze strutturali nei benchmark Azure e VMware}
 
-Appunti WIP
+In questo paragrafo viene confrontata la struttura dei due benchmark utilizzati a livello di definizione dei controlli, escludendo i risultati osservati sulle rispettive infrastrutture di test. Il confronto opera sui valori $E_{norm}$ derivati dai parametri C, D, R assegnati a ciascun controllo sui dataset iniziali.\\
+La distribuzione di $E_{norm}$ sui 60 controlli del dataset Azure e sui 39 controlli del dataset VMware è riportata in Figura~\ref{fig:confronto_benchmark}, tramite boxplot e istogrammi sovrapposti.
 
 
-Distribuzione Enorm sui due benchmark: confronto tra strutture dei due standard
+\begin{figure}[H]
+	\centering
+	\includegraphics[width=1.0\textwidth]{confronto_benchmark.png}
+    \caption{Distribuzione di $E_{norm}$ a confronto tra i dataset Azure e VMware}
+    \label{fig:confronto_benchmark}
+\end{figure}
 
-Test di Mann-Whitney: differenza statisticamente significativa?
 
-Limite: confronto del compliance rate non comparabile tra ambienti — dichiarazione esplicita
+In entrambi i casi la mediana di $E_{norm}$ coincide con il valore minimo possibile zero, indicando che oltre la metà dei controlli selezionati di ciascun ambiente presenta il livello di effort più basso possibile.
+
+Sul boxplot è possibile osservera che i pochi controlli con effort elevato compaiono come punti isolati nella parte superiore del grafico. La loro distanza visiva dal centro della distribuzione dei dati riflette il fatto che la mediana di $E_{norm}$ coincida con il valore minimo per entrambi i dataset.\\
+L'istogramma sulla destra viene riportato il numero di controlli per ciascun valore esatto di $E_{norm}$. Trattandosi di un punteggio derivato da tre parametri, la metrica assume infatti un insieme finito e discreto di valori, non un intervallo continuo.
+
+In generale, la rappresentazione evidenzia una forte concentrazione di controlli a $E_{norm}=0$ per entrambe le piattaforme (36 su 60 per Azure, 27 su 39 per VMware), seguita da un numero contenuto di controlli distribuito sui restanti valori discreti ammissibili. Il valore massimo $E_{norm}=1$ risulta raggiunto da un solo controllo per piattaforma.\\
+
+Considerando la natura della popolazione di controlli utilizzata, non è stato applicato un test di verifica di ipotesi.\\
+I controlli VMware e Azure all'interno dei due dataset in questione non rappresentano un campione estratto in modo totalmente casuale dalla popolazione iniziale, bensì l'insieme delle verifiche di conformità selezionate e implementate durante questo lavoro secondo criteri di copertura pratica. \\
+Un eventuale risultato del test non potrebbe essere generalizzato all'intero standard CIS di ciascuna piattaforma. Tale confronto è quindi limitato al piano descrittivo, come già mostrato in Figura~\ref{fig:confronto_benchmark}.
+
 
 % 			CAPITOLO 7: conclusioni e possibili miglioramenti
 \chapter{Conclusioni e possibili miglioramenti}
 
 
 \section{Contributi apportati}
+
+
+
 
 Appunti WIP
 
@@ -770,6 +788,8 @@ Assegnazione C/D/R: inevitabile componente di expert judgement per check senza I
 Operatore custom: logica di verifica non riducibile a confronto parametrico — limite del paradigma data-driven
 
 Ambiente Azure: subscription studente non rappresentativa di un ambiente di produzione
+
+Limite: confronto del compliance rate non comparabile tra ambienti — dichiarazione esplicita
 
 \section{Possibili miglioramenti}
 
