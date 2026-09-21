@@ -33,6 +33,7 @@
 \usepackage{tesi}
 \usepackage{enumitem}
 \usepackage{float}
+\usepackage{parskip}
 
 \usepackage{tcolorbox}
 \tcbuselibrary{skins,breakable}
@@ -198,6 +199,8 @@ Di seguito vi è un esempio di un controllo estratto da uno dei documenti dedica
 If FTPS is not explicitly required, the recommended setting is \textcolor{red}{Disabled}.
     \item \textbf{Rationale:}\\ FTP is an unencrypted network protocol that transmits data—including passwords—in clear text. The use of this protocol can lead to both data and credential compromise and can present opportunities for exfiltration, persistence, and lateral movement.
     \item \textbf{Impact:} \\
+    Deployment workflows that rely on FTP or FTPS rather than WebDeploy or HTTPS endpoints may be affected.\\
+	\textbf{Audit}:\\
     \textbf{Audit from Azure Portal}
     \begin{enumerate}
     \item Go to App Services or Function App.
@@ -326,8 +329,8 @@ Qui di seguito un esempio di una riga estratta dal dataset per Azure e VMware in
     \item[Category] base
     \item[Profile Applicability] Level 1
     \item[Description] The acceptance level on ESXi regulates the type of software that can be installed on the system, with four distinct levels: VMwareCertified, VMwareAccepted, PartnerSupported, and CommunitySupported. It's advised to set the acceptance level to PartnerSupported or higher to ensure that only tested and digitally signed vSphere Installation Bundles (VIBs) are allowed for installation.
-    \item[Rationale] Restricting the acceptance level to PartnerSupported or higher prevents the installation of CommunitySupported packages, which are unsigned and hence, potentially unreliable or insecure. This restriction, while enhancing security, might limit the range of software that can be installed on the ESXi host.
-    \item[Impact] The acceptance level on ESXi regulates the type of software that can be installed on the system, with four distinct levels: VMwareCertified, VMwareAccepted, PartnerSupported, and CommunitySupported. It's advised to set the acceptance level to PartnerSupported or higher to ensure that only tested and digitally signed vSphere Installation Bundles (VIBs) are allowed for installation.
+    \item[Rationale] The ESXi Image Profile should only allow signed VIBs because an unsigned VIB represents untested code installed on an ESXi host. Also, use of unsigned VIBs will cause hypervisor Secure Boot to fail to configure. Community Supported VIBs do not have digital signatures. To protect the security and integrity of your ESXi hosts, do not allow unsigned (CommunitySupported) VIBs to be installed on your hosts.
+    \item[Impact] Restricting the acceptance level to PartnerSupported or higher prevents the installation of CommunitySupported packages, which are unsigned and hence, potentially unreliable or insecure. This restriction, while enhancing security, might limit the range of software that can be installed on the ESXi host
 \end{description}
 
 \vspace{2pt}
@@ -565,7 +568,7 @@ L'intervallo dei valori ammissibili per D è \{0,1,2\}. La semantica dei valori 
 \end{enumerate}
 \item R: reversibilità del rimedio. \\
 Il terzo e ultimo parametro punta a quantificare la possibilità di fare rollback rispetto all'intervento di rimedio nel caso in cui si renda necessario per qualsiasi motivo(ad esempio un servizio che smette di funzionare). \\
-L'intevento dei valori ammissibili per R è \{1,2,3\}. La semantica dei valori è la seguente:
+L'intervallo dei valori ammissibili per R è \{1,2,3\}. La semantica dei valori è la seguente:
 \begin{enumerate}
 \item Reversibilità immediata. Ad esempio un singolo comando.
 \item Reversibile con procedura strutturata. Può richiedere più passaggi e verifica di eventuali dipendenze.
@@ -739,7 +742,7 @@ La Figura \ref{fig:diagramma-vmware} riporta il diagramma prodotto per l'ambient
 \section{Differenze strutturali nei benchmark Azure e VMware}
 
 In questo paragrafo viene confrontata la struttura dei due benchmark utilizzati a livello di definizione dei controlli, escludendo i risultati osservati sulle rispettive infrastrutture di test. Il confronto opera sui valori $E_{norm}$ derivati dai parametri C, D, R assegnati a ciascun controllo sui dataset iniziali.\\
-La distribuzione di $E_{norm}$ sui 60 controlli del dataset Azure e sui 39 controlli del dataset VMware è riportata in Figura~\ref{fig:confronto_benchmark}, tramite boxplot e istogrammi sovrapposti.
+La distribuzione di $E_{norm}$ sui 60 controlli del dataset Azure e sui 39 controlli del dataset VMware è riportata in Figura~\ref{fig:confronto_benchmark}, tramite boxplot e conteggio dei controlli per valore di $E_{norm}$ su grafico a barre.
 
 
 \begin{figure}[H]
@@ -749,17 +752,16 @@ La distribuzione di $E_{norm}$ sui 60 controlli del dataset Azure e sui 39 contr
     \label{fig:confronto_benchmark}
 \end{figure}
 
+In entrambi i casi la mediana di $E_{norm}$ coincide con il valore minimo possibile, pari a zero, indicando che almeno la metà dei controlli selezionati di ciascun ambiente presenta il livello di effort più basso possibile.\\
+Sul boxplot è possibile osservare che i pochi controlli con effort elevato compaiono come punti isolati nella parte superiore del grafico.\\
+Si osserva inoltre che, per entrambi i dataset, il primo quartile e la mediana di $E_{norm}$ coincidono, entrambi pari a zero. La linea della mediana nel boxplot risulta sovrapposta al bordo inferiore della scatola, anziché posizionata al suo interno come tipicamente atteso. Tale sovrapposizione è conseguenza diretta della forte concentrazione di controlli a $E_{norm}=0$, che supera il 25\% della distribuzione in entrambi i casi.\\
 
-In entrambi i casi la mediana di $E_{norm}$ coincide con il valore minimo possibile zero, indicando che oltre la metà dei controlli selezionati di ciascun ambiente presenta il livello di effort più basso possibile.
-
-Sul boxplot è possibile osservera che i pochi controlli con effort elevato compaiono come punti isolati nella parte superiore del grafico. La loro distanza visiva dal centro della distribuzione dei dati riflette il fatto che la mediana di $E_{norm}$ coincida con il valore minimo per entrambi i dataset.\\
-L'istogramma sulla destra viene riportato il numero di controlli per ciascun valore esatto di $E_{norm}$. Trattandosi di un punteggio derivato da tre parametri, la metrica assume infatti un insieme finito e discreto di valori, non un intervallo continuo.
-
+Nel grafico a barre sulla destra è riportato il numero di controlli per ciascun valore di $E_{norm}$. \\
 In generale, la rappresentazione evidenzia una forte concentrazione di controlli a $E_{norm}=0$ per entrambe le piattaforme (36 su 60 per Azure, 27 su 39 per VMware), seguita da un numero contenuto di controlli distribuito sui restanti valori discreti ammissibili. Il valore massimo $E_{norm}=1$ risulta raggiunto da un solo controllo per piattaforma.\\
 
 Considerando la natura della popolazione di controlli utilizzata, non è stato applicato un test di verifica di ipotesi.\\
 I controlli VMware e Azure all'interno dei due dataset in questione non rappresentano un campione estratto in modo totalmente casuale dalla popolazione iniziale, bensì l'insieme delle verifiche di conformità selezionate e implementate durante questo lavoro secondo criteri di copertura pratica. \\
-Un eventuale risultato del test non potrebbe essere generalizzato all'intero standard CIS di ciascuna piattaforma. Tale confronto è quindi limitato al piano descrittivo, come già mostrato in Figura~\ref{fig:confronto_benchmark}.
+Un eventuale risultato del test non potrebbe essere generalizzato all'intero standard CIS di ciascuna piattaforma. Tale confronto è quindi limitato al piano descrittivo, come mostrato in Figura~\ref{fig:confronto_benchmark}.
 
 
 % 			CAPITOLO 7: conclusioni e possibili miglioramenti
@@ -768,40 +770,35 @@ Un eventuale risultato del test non potrebbe essere generalizzato all'intero sta
 
 \section{Contributi apportati}
 
+Conclusa la fase di sviluppo di questo progetto, si riepilogano di seguito i principali contributi apportati rispetto agli obiettivi prefissati all'inizio di questo elaborato.\\
+\begin{itemize}
+\item È stato formalizzato un sottoinsieme di buone pratiche dello standard di sicurezza CIS in forma eseguibile mediante l'utilizzo di un tool automatico di valutazione della conformità.
+\item È stato sviluppato un modello di scoring in grado di quantificare lo sforzo necessario alla risoluzione delle non conformità rilevate dalla valutazione dello strumento prodotto.
+\end{itemize}
 
+Dunque è stato realizzato un framework di audit automatizzato su due piattaforme differenti con condivisione del modello di funzionamento.\\
+Tale modello di scoring quantitativo viene utilizzato per la prioritizzazione delle problematiche a cui porre rimedio per rispettare lo standard di sicurezza CIS.\\
 
-
-Appunti WIP
-
-Framework di audit automatizzato su due piattaforme con engine condiviso
-
-Modello di scoring quantitativo per la prioritizzazione della remediation
-
-Dataset CIS strutturato con valori C/D/R validati contro il testo ufficiale
+Il lavoro ha inoltre richiesto la costruzione di un dataset CIS strutturato, arricchito con parametri assegnati qualitativamente per ciascun controllo, restando fedeli al testo dei documenti ufficiali del benchmark.
 
 \section{Limiti}
 
-Appunti WIP
+Di seguito si procede a illustrare le limitazioni che questo progetto possiede, con allegate motivazioni.\\
+A partire dal dataset costruito, un limite piuttosto evidente è l'assegnazione dei parametri C/D/R a ogni controllo. Trattasi di una componente qualitativa e soggettiva rispetto al giudizio che ognuno potrebbe dare a tali controlli. Nel corso dell'assegnazione dei valori si è cercato di essere il più ragionevoli possibili, tenendo conto degli effettivi impatti descritti all'interno dei documenti.\\
+Tuttavia, questo giudizio potrebbe differire e di conseguenza cambiare il punteggio della valutazione di conformità.\\
 
-Assegnazione C/D/R: inevitabile componente di expert judgement per check senza Impact esplicito nel documento CIS
+Un altro limite riscontrato è legato alla struttura dei controlli, per i quali non essendo tutti puramente parametrici, non è stato possibile rendere la logica di verifica riducibile totalmente a un confronto parametrico.\\
 
-Operatore custom: logica di verifica non riducibile a confronto parametrico — limite del paradigma data-driven
-
-Ambiente Azure: subscription studente non rappresentativa di un ambiente di produzione
-
-Limite: confronto del compliance rate non comparabile tra ambienti — dichiarazione esplicita
+Infine, il confronto del tasso di conformità tra i due ambienti non è comparabile a causa della loro natura e della dimensione delle rispettive infrastrutture utilizzate in fase di test dello strumento.
 
 \section{Possibili miglioramenti}
 
-Appunti WIP
+Si conclude illustrando alcune possibili migliorie che potrebbero essere apportate a quanto presentato in questo lavoro.\\
 
-Adozione di VIKOR multi-criterio (Anisetti et al., 2023) per la matrice Effort/Impatto multi-dimensionale
+Il modello di scoring proposto, basato su una combinazione lineare pesata di tre dimensioni, potrebbe essere esteso adottando un metodo di decisione multi-criterio più articolato, così da essere in grado di gestire simultaneamente più assi di prioritizzazione oltre a effort e impatto. Ad esempio si potrebbe includere il costo economico della remediation oppure il grado di esposizione al rischio del controllo interessato, il quale possa indicare quanto è pericoloso mantenere tale componente non conforme al benchmark CIS. \\
 
-Analisi temporale: rilevamento del drift di configurazione su esecuzioni periodiche
-
-Estensione a ulteriori piattaforme (AWS, Kubernetes) tramite il pattern engine condiviso + dataset CSV
-
-Aggiunta di test unitari Pester sulle funzioni core di moduleengine
+Un'altra possibile miglioria riguarda l'esecuzione periodica del framework su una stessa infrastruttura, il che consentirebbe di introdurre un'analisi temporale dei risultati. Tale pratica sarebbe finalizzata al rilevamento di eventuale \textit{drift} di configurazione.
+Eventuali variazioni nello stato di conformità di un controllo tra un'esecuzione e la successiva potrebbero segnalare modifiche non autorizzate o non documentate sull'infrastruttura. \\
 
 
 %
