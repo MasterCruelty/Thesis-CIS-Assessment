@@ -14,7 +14,7 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %
 %
-\documentclass[a4paper,12pt]{report}
+\documentclass[a4paper,11pt]{report}
 %    \renewcommand{\baselinestretch}{1.6}      % interline spacing
 %
 % \includeonly{}
@@ -34,6 +34,7 @@
 \usepackage{enumitem}
 \usepackage{float}
 \usepackage{parskip}
+\usepackage[a-1a]{pdfx}
 
 \usepackage{tcolorbox}
 \tcbuselibrary{skins,breakable}
@@ -304,10 +305,18 @@ Qui di seguito un esempio di una riga estratta dal dataset per Azure e VMware in
     \item[Description] Basic Authentication Publishing Credentials provides the ability to publish---or deploy to---a function app without a centralized Identity Provider. For a more effective, capable, and secure solution for Identity, Authentication, Authorization, and Accountability, a centralized Identity Provider such as Entra ID is strongly advised.
     \item[Rationale] Basic Authentication introduces an identity silo for privileged access to a resource and produces logging which may not provide a full chain of accountability. This can be exploited in numerous ways and represents a significant vulnerability and attack vector.
     \item[Impact] Disabling 'Basic Auth Publishing Credentials' will prevent the following deployment methods from working: FTP $\cdot$ FTPS $\cdot$ FTPS SCM Basic Auth Publishing Credentials $\cdot$ Local Git $\cdot$ GitHub $\cdot$ Azure Repos $\cdot$ Bitbucket $\cdot$ Visual Studio (Version 17.12 and earlier). If this recommendation cannot be implemented because one of the above listed deployment methods is necessary and cannot be adapted, compensating controls (e.g. using FTPS only and disabling only "SCM Basic Auth Publishing Credentials") are recommended to reduce potential attack surface.
-    \item[Audit] \texttt{az functionapp list} \\
-    \texttt{az resource show --resource-group <resource-group-name> --name <function-app-name> --resource-type "Microsoft.Web/sites" --query basicPublishingCredentialsPolicies}
-    \item[Remediation] \texttt{az resource update --resource-group <resource-group-name> --name <function-app-name> --resource-type "Microsoft.Web/sites" --set properties.allow=false}
 \end{description}
+\vspace{2pt}
+\noindent\textbf{Audit:}
+\begin{lstlisting}[style=azcli]
+    az functionapp list
+    az resource show --resource-group <resource-group-name> --name <function-app-name> --resource-type "Microsoft.Web/sites" --query basicPublishingCredentialsPolicies
+\end{lstlisting}
+
+\noindent\textbf{Remediation:}
+\begin{lstlisting}[style=azcli]
+az resource update --resource-group <resource-group-name> --name <function-app-name> --resource-type "Microsoft.Web/sites" --set properties.allow=false
+\end{lstlisting}
 
 \vspace{4pt}
 \noindent
@@ -594,7 +603,7 @@ L'assegnazione dei valori per ogni controllo CIS implementato è avvenuta median
 
 \textbf{Controllo 6.3.1 -- Host iSCSI client, if enabled, must employ bidirectional/mutual CHAP authentication ($C=2$, $D=1$, $R=2$)}: questo intervento richiede la configurazione coordinata delle credenziali sia sull'host ESXi sia sul target storage ($C=2$). La documentazione CIS segnala esplicitamente il rischio di interruzioni della comunicazione iSCSI qualora le credenziali configurate sui due lati non coincidano ($D=1$); il ripristino della configurazione precedente richiede una procedura strutturata di verifica su entrambi i lati della connessione ($R=2$). \\
 
-\textbf{Controllo 3.21 -- Host should enable strict lockdown mode ($C=3$, $D=2$, $R=3$)}: questo esempio rappresenta il caso di effort massimo del dataset VMware. L'abilitazione di questa modalità provoca l'impossibilità di accesso diretto all'host tramite Direct Console User Interface (DCUI), alterando la topologia di accesso amministrativo all'host ($C=3$) e potendo comportare un downtime critico ($D=2$) se non correttamente pianificata. Per quanto riguarda la reversibilità, la documentazione CIS segnala esplicitamente che il recupero da uno scenario simile può richiedere la reinstallazione dell'host ESXi. In determinati casi, il rollback può richiedere persino la presenza di un sistemista in datacenter per poter procedere alla reinstallazione dell'host ($R=3$).
+\textbf{Controllo 3.21 -- Host should enable strict lockdown mode ($C=3$, $D=2$, $R=3$)}: questo esempio rappresenta il caso di effort massimo del dataset VMware. L'abilitazione di questa modalità può provocare l'impossibilità di accesso diretto all'host tramite Direct Console User Interface (DCUI), alterando la topologia di accesso amministrativo all'host ($C=3$) e potendo comportare un downtime critico ($D=2$) se non correttamente pianificata. Per quanto riguarda la reversibilità, la documentazione CIS segnala esplicitamente che il recupero da uno scenario simile può richiedere la reinstallazione dell'host ESXi. In determinati casi, il rollback può richiedere persino la presenza di un sistemista in datacenter per poter procedere alla reinstallazione dell'host ($R=3$).
 
 
 \section{Definizione della metrica di effort E}
@@ -754,7 +763,7 @@ La distribuzione di $E_{norm}$ sui 60 controlli del dataset Azure e sui 39 contr
 
 In entrambi i casi la mediana di $E_{norm}$ coincide con il valore minimo possibile, pari a zero, indicando che almeno la metà dei controlli selezionati di ciascun ambiente presenta il livello di effort più basso possibile.\\
 Sul boxplot è possibile osservare che i pochi controlli con effort elevato compaiono come punti isolati nella parte superiore del grafico.\\
-Si osserva inoltre che, per entrambi i dataset, il primo quartile e la mediana di $E_{norm}$ coincidono, entrambi pari a zero. La linea della mediana nel boxplot risulta sovrapposta al bordo inferiore della scatola, anziché posizionata al suo interno come tipicamente atteso. Tale sovrapposizione è conseguenza diretta della forte concentrazione di controlli a $E_{norm}=0$, che supera il 25\% della distribuzione in entrambi i casi.\\
+Si osserva inoltre che la sovrapposizione della mediana con il bordo inferiore della scatola del boxplot è conseguenza diretta della forte concentrazione di controlli a $E_{norm}=0$, che supera il 25\% della distribuzione in entrambi i casi.\\
 
 Nel grafico a barre sulla destra è riportato il numero di controlli per ciascun valore di $E_{norm}$. \\
 In generale, la rappresentazione evidenzia una forte concentrazione di controlli a $E_{norm}=0$ per entrambe le piattaforme (36 su 60 per Azure, 27 su 39 per VMware), seguita da un numero contenuto di controlli distribuito sui restanti valori discreti ammissibili. Il valore massimo $E_{norm}=1$ risulta raggiunto da un solo controllo per piattaforma.\\
@@ -764,7 +773,109 @@ I controlli VMware e Azure all'interno dei due dataset in questione non rapprese
 Un eventuale risultato del test non potrebbe essere generalizzato all'intero standard CIS di ciascuna piattaforma. Tale confronto è quindi limitato al piano descrittivo, come mostrato in Figura~\ref{fig:confronto_benchmark}.
 
 
-% 			CAPITOLO 7: conclusioni e possibili miglioramenti
+
+% 			CAPITOLO 7: integrazione sonda Moon Cloud
+\chapter{Integrazione del progetto nell'ambiente Moon Cloud}
+
+
+\section{Contesto e obiettivo}
+
+
+Una volta che è stato ultimato il framework finora presentato, è stato possibile effettuare la sua integrazione con l'ambiente Moon Cloud.\\
+Moon cloud è una piattaforma dedicata per la verifica della conformità di applicazioni o infrastrutture in grado di eseguire una valutazione completa durante il loro intero ciclo di vita.
+
+Questa piattaforma esegue periodicamente delle \textit{sonde} (\textit{probe}), quindi componenti software indipendenti, ciascuna incaricata di verificare la conformità di uno specifico aspetto di sicurezza su un componente target(applicazione o infrastruttura), restituendo al termine un esito strutturato dei controlli eseguiti.
+
+In questo modo il framework per la valutazione di conformità agli standard CIS, oltre ad essere eseguibile localmente, può anche fare parte di un processo di monitoraggio continuo dell'infrastruttura.
+Chiaramente l'obiettivo qui non è stato la riscrittura dell'intero strumento in funzione di Moon Cloud, bensì la costruzione di un adattatore che ne rispetti i requisiti di funzionalità, andando a riutilizzare la stessa logica di audit e di scoring già sviluppata.
+
+\section{Le specifiche di Moon Cloud: la sonda come macchina a stati}
+
+
+Il requisito principale richiesto dal driver Moon Cloud consiste nel fatto che ogni sonda sia implementata come una classe Python che eredita da \texttt{AbstractProbe}, strutturata come una macchina a stati finiti.\\
+Vi è una sequenza di \textit{atomi} (\textit{atoms}), ognuno dei quali costituito da una coppia di funzioni:
+\begin{itemize}
+\item \textit{forward}.
+Viene eseguita nel normale flusso di esecuzione.
+\item \textit{rollback}.
+Viene invocata solo in caso di errore per disfare eventuali effetti collaterali.
+\end{itemize}
+
+Per ogni atomo vengono definite le eccezioni da intercettare, l'azione da intraprendere se una di esse viene sollevata e la funzione che ha il compito di costruire il messaggio da restituire.
+
+Di seguito è riportata la definizione completa del metodo \texttt{atoms()}. Tale definizione è comune a tutte le sonde sviluppate.
+
+\begin{lstlisting}[style=azcli, caption={Definizione di atoms per ogni sonda sviluppata.}, label={lst:atoms}]
+def atoms(self) -> typing.Sequence[atom.AtomPairWithException]:
+    return [
+        atom.AtomPairWithException(
+            forward=self.init,
+            forward_captured_exceptions=[
+                atom.PunctualExceptionInformationForward(
+                    exception_class=AssertionError,
+                    action=atom.OnExceptionActionForward.STOP,
+                    result_producer=self._input_error,
+                ),
+                atom.PunctualExceptionInformationForward(
+                    exception_class=ValueError,
+                    action=atom.OnExceptionActionForward.STOP,
+                    result_producer=self._input_error,
+                ),
+            ],
+        ),
+        atom.AtomPairWithException(
+            forward=self.azure_login,
+            forward_captured_exceptions=[
+                atom.PunctualExceptionInformationForward(
+                    exception_class=Exception,
+                    action=atom.OnExceptionActionForward.ROLLBACK,
+                    result_producer=self._connection_error,
+                ),
+            ],
+            rollback=self.rollback_azure_login,
+        ),
+        atom.AtomPairWithException(
+            forward=self.run_audit,
+            forward_captured_exceptions=[
+                atom.PunctualExceptionInformationForward(
+                    exception_class=ConnectionError,
+                    action=atom.OnExceptionActionForward.ROLLBACK,
+                    result_producer=self._connection_error,
+                ),
+                atom.PunctualExceptionInformationForward(
+                    exception_class=Exception,
+                    action=atom.OnExceptionActionForward.ROLLBACK,
+                    result_producer=self._execution_error,
+                ),
+            ],
+            rollback=self.rollback_azure_login,
+        ),
+        atom.AtomPairWithException(
+            forward=self.make_result,
+            forward_captured_exceptions=[
+                atom.PunctualExceptionInformationForward(
+                    exception_class=Exception,
+                    action=atom.OnExceptionActionForward.STOP,
+                    result_producer=self._execution_error,
+                ),
+            ],
+        ),
+    ]
+\end{lstlisting}
+
+La struttura della funzione atoms è quindi composta da quattro atomi, ognuno dei quali verrà descritto nei successivi paragrafi.
+\begin{itemize}
+\item \texttt{init}
+\item \texttt{azure\_login}
+\item \texttt{run\_audit}
+\item \texttt{make\_result}
+\end{itemize}
+
+Nel caso d'uso di questo progetto, solo l'atomo \texttt{azure\_login} dispone di un rollback, poichè è l'unico passaggio che produce uno stato persistente al di fuori del ciclo di vita della singola esecuzione. Trattasi della sessione Azure CLI autenticata.
+
+
+
+% 			CAPITOLO 8: conclusioni e possibili miglioramenti
 \chapter{Conclusioni e possibili miglioramenti}
 
 
