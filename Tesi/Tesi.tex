@@ -775,7 +775,7 @@ Un eventuale risultato del test non potrebbe essere generalizzato all'intero sta
 
 
 % 			CAPITOLO 7: integrazione sonda Moon Cloud
-\chapter{Integrazione del progetto nell'ambiente Moon Cloud}
+\chapter{Integrazione nell'ambiente Moon Cloud}
 
 
 \section{Contesto e obiettivo}
@@ -873,6 +873,32 @@ La struttura della funzione atoms è quindi composta da quattro atomi, ognuno de
 
 Nel caso d'uso di questo progetto, solo l'atomo \texttt{azure\_login} dispone di un rollback, poichè è l'unico passaggio che produce uno stato persistente al di fuori del ciclo di vita della singola esecuzione. Trattasi della sessione Azure CLI autenticata.
 
+
+\section{Riutilizzo del framework via processo esterno}
+
+Un primo approccio per la realizzazione delle sonde sarebbe potuto essere la riscrittura della logica in Python, in modo tale da evitare dipendenze esterne.
+Questa opzione è stata fin da subito scartata per due motivazioni.
+\begin{enumerate}
+\item Il framework PowerShell descritto nei capitoli precedenti era già stato validato e testato su un paio di infrastrutture.
+Tradurre l'intero strumento in un altro linguaggio sarebbe risultato oneroso e avrebbe potuto introdurre altresì rischi di errori su funzionalità già corrette e testate.
+\item La documentazione del driver Moon Cloud prevede in modo esplicito la possibilità di invocare uno strumento esterno all'interno di una sonda Python. Data questa possibilità, l'architettura scelta si inserisce in una modalità di integrazione già prevista. PowerShell viene quindi installato all'interno del container come dipendenza esterna.
+\end{enumerate}
+
+Il costo di questa scelta architetturale ricade sulla dimensione dell'immagine Docker, chiaramente più pesante rispetto a una sonda nativa Python a causa delle dipendenze esterne da dover installare. Trattasi di un compromesso ritenuto accettabile a fronte del riutilizzo di uno strumento già ultimato.
+
+\section{Architettura della sonda}
+
+Di seguito in Figura~\ref{fig:architettura-sonda} viene illustrato il flusso complessivo di esecuzione di una singola sonda. 
+La sonda Python (\texttt{probe.py}) autentica la sessione Azure CLI e successivamente invoca come sottoprocesso uno script PowerShell (\texttt{probe\_runner.ps1}) che ha il compito di orchestrare l'esecuzione del framework esistente.
+Al termine, viene prodotto un file JSON con l'esito della valutazione.
+
+
+\begin{figure}[H]
+	\centering
+	\includegraphics[width=1.0\textwidth]{architettura_sonda_moon_cloud}
+    \caption{Flusso di esecuzione di una sonda Moon Cloud integrata con il framework PowerShell.}
+    \label{fig:architettura-sonda}
+\end{figure}
 
 
 % 			CAPITOLO 8: conclusioni e possibili miglioramenti
