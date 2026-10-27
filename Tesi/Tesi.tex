@@ -789,6 +789,8 @@ Questa piattaforma esegue periodicamente delle \textit{sonde} (\textit{probe}), 
 In questo modo il framework per la valutazione di conformità agli standard CIS, oltre ad essere eseguibile localmente, può anche fare parte di un processo di monitoraggio continuo dell'infrastruttura.
 Chiaramente l'obiettivo qui non è stato la riscrittura dell'intero strumento in funzione di Moon Cloud, bensì la costruzione di un adattatore che ne rispetti i requisiti di funzionalità, andando a riutilizzare la stessa logica di audit e di scoring già sviluppata.
 
+Un ulteriore precisazione è che l'integrazione del framework verso questo ambiente è stata realizzata solamente per quanto riguarda le funzionalità sviluppate per Microsoft Azure. 
+
 \section{Le specifiche di Moon Cloud: la sonda come macchina a stati}
 
 
@@ -899,6 +901,200 @@ Al termine, viene prodotto un file JSON con l'esito della valutazione.
     \caption{Flusso di esecuzione di una sonda Moon Cloud integrata con il framework PowerShell.}
     \label{fig:architettura-sonda}
 \end{figure}
+
+
+
+I successivi quattro paragrafi vanno a decrivere ciascun atomo che compone la sonda.
+
+\subsection{init: validazione dell'input}
+
+L'atomo init ha la funzione di leggere e validare i dati necessari all'esecuzione del framework, quindi l'input e le credenziali Azure. Vengono letti tre gruppi di parametri dall'input fornito. Il gruppo \texttt{config} contiene l'identificativo della sottoscrizione Azure.
+il gruppo \texttt{audit} contiene il tempo massimo concesso per l'esecuzione( di default 1800 secondi).
+Il gruppo \texttt{scoring} contiene i pesi $w_c$, $w_d$, $w_r$ e le soglie $\alpha$ e $\beta$, con i valori di default utilizzati dalla sonda.
+Le credenziali del service principal (\texttt{tenant\_id}, \texttt{client\_id}, \texttt{client\_secret}) sono lette dal file dedicato.
+
+La seguente porzione di codice ne riporta l'implementazione.
+
+
+\begin{lstlisting}[style=azcli, caption={Atomo \texttt{init}: validazione dell'input e delle credenziali}, label={lst:init}]
+def init(self, inputs: typing.Any = None) -> bool:
+    config = self.config.input.get("config") or {}
+
+    # validazione sottoscrizione azure
+    self.subscription_id = config.get("subscription_id", "")
+    assert self.subscription_id, "Il campo 'config.subscription_id' e' obbligatorio"
+
+    audit = self.config.input.get("audit") or {}
+    self.timeout = int(audit.get("timeout_seconds", self.DEFAULT_TIMEOUT))
+
+    # validazione pesi per lo scoring finale
+    scoring = self.config.input.get("scoring") or {}
+    wc = float(scoring.get("wc", 0.40))
+    wd = float(scoring.get("wd", 0.30))
+    wr = float(scoring.get("wr", 0.30))
+    assert abs(wc + wd + wr - 1.0) < 0.001, (
+        f"I pesi devono sommare a 1.0 (attuale: {round(wc + wd + wr, 4)})"
+    )
+    self.weights = {"wc": wc, "wd": wd, "wr": wr}
+
+    alfa = float(scoring.get("alfa", 0.35))
+    beta = float(scoring.get("beta", 0.70))
+    assert 0.0 <= alfa < beta <= 1.0, (
+        f"Soglie non valide: richiesto 0 <= alfa < beta <= 1 (alfa={alfa}, beta={beta})"
+    )
+    self.thresholds = {"alfa": alfa, "beta": beta}
+
+    # verifica credenziali in credential.json
+    credential = self.config.credential or {}
+    self.tenant_id = credential.get("tenant_id", "")
+    self.client_id = credential.get("client_id", "")
+    self.client_secret = credential.get("client_secret", "")
+    assert self.tenant_id and self.client_id and self.client_secret, (
+        "Credenziali incomplete: servono 'tenant_id', 'client_id' e 'client_secret' "
+        "di un service principal Azure con ruolo Reader sulla subscription"
+    )
+
+    self.json_path = os.path.join(tempfile.gettempdir(), "cis_azure_result.json")
+    return True
+\end{lstlisting}
+
+
+È da notare come i vincoli del modello di scoring illustrati e discussi nel capitolo 5, quindi la somma dei pesi a 1 e le soglie    $\alpha < \beta$, vengono verificati fin da subito in questo atomo, prima dell'autenticazione e dell'esecuzione dei controlli. Un input non valido interrompe la sonda andando a restituire l'errore corrispondente.
+
+
+\subsection{azure\_login: autenticazione}
+
+Il secondo atomo si occupa dell'autenticazione verso una sottoscrizione valida su Azure mediante l'utilizzo di un service principal con il comando \texttt{az login}. Una volta stabilita la sessione avendo fatto login correttamente, essa viene condivisa dal processo PowerShell invocato nel successivo atomo della sonda. 
+
+Se l'autenticazione dovesse fallire per qualsiasi ragione, viene sollevata un eccezione mappata sul codice di esito \texttt{TARGET\_CONNECTION\_ERROR}, distinto dagli errori di esecuzione del framework in sè.
+
+
+
+\subsection{run\_audit: invocazione del framework esistente}
+
+Questo atomo ha il ruolo di collegamento tra la sonda e il framework PowerShell. Come prima azione va ad eliminare un eventuale file JSON lasciato da un'esecuzione precedente. Fatto questo va a comporre il comando PowerShell con il compito di eseguire il software già esistente. Il comando fornisce a un sorgente dedicato tutte le informazioni necessarie all'esecuzione tra cui la sezione CIS da verificare, i pesi e la directory dove è posizionato il framework.
+Eventuali errori vengono catturati dal canale dedicato dove vengono conservati al più 4000 caratteri, i quali vengono poi riportati nel messaggio restituito una volta sollevata l'eccezione.
+Al termine dell'esecuzione il codice di uscita determina l'esito finale. Il valore 2 indica l'assenza di una sessione Azure valida oppure del dataset CIS, mentre ogni altro valore diverso da zero segnala un errore generico. 
+Se invece è andato tutto a buon fine, viene letto il file JSON prodotto e lo si conserva per l'atomo successivo della macchina a stati finiti.
+
+La seguente porzione di codice ne riporta l'implementazione.
+
+
+\begin{lstlisting}[style=azcli, caption={Atomo \texttt{run\_audit}: invocazione del framework tramite subprocess}, label={lst:run-audit}]
+def run_audit(self, inputs: typing.Any = None) -> bool:
+    # Un file residuo di un'esecuzione precedente verrebbe riletto e riutilizzato.
+    if os.path.exists(self.json_path):
+        os.remove(self.json_path)
+
+    framework_root = os.environ.get("CIS_FRAMEWORK_ROOT", "/usr/src/app/framework")
+    runner = os.path.join(os.path.dirname(os.path.abspath(__file__)), "probe_runner.ps1")
+
+    cmd = [
+        "pwsh", "-NoProfile", "-NonInteractive", "-File", runner,
+        "-FrameworkRoot", framework_root,
+        "-Section", self.SECTION,
+        "-JsonPath", self.json_path,
+        "-Wc", str(self.weights["wc"]),
+        "-Wd", str(self.weights["wd"]),
+        "-Wr", str(self.weights["wr"]),
+        "-Alfa", str(self.thresholds["alfa"]),
+        "-Beta", str(self.thresholds["beta"]),
+    ]
+
+    proc = subprocess.run(cmd, capture_output=True, text=True, timeout=self.timeout)
+    self.runner_stderr = (proc.stderr or "").strip()[:4000]
+
+    if proc.returncode == 2:
+        raise ConnectionError(
+            "Il framework non ha trovato una sessione Azure valida oppure il "
+            f"dataset CIS e' mancante. Dettaglio sull'errore: {self.runner_stderr}"
+        )
+    if proc.returncode != 0:
+        raise RuntimeError(
+            f"probe_runner.ps1 ha terminato con exit code {proc.returncode}. "
+            f"Dettaglio: {self.runner_stderr}"
+        )
+    if not os.path.exists(self.json_path):
+        raise RuntimeError("Il framework non ha prodotto il file di output JSON.")
+
+    with open(self.json_path, "r", encoding="utf-8-sig") as fh:
+        self.audit_data = json.load(fh)
+    return True
+\end{lstlisting}
+
+
+
+\subsection{probe\_runner.ps1: esecuzione dei controlli e produzione del JSON di output}
+
+Questo script si limita a orchestrare l'esecuzione dei moduli CIS e a esportare il risultato in formato JSON.
+Il parametro relativo alla sezione del documento CIS da valutare deve essere uno dei valori ammessi (\texttt{app\_service}, \texttt{management}, \texttt{networking}, \texttt{security}, \texttt{virtual\_machines}).
+La seguente porzione di codice va a illustrare l'intestazione dello script con il relativo blocco di parametri.
+
+
+\begin{lstlisting}[style=azcli, caption={Intestazione di \texttt{probe\_runner.ps1}}, label={lst:runner-header}]
+[CmdletBinding()]
+param(
+    [Parameter(Mandatory = $true)]
+    [string]$FrameworkRoot,
+
+    [Parameter(Mandatory = $true)]
+    [ValidateSet('app_service', 'management', 'networking', 'security', 'virtual_machines', 'all')]
+    [string]$Section,
+
+    [Parameter(Mandatory = $true)]
+    [string]$JsonPath,
+
+    [double]$Wc   = 0.40,
+    [double]$Wd   = 0.30,
+    [double]$Wr   = 0.30,
+    [double]$Alfa = 0.35,
+    [double]$Beta = 0.70
+)
+
+$ErrorActionPreference = 'Stop'
+
+# evita formattazioni di numeri con la virgola come separatore decimale
+[System.Threading.Thread]::CurrentThread.CurrentCulture   = [System.Globalization.CultureInfo]::InvariantCulture
+[System.Threading.Thread]::CurrentThread.CurrentUICulture = [System.Globalization.CultureInfo]::InvariantCulture
+\end{lstlisting}
+
+
+
+Una volta risolti i percorsi del dataset e dei moduli a partire da \texttt{\$FrameworkRoot}, lo script esegue esclusivamente il modulo di valutazione della conformità corrispondente al valore di \texttt{\$Section} ricevuto, quindi invoca \texttt{module\_scoring.ps1} con lo switch \texttt{-ExportJson}, descritto nella sezione seguente.
+
+
+\subsection{make\_result: produzione esito in output}
+
+L'ultimo passo va a tradurre il contenuto del file JSON prodotto dal framework nel formato atteso dal driver Moon Cloud.
+Vengono quindi popolati i campi \texttt{integer\_result}, \texttt{pretty\_result} ed \texttt{extra\_data} dell'oggetto Result.
+Coerentemente con la documentazione fornita sulla piattaforma, l'ultimo passo fornisce sempre un esito booleano.
+Viene restituito \texttt{TRUE} se tutti i controlli valutati risultano conformi o se nessun controllo risulta applicabile, \texttt{FALSE} in presenza di almeno una violazione di conformità.
+
+
+\section{Adattamenti al framework esistente}
+
+Per poter integrare lo strumento sviluppato, si è reso necessaria un'unica modifica a un singolo file sorgente, oltre alla produzione di un nuovo script \texttt{probe\_runner.ps1} già citato e descritto nella sezione precedente.
+Nessun'altra componente logica ha dovuto subire modifiche.
+
+La modifica effettuata ha impattato il file relativo allo scoring, all'interno del quale è stato aggiunto uno switch opzionale per l'esportazione in formato json. Essenzialmente vengono serializzati gli stessi dati già calcolati in un formato riutilizzato poi dalla sonda per popolare l'esito che viene restituito al driver.
+
+È da notare che l'esclusione dei controlli con stato \texttt{UNKNOWN} dal riepilogo finale è un accorgimento necessario in funzione del fatto che ogni sonda esegue un solo modulo CIS alla volta. 
+Il dataset caricato in memoria però contiene comunque le definizioni di tutti i controlli del benchmark compilati.
+In questo caso solo quelli che effettivamente vengono eseguiti ottengono uno stato reale, mentre gli altri sarebbero computati erroneamente nel denominatore del tasso di conformità.
+
+
+\section{Granularità: una sonda per sezione}
+
+A seguito di una prima analisi dopo aver consultato la documentazione, la scelta implementativa è stata quella di produrre una sonda per singola sezione del benchmark CIS invece di una sonda unica che coprisse l'intero dataset comprendente tutte le sezioni implementate. 
+La conseguenza di questa scelta ha comportato la creazione di cinque repository differenti, una per sezione CIS(App Service, Management, Networking, Security, Virtual Machines).
+Ogni repository è pressochè identica alle altre a meno del  valore della costante \texttt{SECTION} definita nella classe \texttt{Probe}.
+
+
+\begin{lstlisting}[style=azcli, caption={Estratto della classe Probe all'interno di ogni sonda sviluppata.}, label={lst:section-constant}]
+class Probe(abstract_probe.AbstractProbe):
+    SECTION = "app_service"
+\end{lstlisting}
+
 
 
 % 			CAPITOLO 8: conclusioni e possibili miglioramenti
