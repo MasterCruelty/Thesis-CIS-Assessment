@@ -1,1 +1,157 @@
-<mxfile host="app.diagrams.net"><diagram name="Architettura sonda Moon Cloud" id="sonda1"><mxGraphModel dx="1400" dy="900" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1400" pageHeight="800" math="0" shadow="0"><root><mxCell id="0"/><mxCell id="1" parent="0"/><mxCell id="c3" value="Container Docker  (Python 3.10, PowerShell Core, Azure CLI)" style="rounded=1;arcSize=8;whiteSpace=wrap;html=1;fillColor=#f4f7fb;strokeColor=#4a6fa5;strokeWidth=2;fontSize=14;fontColor=#4a6fa5;fontStyle=1;align=left;verticalAlign=top;dashed=1;dashPattern=8 6;spacingLeft=10;spacingTop=6;" vertex="1" parent="1"><mxGeometry x="224" y="16" width="1120" height="608" as="geometry"/></mxCell><mxCell id="c4" value="Piattaforma&lt;br&gt;Moon Cloud" style="rounded=1;arcSize=8;whiteSpace=wrap;html=1;fillColor=#fdf1dc;strokeColor=#b8741a;strokeWidth=2;fontSize=13;fontColor=#000000;fontStyle=1;align=center;verticalAlign=middle;" vertex="1" parent="1"><mxGeometry x="4" y="128" width="128" height="112" as="geometry"/></mxCell><mxCell id="c5" style="endArrow=block;endFill=1;html=1;strokeColor=#333333;strokeWidth=2;" edge="1" parent="1"><mxGeometry relative="1" as="geometry"><mxPoint x="138" y="160" as="sourcePoint"/><mxPoint x="253" y="160" as="targetPoint"/></mxGeometry></mxCell><mxCell id="c6" value="input JSON" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;fontSize=11;fontColor=#000000;fontStyle=0;" vertex="1" parent="1"><mxGeometry x="92" y="108" width="176" height="36" as="geometry"/></mxCell><mxCell id="c7" style="endArrow=block;endFill=1;html=1;strokeColor=#2a7a2a;strokeWidth=2;" edge="1" parent="1"><mxGeometry relative="1" as="geometry"><mxPoint x="253" y="208" as="sourcePoint"/><mxPoint x="138" y="208" as="targetPoint"/></mxGeometry></mxCell><mxCell id="c8" value="esito JSON" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;fontSize=11;fontColor=#2a7a2a;fontStyle=0;" vertex="1" parent="1"><mxGeometry x="92" y="211" width="176" height="36" as="geometry"/></mxCell><mxCell id="c9" value="Driver&lt;br&gt;Moon Cloud&lt;br&gt;(libreria)" style="rounded=1;arcSize=8;whiteSpace=wrap;html=1;fillColor=#fdf1dc;strokeColor=#b8741a;strokeWidth=2;fontSize=13;fontColor=#000000;fontStyle=1;align=center;verticalAlign=middle;" vertex="1" parent="1"><mxGeometry x="264" y="112" width="176" height="144" as="geometry"/></mxCell><mxCell id="c10" style="endArrow=block;endFill=1;html=1;strokeColor=#333333;strokeWidth=2;" edge="1" parent="1"><mxGeometry relative="1" as="geometry"><mxPoint x="443" y="160" as="sourcePoint"/><mxPoint x="493" y="160" as="targetPoint"/></mxGeometry></mxCell><mxCell id="c11" style="endArrow=block;endFill=1;html=1;strokeColor=#2a7a2a;strokeWidth=2;" edge="1" parent="1"><mxGeometry relative="1" as="geometry"><mxPoint x="493" y="208" as="sourcePoint"/><mxPoint x="443" y="208" as="targetPoint"/></mxGeometry></mxCell><mxCell id="c12" value="probe.py  (sonda Python, macchina a stati)" style="rounded=1;arcSize=8;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#333333;strokeWidth=2;fontSize=13;fontColor=#000000;fontStyle=1;align=left;verticalAlign=top;spacingLeft=10;spacingTop=6;" vertex="1" parent="1"><mxGeometry x="496" y="80" width="832" height="192" as="geometry"/></mxCell><mxCell id="c13" value="init" style="rounded=1;arcSize=8;whiteSpace=wrap;html=1;fillColor=#dcebd8;strokeColor=#333333;strokeWidth=1.5;fontSize=13;fontColor=#000000;fontStyle=1;align=center;verticalAlign=middle;" vertex="1" parent="1"><mxGeometry x="528" y="160" width="160" height="72" as="geometry"/></mxCell><mxCell id="c14" value="azure_login" style="rounded=1;arcSize=8;whiteSpace=wrap;html=1;fillColor=#dcebd8;strokeColor=#333333;strokeWidth=1.5;fontSize=13;fontColor=#000000;fontStyle=1;align=center;verticalAlign=middle;" vertex="1" parent="1"><mxGeometry x="736" y="160" width="160" height="72" as="geometry"/></mxCell><mxCell id="c15" value="run_audit" style="rounded=1;arcSize=8;whiteSpace=wrap;html=1;fillColor=#f9d9d0;strokeColor=#333333;strokeWidth=1.5;fontSize=13;fontColor=#000000;fontStyle=1;align=center;verticalAlign=middle;" vertex="1" parent="1"><mxGeometry x="944" y="160" width="160" height="72" as="geometry"/></mxCell><mxCell id="c16" value="make_result" style="rounded=1;arcSize=8;whiteSpace=wrap;html=1;fillColor=#dcebd8;strokeColor=#333333;strokeWidth=1.5;fontSize=13;fontColor=#000000;fontStyle=1;align=center;verticalAlign=middle;" vertex="1" parent="1"><mxGeometry x="1152" y="160" width="160" height="72" as="geometry"/></mxCell><mxCell id="c17" style="endArrow=block;endFill=1;html=1;strokeColor=#333333;strokeWidth=2;" edge="1" parent="1"><mxGeometry relative="1" as="geometry"><mxPoint x="691" y="196" as="sourcePoint"/><mxPoint x="733" y="196" as="targetPoint"/></mxGeometry></mxCell><mxCell id="c18" style="endArrow=block;endFill=1;html=1;strokeColor=#333333;strokeWidth=2;" edge="1" parent="1"><mxGeometry relative="1" as="geometry"><mxPoint x="899" y="196" as="sourcePoint"/><mxPoint x="941" y="196" as="targetPoint"/></mxGeometry></mxCell><mxCell id="c19" style="endArrow=block;endFill=1;html=1;strokeColor=#333333;strokeWidth=2;" edge="1" parent="1"><mxGeometry relative="1" as="geometry"><mxPoint x="1107" y="196" as="sourcePoint"/><mxPoint x="1149" y="196" as="targetPoint"/></mxGeometry></mxCell><mxCell id="c20" value="se un atomo fallisce: rollback degli atomi già eseguiti" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;fontSize=11.5;fontColor=#aa3333;fontStyle=2;" vertex="1" parent="1"><mxGeometry x="560" y="236" width="480" height="36" as="geometry"/></mxCell><mxCell id="c21" value="Azure CLI" style="rounded=1;arcSize=8;whiteSpace=wrap;html=1;fillColor=#e3f0fa;strokeColor=#2f6f9f;strokeWidth=2;fontSize=14;fontColor=#000000;fontStyle=1;align=center;verticalAlign=middle;" vertex="1" parent="1"><mxGeometry x="288" y="400" width="288" height="112" as="geometry"/></mxCell><mxCell id="c22" style="endArrow=block;endFill=1;html=1;strokeColor=#333333;strokeWidth=2;" edge="1" parent="1"><mxGeometry relative="1" as="geometry"><mxPoint x="816" y="275" as="sourcePoint"/><mxPoint x="496" y="397" as="targetPoint"/></mxGeometry></mxCell><mxCell id="c23" value="az login" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;fontSize=12;fontColor=#000000;fontStyle=0;" vertex="1" parent="1"><mxGeometry x="568" y="302" width="112" height="36" as="geometry"/></mxCell><mxCell id="c24" value="pwsh probe_runner.ps1  (framework di audit)" style="rounded=1;arcSize=8;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#333333;strokeWidth=2;fontSize=13;fontColor=#000000;fontStyle=1;align=left;verticalAlign=top;spacingLeft=10;spacingTop=6;" vertex="1" parent="1"><mxGeometry x="736" y="320" width="576" height="256" as="geometry"/></mxCell><mxCell id="c25" value="module_utils" style="rounded=1;arcSize=8;whiteSpace=wrap;html=1;fillColor=#efe6f7;strokeColor=#333333;strokeWidth=1.5;fontSize=12;fontColor=#000000;fontStyle=0;align=center;verticalAlign=middle;" vertex="1" parent="1"><mxGeometry x="760" y="392" width="160" height="72" as="geometry"/></mxCell><mxCell id="c26" value="moduli di&lt;br&gt;sezione CIS" style="rounded=1;arcSize=8;whiteSpace=wrap;html=1;fillColor=#efe6f7;strokeColor=#333333;strokeWidth=1.5;fontSize=12;fontColor=#000000;fontStyle=0;align=center;verticalAlign=middle;" vertex="1" parent="1"><mxGeometry x="936" y="392" width="160" height="72" as="geometry"/></mxCell><mxCell id="c27" value="module_scoring" style="rounded=1;arcSize=8;whiteSpace=wrap;html=1;fillColor=#efe6f7;strokeColor=#333333;strokeWidth=1.5;fontSize=12;fontColor=#000000;fontStyle=0;align=center;verticalAlign=middle;" vertex="1" parent="1"><mxGeometry x="1112" y="392" width="176" height="72" as="geometry"/></mxCell><mxCell id="c28" value="dataset CSV (C, D, R)" style="rounded=1;arcSize=8;whiteSpace=wrap;html=1;fillColor=#fff8dc;strokeColor=#333333;strokeWidth=1.5;fontSize=12;fontColor=#000000;fontStyle=0;align=center;verticalAlign=middle;" vertex="1" parent="1"><mxGeometry x="760" y="488" width="256" height="64" as="geometry"/></mxCell><mxCell id="c29" value="JSON di esito" style="rounded=1;arcSize=8;whiteSpace=wrap;html=1;fillColor=#fff8dc;strokeColor=#333333;strokeWidth=1.5;fontSize=12;fontColor=#000000;fontStyle=0;align=center;verticalAlign=middle;" vertex="1" parent="1"><mxGeometry x="1048" y="488" width="240" height="64" as="geometry"/></mxCell><mxCell id="c30" style="endArrow=block;endFill=1;html=1;strokeColor=#333333;strokeWidth=2;" edge="1" parent="1"><mxGeometry relative="1" as="geometry"><mxPoint x="1024" y="234" as="sourcePoint"/><mxPoint x="1024" y="317" as="targetPoint"/></mxGeometry></mxCell><mxCell id="c31" value="subprocess" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;whiteSpace=wrap;fontSize=11.5;fontColor=#000000;fontStyle=0;" vertex="1" parent="1"><mxGeometry x="1040" y="274" width="112" height="36" as="geometry"/></mxCell><mxCell id="c32" style="endArrow=block;endFill=1;html=1;strokeColor=#2a7a2a;strokeWidth=2;" edge="1" parent="1"><mxGeometry relative="1" as="geometry"><mxPoint x="1232" y="317" as="sourcePoint"/><mxPoint x="1232" y="234" as="targetPoint"/></mxGeometry></mxCell><mxCell id="c33" value="stdout" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;whiteSpace=wrap;fontSize=11.5;fontColor=#2a7a2a;fontStyle=0;" vertex="1" parent="1"><mxGeometry x="1248" y="274" width="64" height="36" as="geometry"/></mxCell><mxCell id="c34" style="endArrow=block;endFill=1;html=1;strokeColor=#333333;strokeWidth=2;" edge="1" parent="1"><mxGeometry relative="1" as="geometry"><mxPoint x="733" y="448" as="sourcePoint"/><mxPoint x="579" y="448" as="targetPoint"/></mxGeometry></mxCell><mxCell id="c35" value="az ..." style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;fontSize=11.5;fontColor=#000000;fontStyle=0;" vertex="1" parent="1"><mxGeometry x="608" y="406" width="96" height="36" as="geometry"/></mxCell><mxCell id="c36" value="(controlli)" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;fontSize=11.5;fontColor=#000000;fontStyle=0;" vertex="1" parent="1"><mxGeometry x="600" y="454" width="112" height="36" as="geometry"/></mxCell><mxCell id="c37" value="Sottoscrizione Azure  (risorse controllate)" style="rounded=1;arcSize=8;whiteSpace=wrap;html=1;fillColor=#e3f0fa;strokeColor=#2f6f9f;strokeWidth=2;fontSize=13;fontColor=#000000;fontStyle=1;align=center;verticalAlign=middle;" vertex="1" parent="1"><mxGeometry x="288" y="668" width="560" height="64" as="geometry"/></mxCell><mxCell id="c38" style="endArrow=block;endFill=1;html=1;strokeColor=#2f6f9f;strokeWidth=2;" edge="1" parent="1"><mxGeometry relative="1" as="geometry"><mxPoint x="432" y="515" as="sourcePoint"/><mxPoint x="432" y="662" as="targetPoint"/></mxGeometry></mxCell><mxCell id="c39" value="login e interrogazione&lt;br&gt;della configurazione" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;whiteSpace=wrap;fontSize=11.5;fontColor=#2f6f9f;fontStyle=0;" vertex="1" parent="1"><mxGeometry x="452" y="566" width="208" height="36" as="geometry"/></mxCell></root></mxGraphModel></diagram></mxfile>
+<mxfile host="Electron" agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) draw.io/29.2.9 Chrome/140.0.7339.249 Electron/38.7.2 Safari/537.36" version="29.2.9">
+  <diagram name="Architettura sonda Moon Cloud" id="sonda1">
+    <mxGraphModel dx="1042" dy="626" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1400" pageHeight="800" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="c3" parent="1" style="rounded=1;arcSize=8;whiteSpace=wrap;html=1;fillColor=#f4f7fb;strokeColor=#4a6fa5;strokeWidth=2;fontSize=14;fontColor=#4a6fa5;fontStyle=1;align=left;verticalAlign=top;dashed=1;dashPattern=8 6;spacingLeft=10;spacingTop=6;" value="Container Docker  (Python 3.10, PowerShell Core, Azure CLI)" vertex="1">
+          <mxGeometry height="608" width="1120" x="224" y="16" as="geometry" />
+        </mxCell>
+        <mxCell id="c4" parent="1" style="rounded=1;arcSize=8;whiteSpace=wrap;html=1;fillColor=#fdf1dc;strokeColor=#b8741a;strokeWidth=2;fontSize=13;fontColor=#000000;fontStyle=1;align=center;verticalAlign=middle;" value="Piattaforma&lt;br&gt;Moon Cloud" vertex="1">
+          <mxGeometry height="112" width="128" x="4" y="128" as="geometry" />
+        </mxCell>
+        <mxCell id="c5" edge="1" parent="1" style="endArrow=block;endFill=1;html=1;strokeColor=#333333;strokeWidth=2;">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="138" y="160" as="sourcePoint" />
+            <mxPoint x="253" y="160" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="c6" parent="1" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;fontSize=11;fontColor=#000000;fontStyle=0;" value="input JSON" vertex="1">
+          <mxGeometry height="36" width="176" x="92" y="108" as="geometry" />
+        </mxCell>
+        <mxCell id="c7" edge="1" parent="1" style="endArrow=block;endFill=1;html=1;strokeColor=#2a7a2a;strokeWidth=2;">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="253" y="208" as="sourcePoint" />
+            <mxPoint x="138" y="208" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="c8" parent="1" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;fontSize=11;fontColor=#2a7a2a;fontStyle=0;" value="esito JSON" vertex="1">
+          <mxGeometry height="36" width="176" x="92" y="211" as="geometry" />
+        </mxCell>
+        <mxCell id="c9" parent="1" style="rounded=1;arcSize=8;whiteSpace=wrap;html=1;fillColor=#fdf1dc;strokeColor=#b8741a;strokeWidth=2;fontSize=13;fontColor=#000000;fontStyle=1;align=center;verticalAlign=middle;" value="Driver&lt;br&gt;Moon Cloud&lt;br&gt;(libreria)" vertex="1">
+          <mxGeometry height="144" width="176" x="264" y="112" as="geometry" />
+        </mxCell>
+        <mxCell id="c10" edge="1" parent="1" style="endArrow=block;endFill=1;html=1;strokeColor=#333333;strokeWidth=2;">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="443" y="160" as="sourcePoint" />
+            <mxPoint x="493" y="160" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="c11" edge="1" parent="1" style="endArrow=block;endFill=1;html=1;strokeColor=#2a7a2a;strokeWidth=2;">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="493" y="208" as="sourcePoint" />
+            <mxPoint x="443" y="208" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="c12" parent="1" style="rounded=1;arcSize=8;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#333333;strokeWidth=2;fontSize=13;fontColor=#000000;fontStyle=1;align=left;verticalAlign=top;spacingLeft=10;spacingTop=6;" value="probe.py  (sonda Python, macchina a stati)" vertex="1">
+          <mxGeometry height="192" width="832" x="496" y="80" as="geometry" />
+        </mxCell>
+        <mxCell id="c13" parent="1" style="rounded=1;arcSize=8;whiteSpace=wrap;html=1;fillColor=#dcebd8;strokeColor=#333333;strokeWidth=1.5;fontSize=13;fontColor=#000000;fontStyle=1;align=center;verticalAlign=middle;" value="init" vertex="1">
+          <mxGeometry height="72" width="160" x="528" y="160" as="geometry" />
+        </mxCell>
+        <mxCell id="c14" parent="1" style="rounded=1;arcSize=8;whiteSpace=wrap;html=1;fillColor=#dcebd8;strokeColor=#333333;strokeWidth=1.5;fontSize=13;fontColor=#000000;fontStyle=1;align=center;verticalAlign=middle;" value="azure_login" vertex="1">
+          <mxGeometry height="72" width="160" x="736" y="160" as="geometry" />
+        </mxCell>
+        <mxCell id="c15" parent="1" style="rounded=1;arcSize=8;whiteSpace=wrap;html=1;fillColor=#f9d9d0;strokeColor=#333333;strokeWidth=1.5;fontSize=13;fontColor=#000000;fontStyle=1;align=center;verticalAlign=middle;" value="run_audit" vertex="1">
+          <mxGeometry height="72" width="160" x="944" y="160" as="geometry" />
+        </mxCell>
+        <mxCell id="c16" parent="1" style="rounded=1;arcSize=8;whiteSpace=wrap;html=1;fillColor=#dcebd8;strokeColor=#333333;strokeWidth=1.5;fontSize=13;fontColor=#000000;fontStyle=1;align=center;verticalAlign=middle;" value="make_result" vertex="1">
+          <mxGeometry height="72" width="160" x="1152" y="160" as="geometry" />
+        </mxCell>
+        <mxCell id="c17" edge="1" parent="1" style="endArrow=block;endFill=1;html=1;strokeColor=#333333;strokeWidth=2;">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="691" y="196" as="sourcePoint" />
+            <mxPoint x="733" y="196" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="c18" edge="1" parent="1" style="endArrow=block;endFill=1;html=1;strokeColor=#333333;strokeWidth=2;">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="899" y="196" as="sourcePoint" />
+            <mxPoint x="941" y="196" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="c19" edge="1" parent="1" style="endArrow=block;endFill=1;html=1;strokeColor=#333333;strokeWidth=2;">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="1107" y="196" as="sourcePoint" />
+            <mxPoint x="1149" y="196" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="c20" parent="1" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;fontSize=11.5;fontColor=#aa3333;fontStyle=2;" value="se un atomo fallisce: rollback degli atomi già eseguiti" vertex="1">
+          <mxGeometry height="36" width="480" x="560" y="236" as="geometry" />
+        </mxCell>
+        <mxCell id="c21" parent="1" style="rounded=1;arcSize=8;whiteSpace=wrap;html=1;fillColor=#e3f0fa;strokeColor=#2f6f9f;strokeWidth=2;fontSize=14;fontColor=#000000;fontStyle=1;align=center;verticalAlign=middle;" value="Azure CLI" vertex="1">
+          <mxGeometry height="112" width="288" x="288" y="400" as="geometry" />
+        </mxCell>
+        <mxCell id="c22" edge="1" parent="1" style="endArrow=block;endFill=1;html=1;strokeColor=#333333;strokeWidth=2;">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="816" y="275" as="sourcePoint" />
+            <mxPoint x="496" y="397" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="c23" parent="1" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;fontSize=12;fontColor=#000000;fontStyle=0;" value="az login" vertex="1">
+          <mxGeometry height="36" width="112" x="568" y="302" as="geometry" />
+        </mxCell>
+        <mxCell id="c24" parent="1" style="rounded=1;arcSize=8;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#333333;strokeWidth=2;fontSize=13;fontColor=#000000;fontStyle=1;align=left;verticalAlign=top;spacingLeft=10;spacingTop=6;" value="pwsh probe_runner.ps1  (framework di audit)" vertex="1">
+          <mxGeometry height="256" width="576" x="736" y="320" as="geometry" />
+        </mxCell>
+        <mxCell id="c25" parent="1" style="rounded=1;arcSize=8;whiteSpace=wrap;html=1;fillColor=#efe6f7;strokeColor=#333333;strokeWidth=1.5;fontSize=12;fontColor=#000000;fontStyle=0;align=center;verticalAlign=middle;" value="module_utils" vertex="1">
+          <mxGeometry height="72" width="160" x="760" y="392" as="geometry" />
+        </mxCell>
+        <mxCell id="c26" parent="1" style="rounded=1;arcSize=8;whiteSpace=wrap;html=1;fillColor=#efe6f7;strokeColor=#333333;strokeWidth=1.5;fontSize=12;fontColor=#000000;fontStyle=0;align=center;verticalAlign=middle;" value="moduli di&lt;br&gt;sezione CIS" vertex="1">
+          <mxGeometry height="72" width="160" x="936" y="392" as="geometry" />
+        </mxCell>
+        <mxCell id="c27" parent="1" style="rounded=1;arcSize=8;whiteSpace=wrap;html=1;fillColor=#efe6f7;strokeColor=#333333;strokeWidth=1.5;fontSize=12;fontColor=#000000;fontStyle=0;align=center;verticalAlign=middle;" value="module_scoring" vertex="1">
+          <mxGeometry height="72" width="176" x="1112" y="392" as="geometry" />
+        </mxCell>
+        <mxCell id="c28" parent="1" style="rounded=1;arcSize=8;whiteSpace=wrap;html=1;fillColor=#fff8dc;strokeColor=#333333;strokeWidth=1.5;fontSize=12;fontColor=#000000;fontStyle=0;align=center;verticalAlign=middle;" value="dataset CSV (C, D, R)" vertex="1">
+          <mxGeometry height="64" width="256" x="760" y="488" as="geometry" />
+        </mxCell>
+        <mxCell id="c29" parent="1" style="rounded=1;arcSize=8;whiteSpace=wrap;html=1;fillColor=#fff8dc;strokeColor=#333333;strokeWidth=1.5;fontSize=12;fontColor=#000000;fontStyle=0;align=center;verticalAlign=middle;" value="JSON di esito" vertex="1">
+          <mxGeometry height="64" width="240" x="1048" y="488" as="geometry" />
+        </mxCell>
+        <mxCell id="c30" edge="1" parent="1" style="endArrow=block;endFill=1;html=1;strokeColor=#333333;strokeWidth=2;">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="1024" y="234" as="sourcePoint" />
+            <mxPoint x="1024" y="317" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="c31" parent="1" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;whiteSpace=wrap;fontSize=11.5;fontColor=#000000;fontStyle=0;" value="subprocess" vertex="1">
+          <mxGeometry height="36" width="112" x="1040" y="274" as="geometry" />
+        </mxCell>
+        <mxCell id="c32" edge="1" parent="1" style="endArrow=block;endFill=1;html=1;strokeColor=#2a7a2a;strokeWidth=2;">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="1232" y="317" as="sourcePoint" />
+            <mxPoint x="1232" y="234" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="c33" parent="1" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;whiteSpace=wrap;fontSize=11.5;fontColor=#2a7a2a;fontStyle=0;" value="JSON" vertex="1">
+          <mxGeometry height="36" width="64" x="1248" y="274" as="geometry" />
+        </mxCell>
+        <mxCell id="c34" edge="1" parent="1" style="endArrow=block;endFill=1;html=1;strokeColor=#333333;strokeWidth=2;">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="733" y="448" as="sourcePoint" />
+            <mxPoint x="579" y="448" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="c35" parent="1" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;fontSize=11.5;fontColor=#000000;fontStyle=0;" value="az ..." vertex="1">
+          <mxGeometry height="36" width="96" x="608" y="406" as="geometry" />
+        </mxCell>
+        <mxCell id="c36" parent="1" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;fontSize=11.5;fontColor=#000000;fontStyle=0;" value="(controlli)" vertex="1">
+          <mxGeometry height="36" width="112" x="600" y="454" as="geometry" />
+        </mxCell>
+        <mxCell id="c37" parent="1" style="rounded=1;arcSize=8;whiteSpace=wrap;html=1;fillColor=#e3f0fa;strokeColor=#2f6f9f;strokeWidth=2;fontSize=13;fontColor=#000000;fontStyle=1;align=center;verticalAlign=middle;" value="Sottoscrizione Azure  (risorse controllate)" vertex="1">
+          <mxGeometry height="64" width="560" x="288" y="668" as="geometry" />
+        </mxCell>
+        <mxCell id="c38" edge="1" parent="1" style="endArrow=block;endFill=1;html=1;strokeColor=#2f6f9f;strokeWidth=2;">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="432" y="515" as="sourcePoint" />
+            <mxPoint x="432" y="662" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="c39" parent="1" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;whiteSpace=wrap;fontSize=11.5;fontColor=#2f6f9f;fontStyle=0;" value="login e interrogazione&lt;br&gt;della configurazione" vertex="1">
+          <mxGeometry height="36" width="208" x="452" y="566" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
