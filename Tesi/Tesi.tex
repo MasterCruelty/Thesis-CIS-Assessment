@@ -780,9 +780,8 @@ Un eventuale risultato del test non potrebbe essere generalizzato all'intero sta
 
 \section{Contesto e obiettivo}
 
-
 Una volta che è stato ultimato il framework finora presentato, è stato possibile effettuare la sua integrazione con l'ambiente Moon Cloud.\\
-Moon cloud è una piattaforma dedicata per la verifica della conformità di applicazioni o infrastrutture in grado di eseguire una valutazione completa durante il loro intero ciclo di vita.
+Moon cloud~\cite{Anisetti2018} è una piattaforma dedicata per la verifica della conformità di applicazioni e infrastrutture in grado di eseguire una valutazione continua durante il loro intero ciclo di vita.
 
 Questa piattaforma esegue periodicamente delle \textit{sonde} (\textit{probe}), quindi componenti software indipendenti, ciascuna incaricata di verificare la conformità di uno specifico aspetto di sicurezza su un componente target(applicazione o infrastruttura), restituendo al termine un esito strutturato dei controlli eseguiti.
 
@@ -793,6 +792,8 @@ Un ulteriore precisazione è che l'integrazione del framework verso questo ambie
 
 \section{Le specifiche di Moon Cloud: la sonda come macchina a stati}
 
+Ogni sonda che viene sviluppata è eseguita dal driver di Moon Cloud, trattasi di una libreria Python installata nell'immagine Docker della sonda. Il driver riceve in ingresso i parametri dell'esecuzione e li valida rispetto a uno schema. Successivamente esegue in ordine i passi strutturati nella sonda, gestisce le eccezioni che questi potrebbero sollevare e infine restituisce alla piattaforma il risultato ottenuto.\\
+Per sviluppare una sonda ci si occupa solamente di implementare i passi che il driver richiama.
 
 Il requisito principale richiesto dal driver Moon Cloud consiste nel fatto che ogni sonda sia implementata come una classe Python che eredita da \texttt{AbstractProbe}, strutturata come una macchina a stati finiti.\\
 Vi è una sequenza di \textit{atomi} (\textit{atoms}), ognuno dei quali costituito da una coppia di funzioni:
@@ -803,7 +804,10 @@ Viene eseguita nel normale flusso di esecuzione.
 Viene invocata solo in caso di errore per disfare eventuali effetti collaterali.
 \end{itemize}
 
-Per ogni atomo vengono definite le eccezioni da intercettare, l'azione da intraprendere se una di esse viene sollevata e la funzione che ha il compito di costruire il messaggio da restituire.
+L'esecuzione quindi inizia nel flusso \textit{forward}, un atomo dopo l'altro. Nel caso in cui si dovesse verificare un errore, in funzione di come è stato definito all'interno dello specifico atomo, l'esecuzione può arrestarsi oppure passare al flusso di \textit{rollback}.
+
+Per ogni atomo vengono definite le eccezioni da intercettare, l'azione da intraprendere se una di esse viene sollevata e la funzione che ha il compito di costruire il messaggio da restituire.\\
+Ad esempio l'azione da intraprendere può essere \texttt{STOP}, dunque l'interruzione dell'esecuzione con restituzione immediata del risultato costruito per quell'errore. In un altro caso può essere \texttt{ROLLBACK} che consiste nell'avviare il flusso di rollback prima di restituire il risultato.
 
 Di seguito è riportata la definizione completa del metodo \texttt{atoms()}. Tale definizione è comune a tutte le sonde sviluppate.
 
@@ -891,6 +895,10 @@ Il costo di questa scelta architetturale ricade sulla dimensione dell'immagine D
 \section{Architettura della sonda}
 
 Di seguito in Figura~\ref{fig:architettura-sonda} viene illustrato il flusso complessivo di esecuzione di una singola sonda. 
+
+La piattaforma Moon Cloud, esterna al container, invia l'input al driver, il quale procede a validarlo e avvia la sonda.\\
+Vengono quindi eseguiti in sequenza i quattro atomi. Il framework PowerShell interroga Azure e restituisce l'esito alla sonda, che a sua volta consegna il risultato al driver e da li alla piattaforma.
+
 La sonda Python (\texttt{probe.py}) autentica la sessione Azure CLI e successivamente invoca come sottoprocesso uno script PowerShell (\texttt{probe\_runner.ps1}) che ha il compito di orchestrare l'esecuzione del framework esistente.
 Al termine, viene prodotto un file JSON con l'esito della valutazione.
 
@@ -961,19 +969,35 @@ def init(self, inputs: typing.Any = None) -> bool:
 
 È da notare come i vincoli del modello di scoring illustrati e discussi nel capitolo 5, quindi la somma dei pesi a 1 e le soglie    $\alpha < \beta$, vengono verificati fin da subito in questo atomo, prima dell'autenticazione e dell'esecuzione dei controlli. Un input non valido interrompe la sonda andando a restituire l'errore corrispondente.
 
+Ad esempio, come possibile input, si riporta di seguito un insieme di valori di default utilizzati dalle sonde sviluppate per i pesi e le soglie.
+
+\begin{lstlisting}[style=azcli, caption={Esempio di input della sonda.}, label={lst:input-example}]
+{
+  "config":  { "subscription_id": "<id-sottoscrizione>" },
+  "audit":   { "timeout_seconds": 1800 },
+  "scoring": { "wc": 0.40, "wd": 0.30, "wr": 0.30,
+               "alfa": 0.35, "beta": 0.70 }
+}
+\end{lstlisting}
+
+
+
+
+
+
+
 
 \subsection{azure\_login: autenticazione}
 
 Il secondo atomo si occupa dell'autenticazione verso una sottoscrizione valida su Azure mediante l'utilizzo di un service principal con il comando \texttt{az login}. Una volta stabilita la sessione avendo fatto login correttamente, essa viene condivisa dal processo PowerShell invocato nel successivo atomo della sonda. 
 
-Se l'autenticazione dovesse fallire per qualsiasi ragione, viene sollevata un eccezione mappata sul codice di esito \texttt{TARGET\_CONNECTION\_ERROR}, distinto dagli errori di esecuzione del framework in sè.
-
+Se l'autenticazione dovesse fallire o la sottoscrizione risultasse non valida, viene sollevata un eccezione mappata sul codice di esito \texttt{TARGET\_CONNECTION\_ERROR} (Tabella~\ref{tab:esiti}), distinto dagli errori di esecuzione del framework in sè.
 
 
 \subsection{run\_audit: invocazione del framework esistente}
 
-Questo atomo ha il ruolo di collegamento tra la sonda e il framework PowerShell. Come prima azione va ad eliminare un eventuale file JSON lasciato da un'esecuzione precedente. Fatto questo va a comporre il comando PowerShell con il compito di eseguire il software già esistente. Il comando fornisce a un sorgente dedicato tutte le informazioni necessarie all'esecuzione tra cui la sezione CIS da verificare, i pesi e la directory dove è posizionato il framework.
-Eventuali errori vengono catturati dal canale dedicato dove vengono conservati al più 4000 caratteri, i quali vengono poi riportati nel messaggio restituito una volta sollevata l'eccezione.
+Questo atomo avvia il framework PowerShell di valutazione della conformità. Come prima azione procede a eliminare l'eventuale file JSON lasciato da un'esecuzione precedente, così che non sia possibile scambiarlo per il risultato corrente. Fatto questo va a comporre il comando PowerShell con il compito di eseguire il software già esistente. Il comando fornisce a un sorgente dedicato \texttt{probe\_runner.ps1} tutte le informazioni necessarie all'esecuzione tra cui la sezione CIS da verificare, i pesi e la directory dove è posizionato il framework.\\
+Eventuali errori vengono catturati dal canale dedicato dove vengono conservati al più 4000 caratteri, i quali vengono poi riportati nel messaggio restituito una volta sollevata l'eccezione. \\
 Al termine dell'esecuzione il codice di uscita determina l'esito finale. Il valore 2 indica l'assenza di una sessione Azure valida oppure del dataset CIS, mentre ogni altro valore diverso da zero segnala un errore generico. 
 Se invece è andato tutto a buon fine, viene letto il file JSON prodotto e lo si conserva per l'atomo successivo della macchina a stati finiti.
 
@@ -1022,12 +1046,30 @@ def run_audit(self, inputs: typing.Any = None) -> bool:
     return True
 \end{lstlisting}
 
+Nella seguente tabella~\ref{tab:esiti} sono riportati i codici di esito previsti dal driver Moon Cloud, oltre al passo della sonda in cui vengono prodotti.
+
+\begin{table}[H]
+\centering
+\begin{tabular}{|c|l|p{7cm}|}
+\hline
+\textbf{Codice} & \textbf{Esito} & \textbf{Quando viene restituito} \\ \hline
+0 & \texttt{TRUE} & \texttt{make\_result}: tutti i controlli valutati sono conformi, oppure nessuno è applicabile \\ \hline
+1 & \texttt{FALSE} & \texttt{make\_result}: almeno un controllo non è conforme \\ \hline
+2 & \texttt{TARGET\_CONNECTION\_ERROR} & \texttt{azure\_login}: autenticazione o sottoscrizione non valide; \texttt{run\_audit}: sessione Azure o dataset assenti \\ \hline
+3 & \texttt{TARGET\_EXECUTION\_ERROR} & \texttt{run\_audit}: errore nell'esecuzione del framework; \texttt{make\_result}: errore nella costruzione del risultato \\ \hline
+4 & \texttt{INPUT\_ERROR} & \texttt{init}: input o credenziali non validi \\ \hline
+5 & \texttt{MOON\_CLOUD\_ERROR} & eccezione non prevista, gestita dal driver \\ \hline
+\end{tabular}
+\caption{Codici di esito del driver Moon Cloud e atomo della sonda che li produce.}
+\label{tab:esiti}
+\end{table}
 
 
-\subsection{probe\_runner.ps1: esecuzione dei controlli e produzione del JSON di output}
+\subsection{probe\_runner.ps1: esecuzione dei controlli e produzione dell'output}
 
-Questo script si limita a orchestrare l'esecuzione dei moduli CIS e a esportare il risultato in formato JSON.
+Questo script si limita a orchestrare l'esecuzione dei moduli CIS e a esportare il risultato in formato JSON.\\
 Il parametro relativo alla sezione del documento CIS da valutare deve essere uno dei valori ammessi (\texttt{app\_service}, \texttt{management}, \texttt{networking}, \texttt{security}, \texttt{virtual\_machines}).
+
 La seguente porzione di codice va a illustrare l'intestazione dello script con il relativo blocco di parametri.
 
 
@@ -1058,37 +1100,38 @@ $ErrorActionPreference = 'Stop'
 [System.Threading.Thread]::CurrentThread.CurrentUICulture = [System.Globalization.CultureInfo]::InvariantCulture
 \end{lstlisting}
 
-
-
 Una volta risolti i percorsi del dataset e dei moduli a partire da \texttt{\$FrameworkRoot}, lo script esegue esclusivamente il modulo di valutazione della conformità corrispondente al valore di \texttt{\$Section} ricevuto, quindi invoca \texttt{module\_scoring.ps1} con lo switch \texttt{-ExportJson}, descritto nella sezione seguente.
 
 
 \subsection{make\_result: produzione esito in output}
 
-L'ultimo passo va a tradurre il contenuto del file JSON prodotto dal framework nel formato atteso dal driver Moon Cloud.
-Vengono quindi popolati i campi \texttt{integer\_result}, \texttt{pretty\_result} ed \texttt{extra\_data} dell'oggetto Result.
+L'ultimo passo ha il compito tradurre il contenuto del file JSON prodotto dal framework nel formato atteso dal driver Moon Cloud.
+Vengono quindi popolati i campi \texttt{integer\_result}, \texttt{pretty\_result} ed \texttt{extra\_data} dell'oggetto Result.\\
 Coerentemente con la documentazione fornita sulla piattaforma, l'ultimo passo fornisce sempre un esito booleano.
 Viene restituito \texttt{TRUE} se tutti i controlli valutati risultano conformi o se nessun controllo risulta applicabile, \texttt{FALSE} in presenza di almeno una violazione di conformità.
 
+Nel caso in cui nessu controllo risulti applicabile, essenzialmente perché non vi sono risorse presenti sulla sottoscrizione utilizzata per la sezione CIS in valutazione, l'esito è \texttt{TRUE}.
+Siccome non ci sono oggetti da verificare, non vi è alcuna violazione da segnalare.
 
 \section{Adattamenti al framework esistente}
 
-Per poter integrare lo strumento sviluppato, si è reso necessaria un'unica modifica a un singolo file sorgente, oltre alla produzione di un nuovo script \texttt{probe\_runner.ps1} già citato e descritto nella sezione precedente.
-Nessun'altra componente logica ha dovuto subire modifiche.
+Per poter integrare lo strumento sviluppato, si è reso necessario introdurre un nuovo script \texttt{probe\_runner.ps1} già descritto nella sezione precedente e uno switch opzionale per l'esportazione nel file sorgente dello scoring.
+La logica di verifica delle conformità non ha dovuto subire modifiche.
 
 La modifica effettuata ha impattato il file relativo allo scoring, all'interno del quale è stato aggiunto uno switch opzionale per l'esportazione in formato json. Essenzialmente vengono serializzati gli stessi dati già calcolati in un formato riutilizzato poi dalla sonda per popolare l'esito che viene restituito al driver.
 
-È da notare che l'esclusione dei controlli con stato \texttt{UNKNOWN} dal riepilogo finale è un accorgimento necessario in funzione del fatto che ogni sonda esegue un solo modulo CIS alla volta. 
+È da notare che l'esclusione dei controlli con stato \texttt{UNKNOWN} dal riepilogo finale è un accorgimento necessario in funzione del fatto che ogni sonda esegue un solo modulo CIS alla volta. \\
 Il dataset caricato in memoria però contiene comunque le definizioni di tutti i controlli del benchmark compilati.
 In questo caso solo quelli che effettivamente vengono eseguiti ottengono uno stato reale, mentre gli altri sarebbero computati erroneamente nel denominatore del tasso di conformità.
 
 
 \section{Granularità: una sonda per sezione}
 
-A seguito di una prima analisi dopo aver consultato la documentazione, la scelta implementativa è stata quella di produrre una sonda per singola sezione del benchmark CIS invece di una sonda unica che coprisse l'intero dataset comprendente tutte le sezioni implementate. 
+A seguito di una prima analisi dopo aver consultato la documentazione, la scelta implementativa è stata quella di produrre una sonda per singola sezione del benchmark CIS invece di una sonda unica che coprisse l'intero dataset comprendente tutte le sezioni implementate. \\
 La conseguenza di questa scelta ha comportato la creazione di cinque repository differenti, una per sezione CIS(App Service, Management, Networking, Security, Virtual Machines).
 Ogni repository è pressochè identica alle altre a meno del  valore della costante \texttt{SECTION} definita nella classe \texttt{Probe}.
 
+Il criterio di sviluppo in molteplici sonde deriva dal modo in cui Moon Cloud le concepisce. Ciascuna sonda verifica un aspetto di sicurezza specifico. Suddividerle per sezione permette di eseguire e valutare ogni parte del benchmark CIS in modo indipendente. 
 
 \begin{lstlisting}[style=azcli, caption={Estratto della classe Probe all'interno di ogni sonda sviluppata.}, label={lst:section-constant}]
 class Probe(abstract_probe.AbstractProbe):
@@ -1172,6 +1215,20 @@ ENV AZURE_CORE_NO_COLOR=1
 
 Come da documentazione, le dipendenze che sono state utilizzate esclusivamente in fase di build come ad esempio \texttt{wget}, vengono rimosse subito dopo il loro utilizzo al fine di minimizzare le dimensioni dell'immagine.
 
+\section{Test e validazione in locale}
+
+Quanto sviluppato su Moon Cloud è stato verificato andando a eseguire la build dell'immagine e lanciando il container in locale.
+
+\begin{lstlisting}[style=azcli, caption={Build ed esecuzione locale della sonda.}, label={lst:docker-run}]
+docker build -t <nome-immagine> \
+  --build-arg GITLAB_TOKEN_USER=${GITLAB_TOKEN_USER} \
+  --build-arg GITLAB_TOKEN=${GITLAB_TOKEN} .
+
+cat probe/test.json | docker run -i \
+  -v ${PWD}/credential.json:/usr/src/app/probe/credential.json:ro \
+  <nome-immagine> "python probe/probe.py"
+\end{lstlisting}
+
 
 \section{Esempio di esecuzione}
 
@@ -1179,20 +1236,22 @@ Di seguito viene riportato un estratto dell'output prodotto da un'esecuzione rea
 
 L'esito della valutazione che viene restituito al driver contiene due campi di sintesi: 
 \begin{itemize}
-\item \texttt{integer\_result}.
+\item \texttt{integer\_result}.\\
 Vale 1 in presenza di almeno un controllo non risultato conforme al benchmark.
-\item \texttt{pretty\_result}.
+\item \texttt{pretty\_result}.\\
 Una frase che riassume il numero di controlli non conformi rispetto al totale di quelli valutati.
 \end{itemize}
 
-Il campo \texttt{extra\_data} contiene il dettaglio completo della valutazione di conformità, diviso in tre blocchi.
+Il campo \texttt{extra\_data} contiene il dettaglio completo della valutazione di conformità, diviso in diversi blocchi.
 \begin{itemize}
-\item \texttt{Summary}.
+\item \texttt{Summary}.\\
 Indica il perimetro verificato e i conteggi.
-\item \texttt{RemediationEffort}.
+\item \texttt{RemediationEffort}.\\
 Indica il modello di scoring, pesi, soglie e ripartizione delle non conformità per livello di effort.
-\item \texttt{Checks}.
+\item \texttt{Checks}.\\
 Indica l'esito e i valori C, D, R di ogni controllo. 
+\item \texttt{SuggestedPriority}.\\
+Consiste in una lista di priorità partendo dagli oggetti non conformi di effort di intervento più basso.
 \end{itemize}
 
 
@@ -1235,18 +1294,18 @@ Indica l'esito e i valori C, D, R di ogni controllo.
                "Remediation":"az resource update --resource-group <resource-group-name> --name <functionapp-name> --resource-type \"Microsoft.Web/sites\" --set properties.clientCertEnabled=true --set properties.clientCertMode=Required"
             },
             "CIS 2.3.11":{ ... }
+          }
       }
    }
 }
 \end{lstlisting}
 
 
-Il valore restituito da \texttt{integer\_result}, se risultante 1, corrisponde dunque nella codifica prevista dal driver, all'esito FALSE.
+Il valore restituito da \texttt{integer\_result}, se risultante 1, corrisponde dunque nella codifica prevista dal driver, all'esito FALSE.\\
 Come è possibile osservare, la struttura del risultato riprende il modello di scoring descritto nel capitolo 5, rendendo l'esecuzione della sonda coerente con quanto già discusso in precedenza per le esecuzioni in locale del framework.
 
 
 \section{Limiti dell'integrazione}
-
 
 L'integrazione finora descritta e discussa in questo capitolo è stata validata tramite build ed esecuzione locale del container definito, secondo le modalità di test previste dalla documentazione della piattaforma.
 
