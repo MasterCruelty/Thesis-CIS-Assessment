@@ -857,9 +857,89 @@ Considerando la natura della popolazione di controlli utilizzata, non è stato a
 I controlli VMware e Azure all'interno dei due dataset in questione non rappresentano un campione estratto in modo totalmente casuale dalla popolazione iniziale, bensì l'insieme delle verifiche di conformità selezionate e implementate durante questo lavoro secondo criteri di copertura pratica. \\
 Un eventuale risultato del test non potrebbe essere generalizzato all'intero standard CIS di ciascuna piattaforma. Tale confronto è quindi limitato al piano descrittivo, come mostrato in Figura~\ref{fig:confronto_benchmark}.
 
+%			CAPITOLO 7: Guida operativa passo passo
+\chapter{Guida operativa all'utilizzo}
+
+Questo capitolo mira a fornire una guida per l'utilizzo del framework su un proprio ambiente e all'interpretazione dei file di output prodotti.
+Ci si focalizzerà quindi sugli aspetti operativi, quali la preparazione dell'ambiente, i parametri di lancio del software, i file prodotti e le situazioni di errore più comuni.
+
+\section{Preparazione dell'ambiente di esecuzione}
+
+Per poter eseguire il framework è sufficiente avere a disposizione un terminale con PowerShell installato.
+Il software non richiede alcun tipo di installazione, bisogna solo disporre della cartella di progetto con all'interno il sorgente. Le uniche dipendenze da dover installare se assenti sono Azure CLI e il modulo VMware PowerCLI.\\
+I requisiti di autenticazione sono già stati descritti nel paragrafo 3.3.
+
+I percorsi vengono risolti partendo dalla posizione degli script PowerShell. Data questa premessa, la struttura del progetto va mantenuta come segue:
 
 
-% 			CAPITOLO 7: integrazione sonda Moon Cloud
+\begin{table}[H]
+\centering
+\small
+\begin{tabular}{p{4.6cm}p{7cm}}
+\hline
+\textbf{Elemento} & \textbf{Contenuto} \\
+\hline
+\texttt{Analisi\_Report/} & \texttt{main\_azure.ps1}, \texttt{main\_vmware.ps1}, \texttt{module\_scoring.ps1} \\
+\texttt{Azure/} & un modulo per ciascuna sezione del benchmark Azure implementata \\
+\texttt{VMware/} & un modulo per ciascuna sezione del benchmark VMware implementata \\
+\texttt{module\_utils.ps1} & funzioni condivise (inizializzazione, registrazione dei risultati) \\
+\texttt{cis\_azure.csv}, \texttt{cis\_vmware.csv} & dataset dei controlli \\
+\hline
+\end{tabular}
+\caption{Struttura della cartella del progetto}
+\label{tab:struttura}
+\end{table}
+
+Nel caso in cui le impostazioni del sistema dovessero impedire l'esecuzione di script non firmati, è possibile aggirare la policy per il singolo processo mediante il seguente comando.
+
+\begin{lstlisting}[style=azcli]
+powershell -ExecutionPolicy Bypass -File ".\main_azure.ps1"
+Oppure
+powershell -ExecutionPolicy Bypass -File ".\main_vmware.ps1"
+\end{lstlisting}
+
+Dal momento che il software si limita solo a leggere la configurazione dell'ambiente, l'account utilizzato non necessita di permessi di scrittura sulle risorse di cui va a valutare la conformità rispetto al benchmark.\\
+I comandi mostrati in output relativi alle remediation provengono dal dataset e sono riportati solo come suggerimento, non vengono mai eseguiti.
+
+\section{Avvio esecuzione}
+
+È necessaria una sessione attiva sulla piattaforma di cui si intende lanciare la valutazione di conformità. Il framework non ha una gestione delle credenziali(paragrafo 4.3).
+
+Per Azure è sufficiente quanto segue:
+
+\begin{lstlisting}[style=azcli]
+az login
+az account set --subscription "<nome o id>"
+.\main_azure.ps1
+\end{lstlisting}
+
+Il secondo comando riportato si rende necessario nella casistica in cui l'account abbia accesso a molteplici sottoscrizioni e quella predefinita non sia quella che si vuole utilizzare.
+
+Su VMware invece il comando è il seguente:
+
+\begin{lstlisting}[style=azcli]
+Connect-VIServer -Server <fqdn-vCenter> _User <username> -Password <password>
+.\main_vmware.ps1
+\end{lstlisting}
+
+Il tool, tra le prime azioni che compie, procede a verificare subito la presenza di una sessione attiva sulla piattaforma che sta per valutare.\\
+Su Azure, se avviene con successo la verifica, viene stampato a schermo il nome dell'account e la sottoscrizione che verrà utilizzata dal software per l'analisi dell'infrastruttura. Oltre a ciò viene anche mostrato il numero di controlli caricati dal dataset utilizzato.\\
+Su VMware l'output a schermo è similare e viene mostrato il vCenter al quale si è connessi.
+
+In questo modo è possibile accorgersi fin da subito se si è collegati all'ambiente errato prima ancora dell'esecuzione dei controlli.
+
+La console, durante l'esecuzione, mostra a schermo diverse informazioni nel seguente ordine:
+
+\begin{enumerate}
+\item l'esito della valutazione di ciascun controllo, raggruppato per modulo (si veda la Figura 4 nel capitolo 4 per un esempio).
+\item Un riepilogo complessivo sullo stato della situazione a controlli eseguiti, nel formato \texttt{RIEPILOGO: x/y COMPLIANT}.
+\item l'output a seguito della computazione dello scoring. Viene mostrato l'elenco dei controlli per categoria con stato di conformità ed effort (Per un esempio rivedere le Figure 5 e 6 nel capitolo 6). In coda, vi è anche l'elenco delle non conformità ordinato per valore decrescente di $E_i$.
+\end{enumerate}
+
+
+
+
+% 			CAPITOLO 8: integrazione sonda Moon Cloud
 \chapter{Integrazione nell'ambiente Moon Cloud}
 
 
@@ -1397,7 +1477,7 @@ L'integrazione finora descritta e discussa in questo capitolo è stata validata 
 Eventuali vincoli dell'ambiente di esecuzione non sono stati pertanto verificati direttamente.
 
 
-% 			CAPITOLO 8: conclusioni e possibili miglioramenti
+% 			CAPITOLO 9: conclusioni e possibili miglioramenti
 \chapter{Conclusioni e possibili miglioramenti}
 
 
