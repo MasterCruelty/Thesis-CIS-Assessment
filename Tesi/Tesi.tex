@@ -152,6 +152,7 @@ Infine vi è stata l'analisi dei risultati ottenuti e un resoconto di quanto rea
 I benchmark di sicurezza utilizzati in questo progetto sono sviluppati dal CIS(Center for Internet Security).\\
 Trattasi di un'organizzazione no-profit riconosciuta a livello globale la cui mission è aiutare le persone, le aziende e i governi delle nazioni a proteggersi meglio dalle vulnerabilità informatiche. \cite{CIS} \\
 I sistemi coperti da questa organizzazione sono molteplici, tra i quali anche Microsoft Azure e VMware i cui documenti utilizzati sono stati citati in precedenza.\\ \\ \\
+
 \begin{figure}[h]
 	\centering
 	\includegraphics[width=0.6\textwidth]{CIS_logo}
@@ -172,7 +173,7 @@ Diviso tra livello 1 e livello 2. Il primo tratta generalmente le raccomandazion
 \item \textbf{Rationale} \\
 Qui vi è una breve descrizione sulla ragione per la quale è rilevante questa raccomandazione di sicurezza.
 \item \textbf{Impact} \\
-Qui viene descritto l'impatto che la propria infrastruttura può subire nel caso in cui non venga adottata alcuna misura per risultare conformi a questa buona pratica.
+Qui viene descritto l'impatto che la propria infrastruttura può subire nel caso in cui venga adottata la raccomandazione indicata dalla buona pratica CIS.
 \item \textbf{Audit} \\
 Qui viene descritto come andare a verificare lo stato dell'arte sui propri sistemi per sapere se si è conformi o meno
 \item \textbf{Remediation} \\
@@ -181,6 +182,12 @@ Qui invece viene descritto come operare per risolvere il problema e risultare co
 Qui semplicemente viene indicato qual è il valore di default che detiene la configurazione, spesso quello corretto in termini di sicurezza.
 \end{itemize}
 
+
+Ogni raccomandazione presente all'interno dei documenti CIS riporta inoltra il campo \emph{Assessment Status} che può essere \emph{Automated} oppure \emph{Manual}.
+Nel primo caso si tratta di verifiche che possono essere sempre espresse tramite comandi eseguibili in automatico.
+Nel secondo caso invece è richiesta dell'interazione manuale come ad esempio la modifica di un impostazione esclusivamente da portale web dell'infrastruttura o la valutazione di una scelta architetturale differente.
+
+Per questo caso di studio la distinzione è rilevante poiché solo le raccomandazioni che possono essere automatizzate rientrano tra quelle candidate per essere tradotte in un sistema automatizzato che valuta la conformità dei controlli.
 
 Di seguito vi è un esempio di un controllo estratto da uno dei documenti dedicati a Microsoft Azure. \\ \\
 
@@ -226,8 +233,86 @@ Ensure that \textcolor{red}{"FtpsOnly"} or \textcolor{red}{"Disabled"} is return
 \end{itemize}
 \end{tcolorbox}
 
+
+
+Nell'esempio mostrato si evidenziano due aspetti ricorrenti nei controlli all'interno del benchmark Azure.
+L'audit è descritto sia tramite portale web sia tramite Azure CLI e la verifica deve essere chiaramente ripetuta per ogni risorse del tipo coinvolto.\\
+Per quanto riguarda i documenti VMware la struttura è la medesima, con la differenza che le modalità di verifica spaziano tra il vSphere CLient, PowerCLI ed ESXCLI.
+
 I test eseguiti durante lo svolgimento del lavoro si sono limitati a tutti quei controlli compatibili con la sottoscrizione Azure a disposizione: Azure For Student. \\
 Per quanto riguarda invece VMware è stato possibile utilizzare ai fini del progetto un'infrastruttura di laboratorio aziendale presso Lutech S.p.A.
+
+
+\subsection{Perimetro dei documenti CIS utilizzati}
+
+La seguente tabella~\ref{tab:benchmark} riassume in breve quanti controlli sono stati estratti per l'implementazione tra i tre documenti utilizzati in fase di studio del benchmark.
+
+\begin{table}[H]
+\centering
+\small
+\begin{tabular}{llrrrr}
+\hline
+\textbf{Documento} & \textbf{Versione} & \textbf{Raccomandazioni} &
+\textbf{Automated} & \textbf{Manual} & \textbf{Implementate} \\
+\hline
+Azure Foundations     & 5.0.0 & 155 & 93 & 62 & 39 \\
+Azure Compute Services & 2.0.0 &  99 & 77 & 22 & 21 \\
+VMware ESXi 8         & 1.2.0 & 134 & 38 & 96 & 39 \\
+\hline
+\end{tabular}
+\caption{Documenti CIS utilizzati e raccomandazioni implementate}
+\label{tab:benchmark}
+\end{table}
+
+
+Nell'insieme di buone pratiche implementate per VMware vi è anche un controllo classificato come \emph{Manual}, per il quale è stato comunque possibile definire una verifica da PowerCLI sulla configurazione della macchina virtuale.
+
+I due documenti del benchmark CIS di Azure coprono ambiti diversi.
+Foundations si occupa principalmente delle impostazioni della sottoscrizione attiva e dei servizi di base.\\
+Compute Services invece si dedica ad altre macroaree come le App Service e le virtual machines.
+Su VMware nell'unico documento utilizzato si ha che le raccomandazioni sono distribuite sotto 8 sezioni, spaziando dall'hardware fisico alla configurazione delle virtual machines.
+
+Il perimetro di questo progetto è limitato quindi a un sottoinsieme di questi documenti.\\
+Le seguenti tabelle~\ref{tab:sez-az} e~\ref{tab:sez-vmw} illustrano, per ogni sezione coperta, quante buone pratiche contiene e quante di queste sono state implementate nello strumento di analisi sviluppato.\\
+I dettagli implementativi sono rimandati nel capitolo 4.
+
+\begin{table}[H]
+\centering
+\small
+\begin{tabular}{llrr}
+\hline
+\textbf{Sezione} & \textbf{Documento} & \textbf{Totale} & \textbf{Implementate} \\
+\hline
+6 - Logging and Monitoring & Foundations & 25 & 15 \\
+7 - Networking Services    & Foundations & 16 & 11 \\
+8 - Security Services      & Foundations & 38 & 13 \\
+2 - App Service            & Compute     & 77 & 15 \\
+20 - Virtual Machines      & Compute     & 11 &  6 \\
+\hline
+\end{tabular}
+\caption{Copertura del benchmark Azure per sezione}
+\label{tab:sez-az}
+\end{table}
+
+\begin{table}[H]
+\centering
+\small
+\begin{tabular}{lrr}
+\hline
+\textbf{Sezione} & \textbf{Totale} & \textbf{Implementate} \\
+\hline
+2 - Base             & 12 &  3 \\
+3 - Management       & 26 & 10 \\
+4 - Logging          & 11 &  1 \\
+5 - Network          & 11 &  5 \\
+6 - Features         & 18 &  1 \\
+7 - Virtual Machines & 29 & 19 \\
+\hline
+\end{tabular}
+\caption{Copertura del benchmark VMware per sezione}
+\label{tab:sez-vmw}
+\end{table}
+
 
 \section{Tecnologie}
 
