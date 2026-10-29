@@ -471,6 +471,46 @@ Per VMware invece è necessario essere in possesso delle credenziali di amminist
 Le uniche differenze nel flusso di esecuzione tra Azure e VMware riguardano l'inizializzazione del programma, il quale andrà a caricare in memoria il rispettivo dataset. Fatto questo viene chiamato il relativo main in funzione dell'ambiente e come detto in precedenza, vengono eseguiti sequenzialmente i controlli.
 
 
+\section{Struttura interna del tool}
+
+Finora è stato descritto il framework ad alto livello dal punto di vista di chi lo utilizza, quindi le fasi di esecuzione, i requisiti e il formato del dataset.\\
+A questo punto si va più in profondità ad analizzare le componenti che compongono lo strumento, le interazioni e il percorso che un singolo controllo segue dall'inizio alla fine.
+
+
+\subsection{Componenti e dati condivisi}
+
+Il seguente diagramma mostra le componenti del framework e il flusso di lettura/scrittura dei dati durante l'esecuzione.
+
+
+\begin{figure}[H]
+	\centering
+	\includegraphics[width=\textwidth]{architettura_componenti}
+	\caption{Diagramma strutturale a basso livello del tool sviluppato.}
+	\label{fig:componenti}
+\end{figure}
+
+Come è possibile osservare il punto di ingresso iniziale è il main dell'ambiente che si intende analizzare.
+Come prima operazione viene richiamata una funzione di inizializzazione che procede a verificare l'esistenza di una sessione autenticata sull'infrastruttura da valutare e infine carica in memoria il dataset, il quale è indicizzato dall'identificativo del controllo CIS.
+
+Da questo momento, qualsiasi funzione può recuperare i dati di un controllo(nome, parametro da interrogare, valore atteso, operatore di confronto, remediation) a partire dall'identificativo come chiave. \\
+La stessa funzione di inizializzazione si occupa inoltre di creare un registro dei risultati, un'altra struttura chiave-valore inzialmente vuota all'interno della quale verranno man mano registrati gli esiti dei controlli effettuati.
+
+In un secondo momento, il main esegue in sequenza i moduli delle varie sezioni previste implementate. L'unica componente condivisa tra i moduli e il main è il sorgente \texttt{module\_utils}, il quale contiene funzioni di sistema come ad esempio le operazioni descritte poco fa e funzioni ausiliarie per rendere la logica di verifica dei controlli nei moduli meno complessa.\\
+Al termine dell'esecuzione di ogni controllo, come già anticipato, viene scritto l'esito nel registro dei risultati che per ogni identificativo salva quattro campi di informazione.
+
+\begin{itemize}
+	\item Lo stato del controllo(conforme/non conforme).
+	\item Il numero totale di oggetti valutati.
+	\item Il numero di oggetti non conformi.
+	\item Il dettaglio degli oggetti non conformi, che viene poi mostrato nel report finale.
+\end{itemize}
+
+il modulo dedicato allo scoring è l'unica componente che va ad utilizzare questi risultati. Viene letto il registro prodotto dall'esecuzione dei moduli di audit e rilegge dal dataset i valori C, D, R dei controlli, così da poter produrre il valore di una metrica di effort dell'intervento di rimedio che verrà descritta successivamente in questo elaborato.
+
+Questa struttura permette così di poter aggiungere un nuovo controllo senza dover modificare componenti di sistema del framework e viceversa poter modificare o ampliare le funzionalità senza dover andare a impattare i moduli che contengono i controlli da eseguire.
+
+
+
 %			CAPITOLO 4: Implementazione moduli di audit
 \chapter{Implementazione dei moduli di audit}
 
