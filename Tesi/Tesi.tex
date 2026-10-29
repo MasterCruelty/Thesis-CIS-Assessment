@@ -36,6 +36,7 @@
 \usepackage{parskip}
 \usepackage[a-1a]{pdfx}
 
+\usepackage{tabularx}
 \usepackage{tcolorbox}
 \tcbuselibrary{skins,breakable}
 
@@ -879,11 +880,11 @@ I percorsi vengono risolti partendo dalla posizione degli script PowerShell. Dat
 \hline
 \textbf{Elemento} & \textbf{Contenuto} \\
 \hline
-\texttt{Analisi\_Report/} & \texttt{main\_azure.ps1}, \texttt{main\_vmware.ps1}, \texttt{module\_scoring.ps1} \\
-\texttt{Azure/} & un modulo per ciascuna sezione del benchmark Azure implementata \\
-\texttt{VMware/} & un modulo per ciascuna sezione del benchmark VMware implementata \\
-\texttt{module\_utils.ps1} & funzioni condivise (inizializzazione, registrazione dei risultati) \\
-\texttt{cis\_azure.csv}, \texttt{cis\_vmware.csv} & dataset dei controlli \\
+\texttt{Analisi\_Report/} & \texttt{main\_azure.ps1}, \texttt{main\_vmware.ps1}, \texttt{module\_scoring.ps1} \\ \hline
+\texttt{Azure/} & un modulo per ciascuna sezione del benchmark Azure implementata \\ \hline
+\texttt{VMware/} & un modulo per ciascuna sezione del benchmark VMware implementata \\ \hline
+\texttt{module\_utils.ps1} & funzioni condivise (inizializzazione, registrazione dei risultati) \\ \hline
+\texttt{cis\_azure.csv}, \texttt{cis\_vmware.csv} & dataset dei controlli \\ 
 \hline
 \end{tabular}
 \caption{Struttura della cartella del progetto}
@@ -937,7 +938,113 @@ La console, durante l'esecuzione, mostra a schermo diverse informazioni nel segu
 \end{enumerate}
 
 
+\section{Parametri esistenti}
 
+Gli script di entrambi gli ambienti accettano gli stessi parametri, i quali vengono riassunti nella tabella~\ref{tab:parametri}
+
+\begin{table}[H]
+\centering
+\small
+\begin{tabular}{p{2.3cm}p{3.1cm}p{6.2cm}}
+\hline
+\textbf{Parametro} & \textbf{Predefinito} & \textbf{Effetto} \\
+\hline
+\texttt{-AuditOnly} & disattivato & Esegue solo i controlli, senza calcolo dello scoring né esportazione del report. \\ \hline
+\texttt{-ExportLog} & disattivato & Salva in un file di testo l'intero output della console. \\ \hline
+\texttt{-Wc -Wd -Wr} & 0.30, 0.40, 0.30 & Pesi di C, D, R nella metrica $E_i$. Devono sommare a 1. \\ \hline
+\texttt{-Alpha -Beta} & 0.35, 0.70 & Soglie di classificazione dell'effort. Alpha deve essere minore di Beta. \\ \hline
+\texttt{-CsvPath} & dataset nella cartella radice & Percorso alternativo del dataset. \\ \hline
+\texttt{-OutputDir} & cartella \texttt{Analisi\_Report} & Cartella in cui viene scritto il file di log. \\
+\hline
+\end{tabular}
+\caption{Tabella riassuntiva sui parametri utilizzabili da linea di comando.}
+\label{tab:parametri}
+\end{table}
+
+Di seguito vengono mostrati quindi alcuni esempi di invocazione:
+
+\begin{lstlisting}[style=azcli]
+.\main_azure.ps1 -AuditOnly
+.\main_azure.ps1 -ExportLog
+.\main_vmware.ps1 -Wc 0.5 -Wd 0.3 -Wr 0.2
+.\main_vmware.ps1 -Wc 0.5 -Wd 0.3 -Wr 0.2 -Alpha 0.3 -Beta 0.65
+.\main_vmware.ps1 -ExportLog -OutputDir "C:\reports"
+\end{lstlisting}
+
+\section{Output riportato e struttura del report}
+\label{sec:file}
+
+Alla conclusione dell'esecuzione vengono prodotti fino a tre file, descritti di seguito.
+
+\begin{itemize}
+\item il \textbf{log di sessione}, con nome \texttt{cis\_azure\_log\_<data\_ora>.txt} oppure \texttt{cis\_vmware\_log\_<data\_ora>.txt}, solo se è stata usata l'opzione \texttt{-ExportLog}.
+\item il \textbf{report dei controlli}, \texttt{cis\_scoring\_report\_<data\_ora>.csv}, con una riga per ciascun controllo del dataset.
+\item il \textbf{riepilogo}, con lo stesso nome del report seguito da \texttt{\_summary}, composto da una sola riga.
+\end{itemize}
+
+I file relativi al report e riepilogo vengono salvati nella directory in cui è posizionato il terminale, mentre \texttt{-OutputDir} riguarda solo il file di log. Utilizzando l'opzione \texttt{-AuditOnly} nessuno dei due file (report/riepilogo) viene prodotto.
+
+La seguente tabella riporta e descrive le colonne presenti all'interno del report.
+
+\begin{table}[H]
+\centering
+\small
+\begin{tabular}{p{2.7cm}p{8.9cm}}
+\hline
+\textbf{Colonna} & \textbf{Contenuto} \\
+\hline
+\texttt{ID}, \texttt{Category}, \texttt{Name} & Identificativo CIS, categoria e titolo del controllo, esattamente come all'interno del dataset. \\ \hline
+\texttt{Status} & \texttt{COMPLIANT}, \texttt{NON-COMPLIANT}, \texttt{N/A} oppure \texttt{UNKNOWN}. \\ \hline
+\texttt{Total} & Numero di oggetti valutati dal controllo. \\ \hline
+\texttt{NonCompliant} & Numero di oggetti non conformi tra quelli valutati. \\ \hline
+\texttt{C}, \texttt{D}, \texttt{R} & Valori di complessità, indisponibilità e reversibilità dell'intervento di remediation letti dal dataset. \\ \hline
+\texttt{E\_i}, \texttt{E\_norm} & Effort calcolato con i pesi in uso e versione normalizzata. \\ \hline
+\texttt{Effort} & Fascia assegnata: \texttt{BASSO}, \texttt{MEDIO} o \texttt{ALTO}. \\ \hline
+\texttt{Objects} & Identificativi degli oggetti non conformi, separati dal carattere \texttt{|}. \\ \hline
+\texttt{Remediation} & Procedura di rimedio indicata dal benchmark per quel controllo. \\ 
+\hline
+\end{tabular}
+\caption{Descrizione del contenuto all'interno del report prodotto in output.}
+\label{tab:colonne}
+\end{table}
+
+Un dettaglio rilevante rigurda il valore di stato \texttt{UNKNOWN}. Tale statement viene assegnato nel caso in cui la valutazione di un controllo di conformità non ha registrato alcun risultato. Questo può succedere quando il modulo in questione è stato saltato e non eseguito(ad esempio se la logica di audit di un controllo richiedesse una verifica manuale).\\
+Diversa è la semantica rispetto a \texttt{N/A}, il quale ci indica che il controllo è stato eseguito ma all'interno dell'infrastruttura non vi era alcun oggetto da valutare.
+
+Le colonne relative alla metrica di Effort vengono valorizzate in modo significativo solo per i controlli che sono risultati non conformi. 
+
+Il file di riepilogo contiene solamente i totali dell'esecuzione. Quindi il nome della piattaforma valutata, il numero di controlli coinvolti, conformi e non conformi. Oltre a ciò viene indicata una percentuale di conformità e il totale di componenti non conformi per ogni fascia di effort.
+Entrambi i file di report/riepilogo sono in formato CSV, consultabili mediante foglio di calcolo con cui è possibile eseguire filtri e analizzare i risultati.
+
+\section{Situazioni di errore comuni}
+
+Nella tabella ~\ref{tab:errori} si procede ad elencare in sintesi le situazioni di errore più comuni che si possono incontrare e il comportamento che ha il framework.
+
+\begin{table}[H]
+\centering
+\small
+\renewcommand{\arraystretch}{1.35}
+\begin{tabularx}{\textwidth}{
+  >{\raggedright\arraybackslash}p{0.24\textwidth}
+  >{\raggedright\arraybackslash}X
+  >{\raggedright\arraybackslash}p{0.27\textwidth}}
+\hline
+\textbf{Situazione} & \textbf{Comportamento} & \textbf{Azione} \\
+\hline
+Sessione Azure o vCenter assente & L'esecuzione termina con un messaggio prima di avviare qualsiasi controllo. & Eseguire \texttt{az login} o \texttt{Connect-VIServer}. \\ \hline
+Dataset non trovato & L'esecuzione termina con un avviso di errore. & Verificare la struttura delle cartelle o indicare \texttt{-CsvPath}. \\ \hline
+Pesi con somma diversa da 1, oppure Alpha non minore di Beta & I controlli vengono eseguiti e mostrati a console, ma la fase di scoring termina con un errore e il report non viene prodotto. & Correggere i parametri e rilanciare. \\ \hline
+File di un modulo mancante & Il modulo viene saltato con un avviso e l'esecuzione prosegue. I suoi controlli risulteranno \texttt{UNKNOWN}. & Ripristinare il file. \\ \hline
+Esecuzione script bloccata & Il sistema rifiuta l'esecuzione dello script. & Utilizzare l'opzione \texttt{-ExecutionPolicy Bypass}. \\
+\hline
+\end{tabularx}
+\caption{Errori comuni e comportamento del framework}
+\label{tab:errori}
+\end{table}
+
+
+Siccome la validazione dei pesi e delle soglie avviene solamente in fase di scoring, è consigliabile verificare con attenzione quando vengono modificati rispetto ai valori predefiniti.
+Questo problema non si pone nell'ambito dell'integrazione del framework sulla piattaforma Moon Cloud, descritta nel capitolo successivo.
 
 % 			CAPITOLO 8: integrazione sonda Moon Cloud
 \chapter{Integrazione nell'ambiente Moon Cloud}
