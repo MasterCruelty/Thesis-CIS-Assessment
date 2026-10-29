@@ -344,14 +344,14 @@ Una volta completati tutti i controlli, il software va a riepilogare a schermo i
 
 
 
-\begin{figure}[h]
+\begin{figure}[H]
 	\centering
 	\includegraphics[width=1.0\textwidth]{architettura_script_cis_Azure}
     \caption{Schema concettuale della funzionalità per Azure}
     \label{fig:architettura_script_cis_Azure}
 \end{figure}
 
-\begin{figure}[h]
+\begin{figure}[H]
 	\centering
 	\includegraphics[width=1.0\textwidth]{architettura_script_cis_VMware}
     \caption{Schema concettuale della funzionalità per VMware}
@@ -509,6 +509,71 @@ il modulo dedicato allo scoring è l'unica componente che va ad utilizzare quest
 
 Questa struttura permette così di poter aggiungere un nuovo controllo senza dover modificare componenti di sistema del framework e viceversa poter modificare o ampliare le funzionalità senza dover andare a impattare i moduli che contengono i controlli da eseguire.
 
+
+\subsection{Esecuzione di un singolo controllo}
+
+Per ogni controllo di conformità implementato, il flusso di esecuzione è mostrato come segue in Figura~\ref{fig:ciclo}.
+
+\begin{figure}[H]
+	\centering
+	\includegraphics[width=0.85\textwidth]{ciclo_di_vita_controllo}
+	\caption{Flusso di esecuzione di un singolo controllo}
+	\label{fig:ciclo}
+\end{figure}
+
+Si comincia con la stampa a schermo di un'intestazione costruita con i dati caricati in memoria dal dataset. In questo modo è sempre ben visibile quale controllo sta venendo effettuato e quali valori ci si aspetterebbe.\\
+A questo punto segue l'interrogazione da parte del tool verso l'ambiente infrastruttturale tramite Azure CLI o PowerCLI. Ogni oggetto coinvolto viene confrontato con il valore atteso indicato dal benchmark e tutti quelli che vengono rilevati come non conformi alla buona pratica vengono accumulati per essere mostrati nel dettaglio nel report finale.\\
+Se al termine della computazione nessun oggetto è risultato non conforme, allora viene registrato lo stato di compliance per quel controllo. In caso contrario viene registrato lo stato di non conformità.\\
+Infine vi è la stampa a schermo di un piccolo riepilogo che mostra il numero di oggetti conformi rispetto al totale degli oggetti valutati per quella singola verifica, seguito da un suggerimento per quanto riguarda l'eventuale intervento di rimedio.
+
+\begin{figure}[H]
+	\centering
+	\includegraphics[width=0.85\textwidth]{esempio_init_software}
+	\caption{Esempio di output a schermo dell'inizializzazione del software su Azure, con la computazione del primo controllo.}
+	\label{fig:esempio_init_software}
+\end{figure}
+
+
+\subsection{Controlli standardizzati e controlli con logica dedicata}
+
+In precedenza all'interno del paragrafo 3.2 sono stati introdotti gli attributi definiti nel dataset. Tra questi vi è \texttt{operator}, il quale distingue i controlli standardizzabili da quelli in cui si rende necessaria una logica dedicata.\\
+In figura~\ref{fig:datadriven}, qui di seguito, è illustrato come la distinzione tra queste due casistiche influenzi il ciclo di esecuzione della singola verifica di conformità.
+
+
+\begin{figure}[H]
+	\centering
+	\includegraphics[width=\textwidth]{controlli_datadriven_custom}
+	\caption{Diagramma descrittivo di come l'esecuzione di un controllo venga instradato verso l'utilizzo di una funziona standard o una dedicata.}
+	\label{fig:datadriven}
+\end{figure}
+
+Come si può osservare dal precedente diagramma, se l'operatore assume un valore tra tra \texttt{eq}, \texttt{le} e \texttt{notempty}, allora l'esecuzione del controllo è affidato a una funzione standard che necessita quasi solamente dell'identificativo senza bisogno di ulteriore logica codificata. Il nome della proprietà da verificare e il valore atteso rispetto al benchmark vengono ricavati in automatico dalla riga del dataset.\\
+Le funzioni standard riguardano le impostazioni avanzate degli host ESXi, delle macchine virtuali e per le risorse Azure.
+
+Se l'operatore assume invece il valore \texttt{custom}, la verifica non è riconducibile a un confronto su una singola proprietà ed è richiesta una logica dedicata.\\
+Nonostante non sia stato possibile standardizzare ogni singolo controllo a causa dell'eterogeneità degli stessi, si è cercato di evitare il più possibile la duplicazione di codice superfluo.
+I controlli ricaduti in questa casistica che però condividevano la medesima struttura, come ad esempio la verifica degli Activity Log Alert o dei piani di Microsoft Defender, sono stati gestiti mediante funzioni ausiliarie parametrizzate sempre sull'identificativo e pochi altri valori.\\
+
+In alcuni casi in cui il controllo in sè risultava dal punto di vista logico unico, ha richiesto la codifica dedicata ed è stata posizionata direttamente all'interno del modulo della sezione corrispondente.
+In ogni casistica il risultato viene registrato con la medesima funzione, il che non impatta in nessun modo il funzionamento del framework a prescindere da come il controllo sia stato implementato.\\
+Alcuni esempi concreti sono discussi nel capitolo 4.
+
+\subsection{Flusso dei dati del modello di scoring}
+
+Il seguente diagramma fornisce uno schema concettuale grafico di come il modulo di scoring esporta i risultati dei controlli nei valori finali che vengono poi mostrati a schermo e nei file di report. Per quanto riguarda la definizione delle dimensioni e il loro significato si rimanda al capitolo 5.\\
+In questa fase viene solamente descritto il flusso dei dati.
+
+\begin{figure}[H]
+	\centering
+	\includegraphics[width=\textwidth]{pipeline_scoring}
+	\caption{Flusso dei dati del modulo di scoring}
+	\label{fig:pipeline}
+\end{figure}
+
+il modulo scoring itera sulle righe del dataset e non sui risultati ottenuti. Facendo così, ogni controllo presente sul dataset compare poi nel report a prescindere se abbia prodotto qualche risultato o meno.\\
+Per ogni riga viene recuperato lo stato del controllo eseguito dal registro dei risultati o viene impostato a \texttt{UNKNOWN} se assente. Successivamente viene calcolato il valore grezzo dell'effort di intervento con i pesi utilizzati, ne segue la normalizzazione e infine viene assegnata la fascia in funzione delle soglie $\alpha$ e $\beta$.
+
+L'output a console riporta i controlli raggruppati per categoria, un riepilogo con le metriche totali per stato e per fascia di effort. Infine viene mostrato l'elenco delle non conformità ordinato per valore decrescente di effort.
 
 
 %			CAPITOLO 4: Implementazione moduli di audit
