@@ -1,0 +1,85 @@
+<mxfile host="Electron" agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) draw.io/29.2.9 Chrome/140.0.7339.249 Electron/38.7.2 Safari/537.36" version="29.2.9">
+  <diagram name="Ciclo di vita" id="d1">
+    <mxGraphModel dx="1042" dy="626" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1400" pageHeight="1000" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="c3" parent="1" style="rounded=1;arcSize=8;whiteSpace=wrap;html=1;fillColor=#efe6f7;strokeColor=#333333;strokeWidth=2;fontSize=11;fontColor=#000000;fontStyle=0;align=center;verticalAlign=middle;" value="Write-CheckHeader&lt;br&gt;stampa a schermo nome, setting-name e expected-value dal dataset" vertex="1">
+          <mxGeometry height="72" width="416" x="112" y="24" as="geometry" />
+        </mxCell>
+        <mxCell id="c4" parent="1" style="rounded=1;arcSize=8;whiteSpace=wrap;html=1;fillColor=#e3f0fa;strokeColor=#333333;strokeWidth=2;fontSize=11.5;fontColor=#000000;fontStyle=0;align=center;verticalAlign=middle;" value="Interrogazione della piattaforma&lt;br&gt;(Azure CLI / PowerCLI)" vertex="1">
+          <mxGeometry height="72" width="416" x="112" y="144" as="geometry" />
+        </mxCell>
+        <mxCell id="c5" parent="1" style="rhombus;whiteSpace=wrap;html=1;fillColor=#fff8dc;strokeColor=#333333;strokeWidth=2;fontSize=11.5;fontColor=#000000;" value="Ci sono oggetti&lt;br&gt;da valutare?" vertex="1">
+          <mxGeometry height="112" width="480" x="80" y="256" as="geometry" />
+        </mxCell>
+        <mxCell id="c6" parent="1" style="rounded=1;arcSize=8;whiteSpace=wrap;html=1;fillColor=#dcebd8;strokeColor=#333333;strokeWidth=2;fontSize=11;fontColor=#000000;fontStyle=0;align=center;verticalAlign=middle;" value="Per ogni oggetto si confronta con il valore atteso.&lt;br&gt;Quelli che risultano non conformi vengono accumulati." vertex="1">
+          <mxGeometry height="80" width="416" x="112" y="424" as="geometry" />
+        </mxCell>
+        <mxCell id="c7" parent="1" style="rounded=1;arcSize=8;whiteSpace=wrap;html=1;fillColor=#efe6f7;strokeColor=#333333;strokeWidth=2;fontSize=10.8;fontColor=#000000;fontStyle=0;align=center;verticalAlign=middle;" value="Set-CheckResult&lt;br&gt;Status = COMPLIANT se nessun oggetto non conforme,&lt;br&gt;altrimenti NON-COMPLIANT.&amp;nbsp;&lt;div&gt;Registra Total, NonCompliant e Objects&lt;/div&gt;" vertex="1">
+          <mxGeometry height="96" width="416" x="112" y="568" as="geometry" />
+        </mxCell>
+        <mxCell id="c8" parent="1" style="rounded=1;arcSize=8;whiteSpace=wrap;html=1;fillColor=#efe6f7;strokeColor=#333333;strokeWidth=2;fontSize=11;fontColor=#000000;fontStyle=0;align=center;verticalAlign=middle;" value="Write-CheckFooter&lt;br&gt;riepilogo oggetti conformi e suggerimento di remediation estratto dal dataset" vertex="1">
+          <mxGeometry height="80" width="416" x="112" y="712" as="geometry" />
+        </mxCell>
+        <mxCell id="c9" parent="1" style="rounded=1;arcSize=8;whiteSpace=wrap;html=1;fillColor=#eeeeee;strokeColor=#333333;strokeWidth=2;fontSize=10.8;fontColor=#000000;fontStyle=0;align=center;verticalAlign=middle;" value="N/A  (se previsto dal controllo)&lt;br&gt;Set-CheckResult con&lt;br&gt;Total = 0" vertex="1">
+          <mxGeometry height="88" width="288" x="672" y="256" as="geometry" />
+        </mxCell>
+        <mxCell id="c10" parent="1" style="rounded=1;arcSize=8;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#333333;strokeWidth=2;fontSize=10.8;fontColor=#000000;fontStyle=0;align=center;verticalAlign=middle;dashed=1;dashPattern=8 6;" value="Se un controllo non registra&lt;br&gt;alcun risultato, lo scoring&lt;br&gt;lo riporta come UNKNOWN" vertex="1">
+          <mxGeometry height="128" width="288" x="672" y="656" as="geometry" />
+        </mxCell>
+        <mxCell id="c11" edge="1" parent="1" style="endArrow=block;endFill=1;html=1;strokeColor=#333333;strokeWidth=2;">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="320" y="96" as="sourcePoint" />
+            <mxPoint x="320" y="141" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="c12" edge="1" parent="1" style="endArrow=block;endFill=1;html=1;strokeColor=#333333;strokeWidth=2;">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="320" y="216" as="sourcePoint" />
+            <mxPoint x="320" y="253" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="c13" edge="1" parent="1" style="endArrow=block;endFill=1;html=1;strokeColor=#333333;strokeWidth=2;">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="320" y="368" as="sourcePoint" />
+            <mxPoint x="320" y="421" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="c14" parent="1" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;whiteSpace=wrap;fontSize=11;fontColor=#000000;fontStyle=0;" value="sì" vertex="1">
+          <mxGeometry height="36" width="200" x="336" y="376" as="geometry" />
+        </mxCell>
+        <mxCell id="c15" edge="1" parent="1" style="endArrow=block;endFill=1;html=1;strokeColor=#333333;strokeWidth=2;">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="560" y="312" as="sourcePoint" />
+            <mxPoint x="669" y="312" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="c16" parent="1" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;fontSize=11;fontColor=#000000;fontStyle=0;" value="no" vertex="1">
+          <mxGeometry height="36" width="200" x="514" y="270" as="geometry" />
+        </mxCell>
+        <mxCell id="c17" edge="1" parent="1" style="endArrow=block;endFill=1;html=1;strokeColor=#333333;strokeWidth=2;">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="320" y="504" as="sourcePoint" />
+            <mxPoint x="320" y="565" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="c18" edge="1" parent="1" style="endArrow=block;endFill=1;html=1;strokeColor=#333333;strokeWidth=2;">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="816" y="592" />
+            </Array>
+            <mxPoint x="816" y="344" as="sourcePoint" />
+            <mxPoint x="531" y="592" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="c19" edge="1" parent="1" style="endArrow=block;endFill=1;html=1;strokeColor=#333333;strokeWidth=2;">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="320" y="664" as="sourcePoint" />
+            <mxPoint x="320" y="709" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

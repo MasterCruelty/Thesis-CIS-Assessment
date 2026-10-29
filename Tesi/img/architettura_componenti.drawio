@@ -1,1 +1,132 @@
-<mxfile host="app.diagrams.net"><diagram name="Componenti" id="d1"><mxGraphModel dx="1400" dy="900" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1400" pageHeight="1000" math="0" shadow="0"><root><mxCell id="0"/><mxCell id="1" parent="0"/><mxCell id="c3" value="main_azure.ps1&lt;br&gt;main_vmware.ps1" style="rounded=1;arcSize=8;whiteSpace=wrap;html=1;fillColor=#fdf1dc;strokeColor=#333333;strokeWidth=2;fontSize=12;fontColor=#000000;fontStyle=1;align=center;verticalAlign=middle;" vertex="1" parent="1"><mxGeometry x="40" y="24" width="320" height="72" as="geometry"/></mxCell><mxCell id="c4" value="Dataset CSV&lt;br&gt;(cis_azure.csv / cis_vmware.csv)" style="rounded=1;arcSize=8;whiteSpace=wrap;html=1;fillColor=#fff8dc;strokeColor=#333333;strokeWidth=2;fontSize=12;fontColor=#000000;fontStyle=0;align=center;verticalAlign=middle;" vertex="1" parent="1"><mxGeometry x="40" y="160" width="320" height="80" as="geometry"/></mxCell><mxCell id="c5" value="$Global:CISBenchmarkData&lt;br&gt;id  →  riga del dataset" style="rounded=1;arcSize=8;whiteSpace=wrap;html=1;fillColor=#fff8dc;strokeColor=#333333;strokeWidth=2;fontSize=11.5;fontColor=#000000;fontStyle=0;align=center;verticalAlign=middle;" vertex="1" parent="1"><mxGeometry x="40" y="320" width="320" height="80" as="geometry"/></mxCell><mxCell id="c6" value="Moduli di sezione" style="rounded=1;arcSize=8;whiteSpace=wrap;html=1;fillColor=#f4f7fb;strokeColor=#4a6fa5;strokeWidth=2;fontSize=12;fontColor=#4a6fa5;fontStyle=1;align=left;verticalAlign=top;dashed=1;dashPattern=8 6;spacingLeft=10;spacingTop=6;" vertex="1" parent="1"><mxGeometry x="440" y="24" width="360" height="360" as="geometry"/></mxCell><mxCell id="c7" value="Azure: sezioni 2, 6, 7, 8, 20" style="rounded=1;arcSize=8;whiteSpace=wrap;html=1;fillColor=#dcebd8;strokeColor=#333333;strokeWidth=2;fontSize=11.5;fontColor=#000000;fontStyle=0;align=center;verticalAlign=middle;" vertex="1" parent="1"><mxGeometry x="464" y="112" width="312" height="72" as="geometry"/></mxCell><mxCell id="c8" value="VMware: sezioni 2, 3, 4, 5, 6, 7" style="rounded=1;arcSize=8;whiteSpace=wrap;html=1;fillColor=#dcebd8;strokeColor=#333333;strokeWidth=2;fontSize=11.5;fontColor=#000000;fontStyle=0;align=center;verticalAlign=middle;" vertex="1" parent="1"><mxGeometry x="464" y="232" width="312" height="72" as="geometry"/></mxCell><mxCell id="c9" value="module_utils.ps1" style="rounded=1;arcSize=8;whiteSpace=wrap;html=1;fillColor=#f4f7fb;strokeColor=#4a6fa5;strokeWidth=2;fontSize=12;fontColor=#4a6fa5;fontStyle=1;align=left;verticalAlign=top;dashed=1;dashPattern=8 6;spacingLeft=10;spacingTop=6;" vertex="1" parent="1"><mxGeometry x="440" y="432" width="360" height="152" as="geometry"/></mxCell><mxCell id="c10" value="Get-CheckData · Write-CheckHeader&lt;br&gt;Write-CheckFooter · Set-CheckResult&lt;br&gt;funzioni di verifica condivise" style="rounded=1;arcSize=8;whiteSpace=wrap;html=1;fillColor=#efe6f7;strokeColor=#333333;strokeWidth=2;fontSize=10.8;fontColor=#000000;fontStyle=0;align=center;verticalAlign=middle;" vertex="1" parent="1"><mxGeometry x="464" y="472" width="312" height="96" as="geometry"/></mxCell><mxCell id="c11" value="$Global:CISAuditResults&lt;br&gt;id  →  Status, Total,&lt;br&gt;NonCompliant, Objects" style="rounded=1;arcSize=8;whiteSpace=wrap;html=1;fillColor=#fff8dc;strokeColor=#333333;strokeWidth=2;fontSize=11.5;fontColor=#000000;fontStyle=0;align=center;verticalAlign=middle;" vertex="1" parent="1"><mxGeometry x="864" y="448" width="320" height="112" as="geometry"/></mxCell><mxCell id="c12" value="module_scoring.ps1" style="rounded=1;arcSize=8;whiteSpace=wrap;html=1;fillColor=#efe6f7;strokeColor=#333333;strokeWidth=2;fontSize=12;fontColor=#000000;fontStyle=1;align=center;verticalAlign=middle;" vertex="1" parent="1"><mxGeometry x="440" y="632" width="360" height="80" as="geometry"/></mxCell><mxCell id="c13" value="Console · report CSV · riepilogo CSV" style="rounded=1;arcSize=8;whiteSpace=wrap;html=1;fillColor=#e3f0fa;strokeColor=#333333;strokeWidth=2;fontSize=11.5;fontColor=#000000;fontStyle=0;align=center;verticalAlign=middle;" vertex="1" parent="1"><mxGeometry x="440" y="740" width="360" height="56" as="geometry"/></mxCell><mxCell id="c14" style="endArrow=block;endFill=1;html=1;strokeColor=#333333;strokeWidth=2;" edge="1" parent="1"><mxGeometry relative="1" as="geometry"><mxPoint x="200" y="96" as="sourcePoint"/><mxPoint x="200" y="157" as="targetPoint"/></mxGeometry></mxCell><mxCell id="c15" value="Initialize-*" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;whiteSpace=wrap;fontSize=10.5;fontColor=#000000;fontStyle=0;" vertex="1" parent="1"><mxGeometry x="212" y="108" width="200" height="36" as="geometry"/></mxCell><mxCell id="c16" style="endArrow=block;endFill=1;html=1;strokeColor=#333333;strokeWidth=2;" edge="1" parent="1"><mxGeometry relative="1" as="geometry"><mxPoint x="200" y="240" as="sourcePoint"/><mxPoint x="200" y="317" as="targetPoint"/></mxGeometry></mxCell><mxCell id="c17" value="carica in memoria" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;whiteSpace=wrap;fontSize=10.5;fontColor=#000000;fontStyle=0;" vertex="1" parent="1"><mxGeometry x="212" y="260" width="200" height="36" as="geometry"/></mxCell><mxCell id="c18" style="endArrow=block;endFill=1;html=1;strokeColor=#333333;strokeWidth=2;" edge="1" parent="1"><mxGeometry relative="1" as="geometry"><mxPoint x="363" y="60" as="sourcePoint"/><mxPoint x="443" y="60" as="targetPoint"/></mxGeometry></mxCell><mxCell id="c19" value="esegue" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;fontSize=10.5;fontColor=#000000;fontStyle=0;" vertex="1" parent="1"><mxGeometry x="304" y="17" width="200" height="36" as="geometry"/></mxCell><mxCell id="c20" style="endArrow=block;endFill=1;html=1;strokeColor=#333333;strokeWidth=2;" edge="1" parent="1"><mxGeometry relative="1" as="geometry"><mxPoint x="616" y="384" as="sourcePoint"/><mxPoint x="616" y="429" as="targetPoint"/></mxGeometry></mxCell><mxCell id="c21" value="chiamano" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;whiteSpace=wrap;fontSize=10.5;fontColor=#000000;fontStyle=0;" vertex="1" parent="1"><mxGeometry x="628" y="388" width="200" height="36" as="geometry"/></mxCell><mxCell id="c22" style="endArrow=block;endFill=1;html=1;strokeColor=#333333;strokeWidth=2;" edge="1" parent="1"><mxGeometry relative="1" as="geometry"><mxPoint x="363" y="360" as="sourcePoint"/><mxPoint x="437" y="512" as="targetPoint"/><Array as="points"><mxPoint x="400" y="360"/><mxPoint x="400" y="512"/></Array></mxGeometry></mxCell><mxCell id="c23" value="Get-CheckData" style="text;html=1;strokeColor=none;fillColor=none;align=right;verticalAlign=middle;whiteSpace=wrap;fontSize=10;fontColor=#000000;fontStyle=0;" vertex="1" parent="1"><mxGeometry x="380" y="418" width="200" height="36" as="geometry"/></mxCell><mxCell id="c24" style="endArrow=block;endFill=1;html=1;strokeColor=#333333;strokeWidth=2;" edge="1" parent="1"><mxGeometry relative="1" as="geometry"><mxPoint x="779" y="520" as="sourcePoint"/><mxPoint x="861" y="520" as="targetPoint"/></mxGeometry></mxCell><mxCell id="c25" value="scrive" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;fontSize=10;fontColor=#000000;fontStyle=0;" vertex="1" parent="1"><mxGeometry x="732" y="476" width="200" height="36" as="geometry"/></mxCell><mxCell id="c26" style="endArrow=block;endFill=1;html=1;strokeColor=#333333;strokeWidth=2;" edge="1" parent="1"><mxGeometry relative="1" as="geometry"><mxPoint x="1024" y="560" as="sourcePoint"/><mxPoint x="803" y="672" as="targetPoint"/><Array as="points"><mxPoint x="1024" y="672"/></Array></mxGeometry></mxCell><mxCell id="c27" value="legge" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;fontSize=10.5;fontColor=#000000;fontStyle=0;" vertex="1" parent="1"><mxGeometry x="812" y="633" width="200" height="36" as="geometry"/></mxCell><mxCell id="c28" style="endArrow=block;endFill=1;html=1;strokeColor=#333333;strokeWidth=2;" edge="1" parent="1"><mxGeometry relative="1" as="geometry"><mxPoint x="40" y="200" as="sourcePoint"/><mxPoint x="437" y="672" as="targetPoint"/><Array as="points"><mxPoint x="16" y="200"/><mxPoint x="16" y="672"/></Array></mxGeometry></mxCell><mxCell id="c29" value="legge C, D, R dal CSV" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;fontSize=10.5;fontColor=#000000;fontStyle=0;" vertex="1" parent="1"><mxGeometry x="116" y="633" width="200" height="36" as="geometry"/></mxCell><mxCell id="c30" style="endArrow=block;endFill=1;html=1;strokeColor=#333333;strokeWidth=2;" edge="1" parent="1"><mxGeometry relative="1" as="geometry"><mxPoint x="616" y="712" as="sourcePoint"/><mxPoint x="616" y="741" as="targetPoint"/></mxGeometry></mxCell></root></mxGraphModel></diagram></mxfile>
+<mxfile host="Electron" agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) draw.io/29.2.9 Chrome/140.0.7339.249 Electron/38.7.2 Safari/537.36" version="29.2.9">
+  <diagram name="Componenti" id="d1">
+    <mxGraphModel dx="1042" dy="626" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1400" pageHeight="1000" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="c3" parent="1" style="rounded=1;arcSize=8;whiteSpace=wrap;html=1;fillColor=#fdf1dc;strokeColor=#333333;strokeWidth=2;fontSize=12;fontColor=#000000;fontStyle=1;align=center;verticalAlign=middle;" value="main_azure.ps1&lt;br&gt;main_vmware.ps1" vertex="1">
+          <mxGeometry height="72" width="320" x="40" y="24" as="geometry" />
+        </mxCell>
+        <mxCell id="c4" parent="1" style="rounded=1;arcSize=8;whiteSpace=wrap;html=1;fillColor=#fff8dc;strokeColor=#333333;strokeWidth=2;fontSize=12;fontColor=#000000;fontStyle=0;align=center;verticalAlign=middle;" value="Dataset CSV&lt;br&gt;(cis_azure.csv / cis_vmware.csv)" vertex="1">
+          <mxGeometry height="80" width="320" x="40" y="160" as="geometry" />
+        </mxCell>
+        <mxCell id="c5" parent="1" style="rounded=1;arcSize=8;whiteSpace=wrap;html=1;fillColor=#fff8dc;strokeColor=#333333;strokeWidth=2;fontSize=11.5;fontColor=#000000;fontStyle=0;align=center;verticalAlign=middle;" value="$Global:CISBenchmarkData&lt;br&gt;id  →  riga del dataset" vertex="1">
+          <mxGeometry height="80" width="320" x="40" y="320" as="geometry" />
+        </mxCell>
+        <mxCell id="c6" parent="1" style="rounded=1;arcSize=8;whiteSpace=wrap;html=1;fillColor=#f4f7fb;strokeColor=#4a6fa5;strokeWidth=2;fontSize=12;fontColor=#4a6fa5;fontStyle=1;align=left;verticalAlign=top;dashed=1;dashPattern=8 6;spacingLeft=10;spacingTop=6;" value="Moduli di sezione" vertex="1">
+          <mxGeometry height="360" width="360" x="440" y="24" as="geometry" />
+        </mxCell>
+        <mxCell id="c7" parent="1" style="rounded=1;arcSize=8;whiteSpace=wrap;html=1;fillColor=#dcebd8;strokeColor=#333333;strokeWidth=2;fontSize=11.5;fontColor=#000000;fontStyle=0;align=center;verticalAlign=middle;" value="Azure: sezioni 2, 6, 7, 8, 20" vertex="1">
+          <mxGeometry height="72" width="312" x="464" y="112" as="geometry" />
+        </mxCell>
+        <mxCell id="c8" parent="1" style="rounded=1;arcSize=8;whiteSpace=wrap;html=1;fillColor=#dcebd8;strokeColor=#333333;strokeWidth=2;fontSize=11.5;fontColor=#000000;fontStyle=0;align=center;verticalAlign=middle;" value="VMware: sezioni 2, 3, 4, 5, 6, 7" vertex="1">
+          <mxGeometry height="72" width="312" x="464" y="232" as="geometry" />
+        </mxCell>
+        <mxCell id="c9" parent="1" style="rounded=1;arcSize=8;whiteSpace=wrap;html=1;fillColor=#f4f7fb;strokeColor=#4a6fa5;strokeWidth=2;fontSize=12;fontColor=#4a6fa5;fontStyle=1;align=left;verticalAlign=top;dashed=1;dashPattern=8 6;spacingLeft=10;spacingTop=6;" value="module_utils.ps1" vertex="1">
+          <mxGeometry height="152" width="360" x="440" y="432" as="geometry" />
+        </mxCell>
+        <mxCell id="c10" parent="1" style="rounded=1;arcSize=8;whiteSpace=wrap;html=1;fillColor=#efe6f7;strokeColor=#333333;strokeWidth=2;fontSize=10.8;fontColor=#000000;fontStyle=0;align=center;verticalAlign=middle;" value="Get-CheckData · Write-CheckHeader&lt;br&gt;Write-CheckFooter · Set-CheckResult&lt;br&gt;funzioni di verifica condivise" vertex="1">
+          <mxGeometry height="96" width="312" x="464" y="472" as="geometry" />
+        </mxCell>
+        <mxCell id="c11" parent="1" style="rounded=1;arcSize=8;whiteSpace=wrap;html=1;fillColor=#fff8dc;strokeColor=#333333;strokeWidth=2;fontSize=11.5;fontColor=#000000;fontStyle=0;align=center;verticalAlign=middle;" value="$Global:CISAuditResults&lt;br&gt;id  →  Status, Total,&lt;br&gt;NonCompliant, Objects" vertex="1">
+          <mxGeometry height="112" width="320" x="864" y="448" as="geometry" />
+        </mxCell>
+        <mxCell id="c12" parent="1" style="rounded=1;arcSize=8;whiteSpace=wrap;html=1;fillColor=#efe6f7;strokeColor=#333333;strokeWidth=2;fontSize=12;fontColor=#000000;fontStyle=1;align=center;verticalAlign=middle;" value="module_scoring.ps1" vertex="1">
+          <mxGeometry height="80" width="360" x="440" y="632" as="geometry" />
+        </mxCell>
+        <mxCell id="c13" parent="1" style="rounded=1;arcSize=8;whiteSpace=wrap;html=1;fillColor=#e3f0fa;strokeColor=#333333;strokeWidth=2;fontSize=11.5;fontColor=#000000;fontStyle=0;align=center;verticalAlign=middle;" value="Console · report CSV · riepilogo CSV" vertex="1">
+          <mxGeometry height="56" width="360" x="440" y="740" as="geometry" />
+        </mxCell>
+        <mxCell id="c14" edge="1" parent="1" style="endArrow=block;endFill=1;html=1;strokeColor=#333333;strokeWidth=2;">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="200" y="96" as="sourcePoint" />
+            <mxPoint x="200" y="157" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="c15" parent="1" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;whiteSpace=wrap;fontSize=10.5;fontColor=#000000;fontStyle=0;" value="Initialize-*" vertex="1">
+          <mxGeometry height="36" width="200" x="212" y="108" as="geometry" />
+        </mxCell>
+        <mxCell id="c16" edge="1" parent="1" style="endArrow=block;endFill=1;html=1;strokeColor=#333333;strokeWidth=2;">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="200" y="240" as="sourcePoint" />
+            <mxPoint x="200" y="317" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="c17" parent="1" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;whiteSpace=wrap;fontSize=10.5;fontColor=#000000;fontStyle=0;" value="carica in memoria" vertex="1">
+          <mxGeometry height="36" width="200" x="212" y="260" as="geometry" />
+        </mxCell>
+        <mxCell id="c18" edge="1" parent="1" style="endArrow=block;endFill=1;html=1;strokeColor=#333333;strokeWidth=2;">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="363" y="60" as="sourcePoint" />
+            <mxPoint x="443" y="60" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="c19" parent="1" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;fontSize=10.5;fontColor=#000000;fontStyle=0;" value="esegue" vertex="1">
+          <mxGeometry height="36" width="200" x="304" y="17" as="geometry" />
+        </mxCell>
+        <mxCell id="c20" edge="1" parent="1" style="endArrow=block;endFill=1;html=1;strokeColor=#333333;strokeWidth=2;">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="616" y="384" as="sourcePoint" />
+            <mxPoint x="616" y="429" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="c21" parent="1" style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;whiteSpace=wrap;fontSize=10.5;fontColor=#000000;fontStyle=0;" value="chiamano" vertex="1">
+          <mxGeometry height="36" width="200" x="628" y="388" as="geometry" />
+        </mxCell>
+        <mxCell id="c22" edge="1" parent="1" style="endArrow=block;endFill=1;html=1;strokeColor=#333333;strokeWidth=2;">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="400" y="360" />
+              <mxPoint x="400" y="512" />
+            </Array>
+            <mxPoint x="363" y="360" as="sourcePoint" />
+            <mxPoint x="437" y="512" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="c23" parent="1" style="text;html=1;strokeColor=none;fillColor=none;align=right;verticalAlign=middle;whiteSpace=wrap;fontSize=10;fontColor=#000000;fontStyle=0;" value="viene letto" vertex="1">
+          <mxGeometry height="36" width="200" x="190" y="418" as="geometry" />
+        </mxCell>
+        <mxCell id="c24" edge="1" parent="1" style="endArrow=block;endFill=1;html=1;strokeColor=#333333;strokeWidth=2;">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="779" y="520" as="sourcePoint" />
+            <mxPoint x="861" y="520" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="c25" parent="1" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;fontSize=10;fontColor=#000000;fontStyle=0;" value="scrive" vertex="1">
+          <mxGeometry height="36" width="200" x="732" y="476" as="geometry" />
+        </mxCell>
+        <mxCell id="c26" edge="1" parent="1" style="endArrow=block;endFill=1;html=1;strokeColor=#333333;strokeWidth=2;">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="1024" y="672" />
+            </Array>
+            <mxPoint x="1024" y="560" as="sourcePoint" />
+            <mxPoint x="803" y="672" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="c27" parent="1" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;fontSize=10.5;fontColor=#000000;fontStyle=0;" value="viene letto" vertex="1">
+          <mxGeometry height="36" width="200" x="812" y="633" as="geometry" />
+        </mxCell>
+        <mxCell id="c28" edge="1" parent="1" style="endArrow=block;endFill=1;html=1;strokeColor=#333333;strokeWidth=2;">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="16" y="200" />
+              <mxPoint x="16" y="672" />
+            </Array>
+            <mxPoint x="40" y="200" as="sourcePoint" />
+            <mxPoint x="437" y="672" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="c29" parent="1" style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;fontSize=10.5;fontColor=#000000;fontStyle=0;" value="vengono letti C, D, R dal CSV" vertex="1">
+          <mxGeometry height="36" width="200" x="116" y="633" as="geometry" />
+        </mxCell>
+        <mxCell id="c30" edge="1" parent="1" style="endArrow=block;endFill=1;html=1;strokeColor=#333333;strokeWidth=2;">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="616" y="712" as="sourcePoint" />
+            <mxPoint x="616" y="741" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
