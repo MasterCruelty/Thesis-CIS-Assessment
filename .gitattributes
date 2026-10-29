@@ -2,3 +2,4 @@
 *.sty linguist-detectable=false
 *.tex linguist-detectable=true
 *.ipynb linguist-detectable=true
+*.drawio linguist-language=XML
