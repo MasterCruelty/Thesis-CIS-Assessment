@@ -496,7 +496,7 @@ Da questo momento, qualsiasi funzione può recuperare i dati di un controllo(nom
 La stessa funzione di inizializzazione si occupa inoltre di creare un registro dei risultati, un'altra struttura chiave-valore inzialmente vuota all'interno della quale verranno man mano registrati gli esiti dei controlli effettuati.
 
 In un secondo momento, il main esegue in sequenza i moduli delle varie sezioni previste implementate. L'unica componente condivisa tra i moduli e il main è il sorgente \texttt{module\_utils}, il quale contiene funzioni di sistema come ad esempio le operazioni descritte poco fa e funzioni ausiliarie per rendere la logica di verifica dei controlli nei moduli meno complessa.\\
-Al termine dell'esecuzione di ogni controllo, come già anticipato, viene scritto l'esito nel registro dei risultati che per ogni identificativo salva quattro campi di informazione.
+Al termine dell'esecuzione di ogni controllo, come già anticipato, viene scritto l'esito nel registro dei risultati(Si rimanda al codice~\ref{lst:set-check-result} illustrato nell'Appendice~\ref{app:registro}) che per ogni identificativo salva quattro campi di informazione.
 
 \begin{itemize}
 	\item Lo stato del controllo(conforme/non conforme).
@@ -547,7 +547,7 @@ In figura~\ref{fig:datadriven}, qui di seguito, è illustrato come la distinzion
 	\label{fig:datadriven}
 \end{figure}
 
-Come si può osservare dal precedente diagramma, se l'operatore assume un valore tra tra \texttt{eq}, \texttt{le} e \texttt{notempty}, allora l'esecuzione del controllo è affidato a una funzione standard che necessita quasi solamente dell'identificativo senza bisogno di ulteriore logica codificata. Il nome della proprietà da verificare e il valore atteso rispetto al benchmark vengono ricavati in automatico dalla riga del dataset.\\
+Come si può osservare dal precedente diagramma, se l'operatore assume un valore tra tra \texttt{eq}, \texttt{le} e \texttt{notempty}, allora l'esecuzione del controllo è affidato a una funzione standard (Appendice~\ref{app:generiche}) che necessita quasi solamente dell'identificativo senza bisogno di ulteriore logica codificata. Il nome della proprietà da verificare e il valore atteso rispetto al benchmark vengono ricavati in automatico dalla riga del dataset.\\
 Le funzioni standard riguardano le impostazioni avanzate degli host ESXi, delle macchine virtuali e per le risorse Azure.
 
 Se l'operatore assume invece il valore \texttt{custom}, la verifica non è riconducibile a un confronto su una singola proprietà ed è richiesta una logica dedicata.\\
@@ -1726,8 +1726,219 @@ Un'altra possibile miglioria riguarda l'esecuzione periodica del framework su un
 Eventuali variazioni nello stato di conformità di un controllo tra un'esecuzione e la successiva potrebbero segnalare modifiche non autorizzate o non documentate sull'infrastruttura. \\
 
 
-%
-%
+
+
+
+
+%	APPENDICE A
+\appendix
+\chapter{Funzioni condivise del framework}
+\label{app:funzioni}
+
+Qui si riporta il codice delle funzioni a cui i capitoli precedenti hanno fatto riferimento. La codifica che viene mostrata è contenuta all'interno del sorgente \texttt{module\_utils.ps1}. 
+
+\section{Registrazione e lettura dei risultati}
+\label{app:registro}
+
+La funzione \texttt{Set-CheckResult} si occupa di scrivere l'esito di un controllo di conformità nel registro dei risultati.\\
+Il parametro opzionale \texttt{ReportObjects} permette di mostrare un dettaglio più fine di quello riportato per il conteggio. Ad esempio, laddove vi sono controlli su dispositivi collegati alle macchine virtuali , il conteggio delle non conformità non si fermerebbe solo al numero delle VM non conformi, ma comparirebbe nel report un elemento per ogni dispositivo rilevato.\\
+
+La funzione \texttt{Get-CheckData} si occupa invece di restituire la riga del dataset dato l'identificativo del controllo corrispondente.
+
+\begin{lstlisting}[style=azcli, caption={Funzione \texttt{Set-CheckResult} per la registrazione dell'esito di un controllo}, label={lst:set-check-result}]
+# ---------------------------------------------------------------------------
+# Set-CheckResult
+# ---------------------------------------------------------------------------
+function Set-CheckResult {
+    param(
+        [string]$CheckId,
+        [int]$Total,
+        [array]$NonCompliantObjects,   # usato per il conteggio
+        [string]$ForceStatus  = "",    # usato per N/A, UNKNOWN
+        [array]$ReportObjects = @()    # se valorizzato, usato nel report al posto di NonCompliantObjects
+    )
+    $nc = if ($NonCompliantObjects) { @($NonCompliantObjects) } else { @() }
+    $status = if ($ForceStatus) { $ForceStatus }
+              elseif ($nc.Count -eq 0) { "COMPLIANT" }
+              else { "NON-COMPLIANT" }
+
+    $objForReport = if ($ReportObjects.Count -gt 0) { $ReportObjects } else { $nc }
+
+    $Global:CISAuditResults[$CheckId] = @{
+        Status       = $status
+        Total        = $Total
+        NonCompliant = $nc.Count
+        Objects      = $objForReport
+    }
+}
+\end{lstlisting}
+
+\begin{lstlisting}[style=azcli, caption={Funzione \texttt{Get-CheckData} per la lettura di una riga del dataset}, label={lst:get-check-data}]
+# ---------------------------------------------------------------------------
+# Get-CheckData 
+# ---------------------------------------------------------------------------
+function Get-CheckData {
+    param([string]$CheckId)
+    if ($Global:CISBenchmarkData.ContainsKey($CheckId)) {
+        return $Global:CISBenchmarkData[$CheckId]
+    }
+    return $null
+}
+\end{lstlisting}
+
+\section{Intestazione e riepilogo di un controllo}
+\label{app:output}
+
+Qui si riportano le funzioni \texttt{Write-CheckHeader} e \texttt{Write-CheckFooter}, le quali si occupano di aprire e chiudere graficamente l'esecuzione di ogni controllo stampando a console un'intestazione iniziale e un riepilogo di fine esecuzione, come descritto nel paragrafo 3.4.
+
+\begin{lstlisting}[style=azcli, caption={Funzione \texttt{Write-CheckHeader}}, label={lst:write-check-header}]
+# ---------------------------------------------------------------------------
+# Write-CheckHeader 
+# ---------------------------------------------------------------------------
+function Write-CheckHeader {
+    param([string]$CheckId)
+    $data = Get-CheckData $CheckId
+    $name = if ($data -and $data.'name') { $data.'name' } else { "" }
+    $expected = if ($data -and $data.'expected-value') { $data.'expected-value' } else { "" }
+    $setting  = if ($data -and $data.'setting-name')   { $data.'setting-name' }   else { "" }
+
+    Write-Host "[$CheckId] $name" -ForegroundColor Yellow
+    if ($setting)  { Write-Host "       Setting : $setting" }
+    if ($expected) { Write-Host "       Expected: $expected" }
+    Write-Host ""
+}
+\end{lstlisting}
+
+\begin{lstlisting}[style=azcli, caption={Funzione \texttt{Write-CheckFooter}}, label={lst:write-check-footer}]
+# ---------------------------------------------------------------------------
+# Write-CheckFooter 
+# ---------------------------------------------------------------------------
+function Write-CheckFooter {
+    param([string]$CheckId, [string]$ObjectType = "oggetti")
+    $rem    = $Global:CISAuditResults[$CheckId]
+    $data = Get-CheckData $CheckId
+
+    $compliant = $rem.Total - $rem.NonCompliant
+    Write-Host ""
+    Write-Host "  Riepilogo: $compliant/$($rem.Total) $ObjectType conformi" -ForegroundColor DarkCyan
+
+    if ($data -and $data.remediation) {
+        $rem = ($data.remediation -replace "`r","").Trim()
+        Write-Host ""
+        Write-Host "  REMEDIATION:" -ForegroundColor DarkGray
+        $rem -split "`n" | ForEach-Object { Write-Host "    $_" -ForegroundColor DarkGray }
+    }
+    Write-Host ""
+}
+\end{lstlisting}
+
+\section{Funzioni di verifica standardizzate}
+\label{app:generiche}
+
+Le seguenti funzioni si dedicano a implementare i controlli standardizzabili descritti nel paragrafo 3.4.
+Dunque leggono dal dataset il nome della proprietà da verificare, valore atteso e operatore. Fatto ciò li applicano agli oggetti restituiti dall'interrogazione della piattaforma di riferimento.\\
+\texttt{Test-AzPropertyCheck} opera sulle risorse Azure ottenute tramite Azure CLI, mentre \texttt{Test-HostAdvSettingCheck} sulle impostazioni avanzate degli host ESXi tramite PowerCLI.
+
+\begin{lstlisting}[style=azcli, caption={Funzione \texttt{Test-AzPropertyCheck} per le verifiche sulle risorse Azure}, label={lst:test-az-property-check}]
+# ---------------------------------------------------------------------------
+# Test-AzPropertyCheck
+# funzione data-driven per i controlli sulle risorse via Azure CLI.
+# Delega intestazione, footer e registrazione alle funzioni condivise Write-CheckHeader / Write-CheckFooter / Set-CheckResult.
+# $Resources     : array di oggetti su cui effettuare il controllo
+# $GetValueScript: scriptblock che riceve $_ e restituisce il valore da verificare
+# $Operator      : opearatore di confronto per il controllo. eq | le | notempty  (custom = logica inline nel modulo chiamante)
+# ---------------------------------------------------------------------------
+function Test-AzPropertyCheck {
+    param(
+        [string]$CheckId,
+        [array] $Resources,
+        [string]$ObjectType = "risorse",
+        [scriptblock]$LabelScript = { $_.name }
+    )
+
+    $data          = Get-CheckData $CheckId
+    $settingName   = $data.'setting-name'
+    $operator      = $data.'operator'
+    $expectedValue = $data.'expected-value'
+
+    Write-CheckHeader $CheckId
+    if (-not $Resources -or $Resources.Count -eq 0) {
+        Write-Host "  [N/A] Nessuna risorsa trovata per questo controllo" -ForegroundColor DarkYellow
+        Set-CheckResult $CheckId 0 @() -ForceStatus "N/A"
+        return
+    }
+
+    $nc = @()
+
+    foreach ($res in $Resources) {
+        #per debug
+        #Write-Host "DEBUG: $($res | ConvertTo-Json -Depth 2 -Compress)" -ForegroundColor DarkGray
+
+        $resLabel = $res | ForEach-Object $LabelScript
+        try { $val = Get-NestedProperty -Object $res -Path $settingName }
+        catch { $val = $null }
+
+        $isCompliant = switch ($operator) {
+            "eq"       { "$val" -eq $expectedValue }
+            "le"       { [double]"$val" -le [double]$expectedValue }
+            "notempty" { $null -ne $val -and "$val" -ne "" }
+            default    { $false }
+        }
+
+        if ($isCompliant) {
+            Write-Host "  [COMPLIANT]     $resLabel = $val" -ForegroundColor Green
+        } else {                                    
+            $displayVal  = if ($null -eq $val -or "$val" -eq "") { "(proprieta' assente)" } else { $val }
+            $expectedStr = if ($Operator -eq "notempty") { "(valore assente o nullo)" } else { "(atteso: $ExpectedValue)" }
+            Write-Host "  [NON-COMPLIANT] $resLabel = $displayVal $expectedStr" -ForegroundColor Red
+            $nc += "$resLabel (valore: $val)"
+        }
+    }
+
+    Set-CheckResult $CheckId $Resources.Count $nc
+    Write-CheckFooter $CheckId $ObjectType
+}
+\end{lstlisting}
+
+\begin{lstlisting}[style=azcli, caption={Funzione \texttt{Test-HostAdvSettingCheck} per le verifiche sulle impostazioni degli host ESXi}, label={lst:test-host-adv-setting}]
+# ---------------------------------------------------------------------------
+# Test-HostAdvSettingCheck
+# funzione data-driven per i controlli della sezione AdvancedSetting degli host ESXi.
+# Operatori: eq, le, notempty
+# ---------------------------------------------------------------------------
+function Test-HostAdvSettingCheck {
+    param([string]$CheckId, [string]$ObjectType = "host")
+
+    $data = Get-CheckData $CheckId
+    if (-not $data) { Write-Warning "dati non trovati per $CheckId"; return }
+
+    $settingName = $data.'setting-name'
+    $expectedValue = $data.'expected-value'
+    $operator    = $data.'operator'
+
+    Write-CheckHeader $CheckId 
+
+    $settings = @(Get-VMHost | Get-AdvancedSetting -Name $settingName -ErrorAction SilentlyContinue)
+    $nc = @()
+
+    foreach ($s in $settings) {
+        $ok = switch ($operator) {
+            "eq"       { "$($s.Value)".ToLower() -eq $expectedValue.ToLower() }
+            "le"       { [double]$s.Value -le [double]$expectedValue }
+            "notempty" { $null -ne $s.Value -and "$($s.Value)".Trim() -ne "" }
+            default    { $false }
+        }
+        $color  = if ($ok) { "Green" } else { "Red" }
+        $status = if ($ok) { "COMPLIANT" } else { "NON-COMPLIANT" }
+        Write-Host "  [$status] $($s.Entity) -> $settingName = $($s.Value)" -ForegroundColor $color
+        if (-not $ok) { $nc += "$($s.Entity) (valore=$($s.Value))" }
+    }
+
+    Set-CheckResult $CheckId $settings.Count $nc
+    Write-CheckFooter $CheckId $ObjectType
+}
+\end{lstlisting}
+
 
 %
 %			BIBLIOGRAFIA
