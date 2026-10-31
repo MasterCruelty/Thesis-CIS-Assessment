@@ -636,13 +636,126 @@ All'interno della sezione 7 \textbf{Networking Services} i casi rappresentativi 
 Rispettivamente vanno a valutare che le regole dei Security Group non espongano le porte dedicate a SSH e RDP al traffico proveniente da Internet. \\
 L'implementazione è adottata con una funzione di analisi condivisa tra i controlli che mira a risolvere l'eterogeneità con cui Azure rappresenta l'origine del traffico consentito da una singola regola. Questo poichè il campo può comparire come una proprietà singola(\textit{sourceAddressPrefix}) o come una lista(\textit{sourceAddressPrefixes}).\\
 
+La seguente porzione di codice illustra la funzione che valuta una singola regola. Ricordiamo che una regola è considerata un'esposizione solo se consente traffico in ingresso e soddisfa tre condizioni:
+\begin{enumerate}
+\item L'origine è "qualsiasi".
+\item La porta di destinazione è tra quelle indicate.
+\item Il protocollo è compatibile con quello richiesto.
+\end{enumerate}
+
+I valori che danno luogo all'origine qualsiasi sono \texttt{*}, \texttt{Internet}, \texttt{0.0.0.0/0} e \texttt{::/0}.
+
+\begin{lstlisting}[style=azcli, caption={Funzione \texttt{Test-NsgAllowsInternet} per la valutazione di una regola di sicurezza}, label={lst:nsg-allows}]
+
+function Test-NsgAllowsInternet {
+    param($rule, [string[]]$Ports, [string]$Proto = "*")
+    if ($rule.access -ne "Allow" -or $rule.direction -ne "Inbound") { return $false }
+    $srcAny = $rule.sourceAddressPrefix -in @("*","Internet","0.0.0.0/0","::/0") -or
+              ($rule.sourceAddressPrefixes -contains "Internet")
+    $portOk = ($rule.destinationPortRange -eq "*") -or
+              ($rule.destinationPortRange -in $Ports) -or
+              ($rule.destinationPortRanges | Where-Object { $_ -in $Ports })
+    $protoOk = $rule.protocol -in @("*","Tcp",$Proto)
+    return $srcAny -and $portOk -and $protoOk
+}
+\end{lstlisting}
+
+La prossima funzione mostrata applica la valutazione a tutti i Network Security Group, raccogliendo l'insieme delle regole che violano il controllo e registra l'esito.\\
+
+\begin{lstlisting}[style=azcli, caption={Funzione condivisa \texttt{Test-NsgInternet} per i controlli sull'esposizione verso Internet}, label={lst:nsg-internet}]
+# ---------------------------------------------------------------------------
+# Funzione di appoggio per i controlli della sezione networking 7.x
+# ---------------------------------------------------------------------------
+function Test-NsgInternet {
+    param([string]$CheckId, [string[]]$Ports, [string]$Proto = "Tcp")
+    Write-CheckHeader $CheckId 
+    $nc = @()
+    foreach ($nsg in $allNSGs) {
+        $bad = $nsg.securityRules | Where-Object { Test-NsgAllowsInternet $_ $Ports $Proto }
+        if ($bad) {
+            $bad | ForEach-Object {
+                Write-Host "  [NON-COMPLIANT] NSG '$($nsg.name)' regola '$($_.name)'" -ForegroundColor Red
+                $nc += "$($nsg.name)/$($_.name) (porta $($_.destinationPortRange) da Internet)"
+            }
+        } else {
+            Write-Host "  [COMPLIANT]     NSG '$($nsg.name)': nessuna regola aperta" -ForegroundColor Green
+        }
+    }
+    Set-CheckResult $CheckId $allNSGs.Count $nc
+    Write-CheckFooter $CheckId "NSG"
+}
+
+
+#Esempio di invocazione su alcuni controlli.
+Test-NsgInternet "7.1"  @("3389")
+Test-NsgInternet "7.2"  @("22")
+Test-NsgInternet "7.3"  @("*") "Udp"
+\end{lstlisting}
+
 All'interno della sezione 8 \textbf{Security Services} i casi rappresentativi fanno parte della sotto sezione 8.1.x dedicati a Microsoft Defender for Cloud. \\
 Questi controlli vanno a verificare che ciascun piano sia a pagamento e non gratuito. Come nei casi precedenti vi è una funzione di appoggio dove l'unico parametro variabile è il nome del piano. La funzione interroga il pricing tier corrente e va a confrontarlo con quello atteso. \\
 
-All'interno della sezione 20 \textbf{Virtual Machines} il caso rappresentativo è sul controllo \textit{20.2 ( Ensure that 'OS and Data' disks are encrypted with Customer Managed Key (CMK) (Automated) )}. \\
-Questo controllo verifica che i dischi collegati alle macchine virtuali siano cifrati. \\
-Immaginando una lista di numerose macchine virtuali, l'approccio è stato quello di andare a interrogare direttamente il disco tramite il suo identificativo rispetto a iterare sulle macchine stesse. La complessità risulta così minore al costo di una chiamata aggiuntiva su Azure CLI per ogni VM rispetto a un'unica chiamata cumulativa.
 
+Di seguito si mostra la codifica della funzione ausiliaria. Essa riceve come argomento l'identificativo del controllo e il nome del piano così come viene riportato su Azure CLI.\\
+Ad esempio vi è \texttt{VirtualMachines} o \texttt{StorageAccounts}, poi viene confrontato il piano di tariffa corrente sulla sottoscrizione utilizzata con il valore di riferimento \texttt{Standard}, il quale corrisponde al piano di tariffa a pagamento.\\
+Se il piano non può essere interrogato, si assume il valore \texttt{N/A} e l'esito risulta non conforme.
+
+\begin{lstlisting}[style=azcli, caption={Funzione \texttt{Test-DefenderPlan}}, label={lst:defender-plan}]
+
+function Test-DefenderPlan {
+    param([string]$CheckId, [string]$PlanName)
+    Write-CheckHeader $CheckId
+    $pricing = @(az security pricing show --name $PlanName 2>$null | ConvertFrom-Json)
+    $tier    = if ($pricing -and $pricing.Count -gt 0) { $pricing[0].pricingTier } else { "N/A" }
+    if ($tier -eq "Standard") {
+        Write-Host "  [COMPLIANT]     Defender for $PlanName : pricingTier=$tier" -ForegroundColor Green
+        Set-CheckResult $CheckId 1 @()
+    } else {
+        Write-Host "  [NON-COMPLIANT] Defender for $PlanName : pricingTier=$tier" -ForegroundColor Red
+        Set-CheckResult $CheckId 1 @("$PlanName  -  pricingTier=$tier")
+    }
+    Write-CheckFooter $CheckId "servizi"
+}
+\end{lstlisting}
+
+\begin{lstlisting}[style=azcli, caption={Alcuni esempi di invocazioni di \texttt{Test-DefenderPlan} nel modulo della sezione 8}, label={lst:defender-inv}]
+Test-DefenderPlan "8.1.1.1" "CloudPosture"
+Test-DefenderPlan "8.1.2.1" "Api"
+Test-DefenderPlan "8.1.3.1" "VirtualMachines"
+Test-DefenderPlan "8.1.4.1" "Containers"
+\end{lstlisting}
+
+
+All'interno della sezione 20 \textbf{Virtual Machines} il caso rappresentativo è sul controllo \textit{20.2 ( Ensure that 'OS and Data' disks are encrypted with Customer Managed Key (CMK) (Automated) )}. \\
+Questo controllo verifica che i dischi collegati alle macchine virtuali siano cifrati utilizzando una \emph{Customer-Managed Key} (CMK). \\
+Immaginando una lista di numerose macchine virtuali, l'approccio è stato quello di andare a interrogare direttamente il disco tramite il suo identificativo rispetto a iterare sulle macchine stesse. La complessità risulta così minore al costo di una chiamata aggiuntiva su Azure CLI per ogni VM rispetto a un'unica chiamata cumulativa.\\
+
+La seguente porzione di codice illustra l'implementazione del controllo discusso. In primo luogo viene acquisito l'elenco dei dischi una volta sola. Ogni disco relativo al sistema operativo della macchina virtuale è interrogato mediante il proprio identificativo di risorsa Azure.\\
+Una macchina virtuale risulta conforme solo se la cifratura del disco del sistema operativo e quella di tutti i dischi dati utilizzano una chiave \emph{Customer-Managed Key} (CMK).
+
+
+\begin{lstlisting}[style=azcli, caption={Implementazione controllo su cifratura con chiave gestita dal cliente su dischi OS e dati}, label={lst:cmk}]
+
+Write-CheckHeader "20.2" 
+$nc = @()
+foreach ($vm in $allVMs) {
+    $osDisk = az disk show --ids $vm.storageProfile.osDisk.managedDisk.id 2>$null | ConvertFrom-Json
+    $osOk   = $osDisk.encryption.type -like "*CustomerKey*"
+    $dataOk = $true
+    foreach ($dd in $vm.storageProfile.dataDisks) {
+        $d = $allDisks | Where-Object { $_.id -eq $dd.managedDisk.id }
+        if ($d.encryption.type -notlike "*CustomerKey*") { $dataOk = $false }
+    }
+    if (-not ($osOk -and $dataOk)) {
+        Write-Host "  [NON-COMPLIANT] $($vm.name): osEnc=$($osDisk.encryption.type), dataOk=$dataOk" -ForegroundColor Red
+        $nc += "$($vm.name) (osEnc=$($osDisk.encryption.type), dataDisks=$dataOk)"
+    } else {
+        Write-Host "  [COMPLIANT]     $($vm.name): CMK su OS e data disk" -ForegroundColor Green
+    }
+}
+Set-CheckResult "20.2" $allVMs.Count $nc
+Write-CheckFooter "20.2" "VM"
+\end{lstlisting}
 
 \section{Moduli VMware}
 
@@ -654,15 +767,109 @@ Per effettuare tale controllo è necessario eseguire una chiamata diretta all'AP
 
 All'interno della sezione 3 \textbf{Management}, il caso rappresentativo è dato dal controllo 3.3 \textit{((L1) Host must deactivate the ESXi Managed Object Browser (MOB) (Automated))}. \\
 Qui viene verificato che il Managed Object Browser sia disattivato. La documentazione CIS in merito dichiara che la sua eventuale disattivazione debba essere eseguite mediante l'interfaccia web vSphere Client, non possibile quindi tramite linea di comando. A tal proposito, la sola verifica della conformità è stata eseguita con PowerCLI. Per quanto riguarda il suggerimento per rimediare alla possibile non conformità, non è stato quindi possibile fornire un comando analogo per risolvere in maniera automatizzata, ma solamente un rimando a dover operare sull'interfaccia web. \\
+All'interno della stessa sezione CIS vi sono i controlli 3.1 e 3.2 relativi ai servizi SSH ed ESXi Shell, i quali condividono la stessa struttura e sono stati implementati con una funzione ausiliaria comune.\\
+Un host è conforme se il servizio coinvolto non è attivo e la policy di avvio è disattivata.
+
+\begin{lstlisting}[style=azcli, caption={Funzione \texttt{Test-HostService} per i controlli sui servizi critici degli host}, label={lst:host-service}]
+# ---------------------------------------------------------------------------
+# Test-HostService
+# Funzione di appoggio per i test sui servizi attivi sugli host ESXi (modulo 3.x)
+# ---------------------------------------------------------------------------
+function Test-HostService {
+    param([string]$CheckId, [string]$ServiceKey, [string]$Label)
+    Write-CheckHeader $CheckId
+    $services = @(Get-VMHost | Get-VMHostService | Where-Object { $_.Key -eq $ServiceKey })
+    $nc = @()
+    foreach ($item in $services) {
+        $ok     = (-not $item.Running -and $item.Policy -eq "off")
+        $color  = if ($ok) { "Green" } else { "Red" }
+        $status = if ($ok) { "COMPLIANT" } else { "NON-COMPLIANT" }
+        Write-Host "  [$status] $($item.VMHost) -> Running: $($item.Running) | Policy: $($item.Policy)" -ForegroundColor $color
+        if (-not $ok) { $nc += "$($item.VMHost) (running=$($item.Running), policy=$($item.Policy))" }
+    }
+    Set-CheckResult $CheckId $services.Count $nc
+    Write-CheckFooter $CheckId "host"
+}
+\end{lstlisting}
 
 All'interno della sezione 4 \textbf{Logging}, il caso mostrato è dato dal controllo 4.2 \textit{((L1) Host must transmit system logs to a remote log collector (Automated))}, il quale mira a verificare la configurazione di un syslog remoto per la raccolta centralizzata dei log dell'host. \\
 L'intera logica di verifica è delegata a una funzione generica alla quale , come in altri casi, viene passato solamente l'identificativo del controllo. Il nome del parametro ESXi da interrogare, il valore atteso e l'operatore di confronto sono letti direttamente dal dataset csv, senza alcuna codifica specifica. \\
 Trattasi di uno degli esempi rappresentativi di come il framework, ove possibile, standardizza la struttura della documentazione CIS utilizzando l'id come indice e popolando l'input con gli attributi della riga. \\
 
- 
+
+All'interno della sezione 5 Network i casi rappresentativi che vengono descritti sono i controlli con identificativo da 5.6 a 5.10, i quali sono tutti riferiti agli standard virtual switch.\\
+I controlli 5.6, 5.7, 5.8 hanno il compito di verificare che lo switch rifiuti trasmissioni con indirizzo compromesso (\texttt{ForgedTransmits}), modifiche del mac address (\texttt{MacChanges}) e la (\texttt{PromiscuousMode}).\\
+Hanno tutti la stessa struttura, con la sola proprietà della policy di sicurezza che differisce, pertanto sono stati implementati con un'unica funzione comune parametrizzata sul nome della proprietà. I controlli risultano conformi laddove la proprietà risulti disattivata sul virtual switch.
+
+
+\begin{lstlisting}[style=azcli, caption={Funzione \texttt{Test-vSwitchSecurity} per i controlli 5.6, 5.7 e 5.8}, label={lst:vswitch}]
+function Test-vSwitchSecurity {
+    param([string]$CheckId, [string]$Property)
+    Write-CheckHeader $CheckId 
+    $vSwitches  = @(Get-VirtualSwitch -Standard)
+    $nc = @()
+    foreach ($vsw in $vSwitches) {
+        $ok     = (-not $vsw.ExtensionData.Spec.Policy.Security.$Property)
+        $val    = if ($ok) { "Reject" } else { "Accept" }
+        $color  = if ($ok) { "Green" } else { "Red" }
+        $status = if ($ok) { "COMPLIANT" } else { "NON-COMPLIANT" }
+        Write-Host "  [$status] Host: $($vsw.VMHost) | Switch: $($vsw.Name) -> $Property = $val" -ForegroundColor $color
+        if (-not $ok) { $nc += "Host=$($vsw.VMHost) Switch=$($vsw.Name)" }
+    }
+    Set-CheckResult $CheckId $vSwitches.Count $nc
+    Write-CheckFooter $CheckId "vSwitch"
+}
+\end{lstlisting}
+
+Per quanto riguarda invece i controlli 5.9 e 5.10, relativi ai port group, si verifica che non venga utilizzata la VLAN predefinita (ID 1) e il Virtual Guest Tagging (ID 4095). Trattandosi di confrontare il VLAN ID con un valore, si è scelto di implementare i controlli direttamente senza l'ausilio di funzioni specifiche.
+
+
+\begin{lstlisting}[style=azcli, caption={Controllo 5.9 di verifica sull'utilizzo della VLAN predefinita}, label={lst:vlan}]
+
+Write-CheckHeader "5.9" 
+$nc_59 = @()
+foreach ($pg in $portGroups) {
+    $ok     = ($pg.VlanId -ne 1)
+    $color  = if ($ok) { "Green" } else { "Red" }
+    $status = if ($ok) { "COMPLIANT" } else { "NON-COMPLIANT" }
+    Write-Host "  [$status] Switch: $($pg.VirtualSwitch) | PortGroup: $($pg.Name) -> VLAN ID = $($pg.VlanId)" -ForegroundColor $color
+    if (-not $ok) { $nc_59 += "PortGroup=$($pg.Name) Switch=$($pg.VirtualSwitch)" }
+}
+Set-CheckResult "5.9" $portGroups.Count $nc_59
+Write-CheckFooter "5.9" "port group"
+\end{lstlisting}
+
 All'interno della sezione 6 \textbf{Features}, il caso rappresentativo è dato dal controllo 6.3.1 \textit{((L1) Host iSCSI client, if enabled, must employ bidirectional/mutual CHAP authentication (Automated))}. \\
 Qui deve essere verificato che sugli adapter ISCSI di ogni host sia attiva l'autenticazione CHAP bidirezionale. \\
 Se non viene rilevato alcun adapter, il tutto viene valutato N/A e quindi risulta rappresentativo di come il framework tratti la non applicabilità dei controlli senza valutare come conforme o non conforme. Questo evita che un controllo privo di oggetto da valutare venga valutato in automatico come conforme.\\
+
+Il seguente estratto di codice illustra come viene stabilito lo stato di non applicabilità. In questo caso, se non è presente alcun adapter iSCSI, si registra lo stato \texttt{N/A} con nessun oggetto valutato.\\
+In caso contrario, ogni adapter rilevato viene valutato e si registra l'esito di conformità.
+
+\begin{lstlisting}[style=azcli, caption={Controllo 6.3.1 sull'autenticazione CHAP bidirezionale}, label={lst:chap}]
+
+Write-CheckHeader "6.3.1" 
+Write-Host "        NOTE: Applicabile solo se iSCSI e' in uso." -ForegroundColor DarkGray
+Write-Host ""
+
+$iscsiAdapters = @(Get-VMHost | Get-VMHostHba | Where-Object { $_.Type -eq "Iscsi" })
+
+if ($iscsiAdapters.Count -gt 0) {
+    $nc = @()
+    foreach ($adpt in $iscsiAdapters) {
+        $ok     = ($adpt.ChapType -in @("Mutual","Required"))
+        $color  = if ($ok) { "Green" } else { "Red" }
+        $status = if ($ok) { "COMPLIANT" } else { "NON-COMPLIANT" }
+        Write-Host "  [$status] Host: $($adpt.VMHost) | Adapter: $($adpt.Device) | ChapType: $($adpt.ChapType)" -ForegroundColor $color
+        if (-not $ok) { $nc += "Host=$($adpt.VMHost) Adapter=$($adpt.Device) (ChapType=$($adpt.ChapType))" }
+    }
+    Set-CheckResult "6.3.1" $iscsiAdapters.Count $nc
+} else {
+    Write-Host "  [N/A] Nessun adapter iSCSI trovato." -ForegroundColor Gray
+    Set-CheckResult "6.3.1" 0 @() "N/A"
+}
+Write-CheckFooter "6.3.1" "adapter"
+\end{lstlisting}
 
 All'interno della sezione 7 \textbf{Virtual Machines}, i casi rappresentativi sono dati dai controlli 7.13 e 7.14 \textit{((L1) Virtual machines must remove unnecessary \textbf{serial port devices}/\textbf{parallel port devices} (Automated))}. \\
 Questa serie di verifica puntano a valutare l'assenza di dispositivi porte seriali e porte parallele superflue sulle macchine virtuali presenti sugli host ESXi. \\
@@ -718,13 +925,39 @@ Write-CheckFooter "7.14" "VM"
 La seguente figura \textbf{\ref{fig:screenshot-7-13-7-14}} mostra un esempio di esito dell'esecuzione dei controlli 7.13 e 7.14 effettuati sull'infrastruttura VMware a dispozione per questo progetto. \\
 Il controllo 7.13 rileva la presenza di una porta seriale non rimossa su due macchine virtuali, mentre il controllo 7.14 risulta conforme in assenza di porte parallele configurate.
 
-\begin{figure}[h]
+\begin{figure}[H]
 	\centering
 	\includegraphics[width=0.9\textwidth]{esempio_comp}
     \caption{Esempio di output a console della valutazione dei controlli 7.13 e 7.14}
     \label{fig:screenshot-7-13-7-14}
 \end{figure}
 
+Riguardo i controlli 7.12 (dispositivi USB) e 7.16 (unità floppy), è stato possibile implementarli con una funzione ausiliaria comune potendo disporre di comandi dedicati in PowerCLI. La funzione è in grado di distinguere ciò che viene contato da ciò che viene poi riportato. Gli oggetti non conformi sono contati per ogni macchina virtuale, così che sia possibile confrontare il numero con il totale delle macchine coinvolte.\\
+Nel report invece compare un elemento per ogni dispositivo rilevato (si veda l'Appendice~\ref{app:registro}).
+
+\begin{lstlisting}[style=azcli, caption={Funzione \texttt{Test-VMDevice} per i controlli sui dispositivi collegati delle macchine virtuali}, label={lst:vmdevice}]
+
+function Test-VMDevice {
+    param([string]$CheckId, [scriptblock]$GetDevices)
+    Write-CheckHeader $CheckId 
+    $devices = @(& $GetDevices)
+    $nc = @()
+    $ncVMs = @()   # VM uniche non conformi
+    if ($devices.Count -gt 0) {
+        foreach ($item in $devices) {
+            $vmName = try { $item.Parent.Name } catch { "$item" }
+            Write-Host "  [NON-COMPLIANT] VM: $vmName -> $($item.Name)" -ForegroundColor Red
+            $nc += "VM=$vmName Device=$($item.Name)"
+            if ($vmName -notin $ncVMs) { $ncVMs += $vmName }
+        }
+    } else {
+        Write-Host "  [COMPLIANT] Nessun dispositivo trovato." -ForegroundColor Green
+    }
+    # NonCompliant = VM uniche con almeno un dispositivo; Objects = dettaglio per il report
+    Set-CheckResult $CheckId $allVMs.Count $ncVMs -ReportObjects $nc
+    Write-CheckFooter $CheckId "VM"
+}
+\end{lstlisting}
 
 
 
