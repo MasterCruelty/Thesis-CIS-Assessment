@@ -959,10 +959,10 @@ Come citato nel paragrafo precedente(controllo 6.3.1), è stato scelto di distin
 Questa distinzione è resa esplicita nel report tramite un terzo stato dedicato, distinto da conforme e non conforme, ed escluso dal calcolo del tasso di conformità complessivo.\\
 Questo perché essenzialmente il fatto di non avere nella propria infrastruttura oggetti valutabili per quello specifico controllo non implica la conformità o non conformità rispetto alla documentazione CIS. \\
 Il risultato è che il tasso di conformità non venga ridotto artificialmente da controlli che non hanno prodotto una valutazione reale. \\
-La gestione della sessione di autenticazione è stata gestita diversamente per i due ambienti.\\
-Su Azure viene effettuata esternamente prima dell'esecuzione dello script principale, delegando l'autenticazione ai meccanismi nativi di Azure CLI, pensati per non richiedere che uno script terzo maneggi username e password. Il framework si limita a verificare che una sessione Azure sia già attiva, senza mai gestire credenziali direttamente. \\
 
-Su VMware il discorso è diverso in quanto ci si collega durante l'esecuzione con un prompt interattivo. Questo perché è stato osservato durante lo sviluppo che la variabile globale \textit{\$global:DefaultVIServers}, utilizzata per verificare la presenza di una sessione attiva, non è risultata affidabile per lo scopo di questo progetto.
+L'autenticazione avviene con lo stesso principio nei due ambienti. Viene effettuata prima dell'esecuzione dello script principale e il framework si limita a verificare la presenza di una sessione attiva.\\
+Su Azure la procedura è delegata a meccanismi nativi di Azure CLI. Il software verifica che una sessione Azure sia già attiva, senza mai gestirne le credenziali direttamente.\\
+Su VMware invece ci si autentica mediante il comando \textit{Connect-VIServer}, il quale se lanciato senza credenziali procede a richiederle con un prompt interattivo. Anche in questo caso lo script non gestisce le credenziali, ma verifica solamente che la connessione al vCenter sia attiva. Durante lo sviluppo è stato riscontrato che la variabile globale \textit{\$global:DefaultVIServers} dedicata allo scopo di questa verifica, non è risultata affidabile per lo scopo di questo progetto. Pertanto la presenza della sessione viene controllata direttamente.
 
 
 %			CAPITOLO 5: modello di scoring
