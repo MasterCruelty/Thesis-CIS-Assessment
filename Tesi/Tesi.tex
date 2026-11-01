@@ -583,12 +583,10 @@ L'output a console riporta i controlli raggruppati per categoria, un riepilogo c
 \section{Moduli Azure}
 
 In questo paragrafo andremo a soffermarci su alcuni casi rappresentativi tra le sezioni del documento CIS Azure coperte. \\
-In particolare i controlli implementati fanno parte delle sezioni 2 e 20 per il documento Azure Compute Services Benchmark \cite{CIS_Azure_2}, in aggiunta alle sezioni 6, 7 e 8 del documento Azure Foundations Benchmark \cite{CIS_Azure_1} \\
+Come accennato nel capitolo 2 dedicato allo standard di riferimento CIS, i controlli implementati fanno parte delle sezioni 2 e 20 per il documento Azure Compute Services Benchmark \cite{CIS_Azure_2}, in aggiunta alle sezioni 6, 7 e 8 del documento Azure Foundations Benchmark \cite{CIS_Azure_1} \\
 
-All'interno della sezione 2 \textbf{App Service}, il controllo \textit{2.3.15 (Ensure configuration is routed through the virtual network integration (Automated) )} è rappresentativo del problema dei path annidati all'interno delle risorse Azure. La proprietà vnetRouteAllEnabled non si trova al primo livello nel percorso dell'oggetto App Service, ma annidata sotto SiteConfig, il che ha richiesto lo sviluppo di una funzione dedicata in grado di risolvere i path annidati per raggiungere la risorsa al livello corretto. \\
-
+All'interno della sezione 2 \textbf{App Service}, il controllo \textit{2.3.15 (Ensure configuration is routed through the virtual network integration (Automated) )} è rappresentativo del problema dei path annidati all'interno delle risorse Azure. La proprietà vnetRouteAllEnabled non si trova al primo livello nel percorso dell'oggetto App Service, ma annidata sotto SiteConfig, il che ha richiesto lo sviluppo di una funzione dedicata in grado di risolvere i path annidati per raggiungere la risorsa al livello corretto.\\
 La seguente porzione di codice \textbf{\ref{lst:get-nested-property}} mostra l'implementazione della funzione che risolve il percorso annidato sulle risorse Azure.
-
 \begin{lstlisting}[style=azcli, caption={Funzione \texttt{Get-NestedProperty} per la risoluzione di percorsi annidati}, label={lst:get-nested-property}]
 function Get-NestedProperty {
     param($Object, [string]$Path)
@@ -636,7 +634,6 @@ Test-ActivityLogAlert "6.1.2.4" "Microsoft.Network/networkSecurityGroups/delete"
 All'interno della sezione 7 \textbf{Networking Services} i casi rappresentativi sono i controlli 7.1 e 7.2. \\
 Rispettivamente vanno a valutare che le regole dei Security Group non espongano le porte dedicate a SSH e RDP al traffico proveniente da Internet. \\
 L'implementazione è adottata con una funzione di analisi condivisa tra i controlli che mira a risolvere l'eterogeneità con cui Azure rappresenta l'origine del traffico consentito da una singola regola. Questo poichè il campo può comparire come una proprietà singola(\textit{sourceAddressPrefix}) o come una lista(\textit{sourceAddressPrefixes}).\\
-
 La seguente porzione di codice illustra la funzione che valuta una singola regola. Ricordiamo che una regola è considerata un'esposizione solo se consente traffico in ingresso e soddisfa tre condizioni:
 \begin{enumerate}
 \item L'origine è "qualsiasi".
@@ -661,12 +658,10 @@ function Test-NsgAllowsInternet {
 }
 \end{lstlisting}
 
-La prossima funzione mostrata applica la valutazione a tutti i Network Security Group, raccogliendo l'insieme delle regole che violano il controllo e registra l'esito.\\
+La prossima funzione mostrata applica la valutazione a tutti i Network Security Group, raccogliendo l'insieme delle regole che violano il controllo e registra l'esito.\\\\
 
 \begin{lstlisting}[style=azcli, caption={Funzione condivisa \texttt{Test-NsgInternet} per i controlli sull'esposizione verso Internet}, label={lst:nsg-internet}]
-# ---------------------------------------------------------------------------
-# Funzione di appoggio per i controlli della sezione networking 7.x
-# ---------------------------------------------------------------------------
+
 function Test-NsgInternet {
     param([string]$CheckId, [string[]]$Ports, [string]$Proto = "Tcp")
     Write-CheckHeader $CheckId 
@@ -695,7 +690,6 @@ Test-NsgInternet "7.3"  @("*") "Udp"
 
 All'interno della sezione 8 \textbf{Security Services} i casi rappresentativi fanno parte della sotto sezione 8.1.x dedicati a Microsoft Defender for Cloud. \\
 Questi controlli vanno a verificare che ciascun piano sia a pagamento e non gratuito. Come nei casi precedenti vi è una funzione di appoggio dove l'unico parametro variabile è il nome del piano. La funzione interroga il pricing tier corrente e va a confrontarlo con quello atteso. \\
-
 
 Di seguito si mostra la codifica della funzione ausiliaria. Essa riceve come argomento l'identificativo del controllo e il nome del piano così come viene riportato su Azure CLI.\\
 Ad esempio vi è \texttt{VirtualMachines} o \texttt{StorageAccounts}, poi viene confrontato il piano di tariffa corrente sulla sottoscrizione utilizzata con il valore di riferimento \texttt{Standard}, il quale corrisponde al piano di tariffa a pagamento.\\
@@ -730,7 +724,6 @@ Test-DefenderPlan "8.1.4.1" "Containers"
 All'interno della sezione 20 \textbf{Virtual Machines} il caso rappresentativo è sul controllo \textit{20.2 ( Ensure that 'OS and Data' disks are encrypted with Customer Managed Key (CMK) (Automated) )}. \\
 Questo controllo verifica che i dischi collegati alle macchine virtuali siano cifrati utilizzando una \emph{Customer-Managed Key} (CMK). \\
 Immaginando una lista di numerose macchine virtuali, l'approccio è stato quello di andare a interrogare direttamente il disco tramite il suo identificativo rispetto a iterare sulle macchine stesse. La complessità risulta così minore al costo di una chiamata aggiuntiva su Azure CLI per ogni VM rispetto a un'unica chiamata cumulativa.\\
-
 La seguente porzione di codice illustra l'implementazione del controllo discusso. In primo luogo viene acquisito l'elenco dei dischi una volta sola. Ogni disco relativo al sistema operativo della macchina virtuale è interrogato mediante il proprio identificativo di risorsa Azure.\\
 Una macchina virtuale risulta conforme solo se la cifratura del disco del sistema operativo e quella di tutti i dischi dati utilizzano una chiave \emph{Customer-Managed Key} (CMK).
 
@@ -772,10 +765,7 @@ All'interno della stessa sezione CIS vi sono i controlli 3.1 e 3.2 relativi ai s
 Un host è conforme se il servizio coinvolto non è attivo e la policy di avvio è disattivata.
 
 \begin{lstlisting}[style=azcli, caption={Funzione \texttt{Test-HostService} per i controlli sui servizi critici degli host}, label={lst:host-service}]
-# ---------------------------------------------------------------------------
-# Test-HostService
-# Funzione di appoggio per i test sui servizi attivi sugli host ESXi (modulo 3.x)
-# ---------------------------------------------------------------------------
+
 function Test-HostService {
     param([string]$CheckId, [string]$ServiceKey, [string]$Label)
     Write-CheckHeader $CheckId
@@ -799,7 +789,7 @@ Trattasi di uno degli esempi rappresentativi di come il framework, ove possibile
 
 
 All'interno della sezione 5 Network i casi rappresentativi che vengono descritti sono i controlli con identificativo da 5.6 a 5.10, i quali sono tutti riferiti agli standard virtual switch.\\
-I controlli 5.6, 5.7, 5.8 hanno il compito di verificare che lo switch rifiuti trasmissioni con indirizzo compromesso (\texttt{ForgedTransmits}), modifiche del mac address (\texttt{MacChanges}) e la (\texttt{PromiscuousMode}).\\
+I controlli 5.6, 5.7, 5.8 hanno il compito di verificare che lo switch rifiuti trasmissioni con indirizzo compromesso (\texttt{ForgedTransmits}), modifiche del mac address (\texttt{MacChanges}) e la \texttt{PromiscuousMode}.\\
 Hanno tutti la stessa struttura, con la sola proprietà della policy di sicurezza che differisce, pertanto sono stati implementati con un'unica funzione comune parametrizzata sul nome della proprietà. I controlli risultano conformi laddove la proprietà risulti disattivata sul virtual switch.
 
 
@@ -872,14 +862,14 @@ if ($iscsiAdapters.Count -gt 0) {
 Write-CheckFooter "6.3.1" "adapter"
 \end{lstlisting}
 
-All'interno della sezione 7 \textbf{Virtual Machines}, i casi rappresentativi sono dati dai controlli 7.13 e 7.14 \textit{((L1) Virtual machines must remove unnecessary \textbf{serial port devices}/\textbf{parallel port devices} (Automated))}. \\
+All'interno della sezione 7 \textbf{Virtual Machines}, i casi rappresentativi sono dati dai controlli 7.13 e 7.14 \textit{((L1) Virtual machines must remove unnecessary serial port devices/parallel port devices (Automated))}. \\
 Questa serie di verifica puntano a valutare l'assenza di dispositivi porte seriali e porte parallele superflue sulle macchine virtuali presenti sugli host ESXi. \\
 
 Sono esempi rappresentativi poiché in questi casi PowerCLI non disponeva di comandi dedicati per l'interrogazione sulla presenza di questi dispositivi hardware. L'implementazione ha quindi richiesto un accesso diretto alla configurazione hardware della VM, andando a filtrare per tipo ad esempio \\ (\texttt{VMware.Vim.VirtualSerialPort},\texttt{VMware.Vim.VirtualParallelPort}).
 
 La seguente porzione di codice mostra l'implementazione dei suddetti due controlli della sezione 7.
 
-\begin{lstlisting}[style=azcli, caption={Controlli \texttt{7.13} e \texttt{7.14} -- rilevamento di porte seriali e parallele tramite \texttt{ExtensionData}}, label={lst:serial-parallel-check}]
+\begin{lstlisting}[style=azcli, caption={Rilevamento di porte seriali e parallele tramite \texttt{ExtensionData} per i controlli 7.13 e 7.14}, label={lst:serial-parallel-check}]
 # 7.13 Virtual machines must remove unnecessary serial port devices
 Write-CheckHeader "7.13"
 $serial = @(Get-VM | ForEach-Object {
@@ -915,7 +905,7 @@ Write-CheckHeader "7.14"
     if ($parallel.Count -eq 0) { Write-Host "  [COMPLIANT] Nessuna porta parallela trovata." -ForegroundColor Green }
     Set-CheckResult "7.14" $allVMs.Count $nc_714
 #} else {
-#    Write-Host "  [UNKNOWN] Get-ParallelPort non disponibile - verificare manualmente." -ForegroundColor DarkYellow
+#    Write-Host "  [UNKNOWN] Get-ParallelPort non disponibile; verificare manualmente." -ForegroundColor DarkYellow
 #    Set-CheckResult "7.14" $allVMs.Count @() "UNKNOWN"
 #}
 Write-CheckFooter "7.14" "VM"
@@ -969,7 +959,6 @@ Come citato alla fine del paragrafo precedente, è stato scelto di distinguere l
 Questa distinzione è resa esplicita nel report tramite un terzo stato dedicato, distinto da conforme e non conforme, ed escluso dal calcolo del tasso di conformità complessivo.\\
 Questo perché essenzialmente il fatto di non avere nella propria infrastruttura oggetti valutabili per quello specifico controllo non implica la conformità o non conformità rispetto alla documentazione CIS. \\
 Il risultato è che il tasso di conformità non venga ridotto artificialmente da controlli che non hanno prodotto una valutazione reale. \\
-
 La gestione della sessione di autenticazione è stata gestita diversamente per i due ambienti.\\
 Su Azure viene effettuata esternamente prima dell'esecuzione dello script principale, delegando l'autenticazione ai meccanismi nativi di Azure CLI, pensati per non richiedere che uno script terzo maneggi username e password. Il framework si limita a verificare che una sessione Azure sia già attiva, senza mai gestire credenziali direttamente. \\
 
@@ -1140,13 +1129,13 @@ Il grafico è suddiviso in quattro quadranti da  due soglie. La linea tratteggia
 
 Incrociando le due linee, i quadranti sono divisi come segue:
 \begin{itemize}
-\item Primo quadrante. \\
+\item \textbf{Primo quadrante}. \\
 In alto a destra vi sono i punti con effort alto e impatto alto. Qui vi cadono quei controlli non conformi che richiedono interventi complessi, ma che allo stesso tempo hanno rilevato molte risorse non in linea con i benchmark. In questo caso il team operativo dovrebbe pianificare con cura la risoluzione programmando una finestra di manutenzione.
-\item Secondo quadrante. \\
+\item \textbf{Secondo quadrante}. \\
 In alto a sinistra troviamo molti controlli non conformi con costo basso di remediation.
-\item Terzo quadrante. \\
+\item \textbf{Terzo quadrante}. \\
 Qui troviamo controlli non conformi il cui effort di risoluzione è basso, ma anche il numero di oggetti coinvolti è basso.
-\item Quarto quadrante. \\
+\item \textbf{Quarto quadrante}. \\
 In questa area del grafico troviamo le valutazioni non conformi meno convenienti da risolvere nell'immediato. Questo poichè abbiamo pochi oggetti con costo di intervento alto.
 \end{itemize}
 
@@ -1347,7 +1336,7 @@ La seguente tabella riporta e descrive le colonne presenti all'interno del repor
 \label{tab:colonne}
 \end{table}
 
-Un dettaglio rilevante rigurda il valore di stato \texttt{UNKNOWN}. Tale statement viene assegnato nel caso in cui la valutazione di un controllo di conformità non ha registrato alcun risultato. Questo può succedere quando il modulo in questione è stato saltato e non eseguito(ad esempio se la logica di audit di un controllo richiedesse una verifica manuale).\\
+Un dettaglio rilevante riguarda il valore di stato \texttt{UNKNOWN}. Tale statement viene assegnato nel caso in cui la valutazione di un controllo di conformità non ha registrato alcun risultato. Questo può succedere quando il modulo in questione è stato saltato e non eseguito(ad esempio se la logica di audit di un controllo richiedesse una verifica manuale).\\
 Diversa è la semantica rispetto a \texttt{N/A}, il quale ci indica che il controllo è stato eseguito ma all'interno dell'infrastruttura non vi era alcun oggetto da valutare.
 
 Le colonne relative alla metrica di Effort vengono valorizzate in modo significativo solo per i controlli che sono risultati non conformi. 
@@ -2076,7 +2065,7 @@ Dunque leggono dal dataset il nome della proprietà da verificare, valore atteso
 \begin{lstlisting}[style=azcli, caption={Funzione \texttt{Test-AzPropertyCheck} per le verifiche sulle risorse Azure}, label={lst:test-az-property-check}]
 # ---------------------------------------------------------------------------
 # Test-AzPropertyCheck
-# funzione data-driven per i controlli sulle risorse via Azure CLI.
+# funzione standardizzata per i controlli sulle risorse via Azure CLI.
 # Delega intestazione, footer e registrazione alle funzioni condivise Write-CheckHeader / Write-CheckFooter / Set-CheckResult.
 # $Resources     : array di oggetti su cui effettuare il controllo
 # $GetValueScript: scriptblock che riceve $_ e restituisce il valore da verificare
@@ -2137,7 +2126,7 @@ function Test-AzPropertyCheck {
 \begin{lstlisting}[style=azcli, caption={Funzione \texttt{Test-HostAdvSettingCheck} per le verifiche sulle impostazioni degli host ESXi}, label={lst:test-host-adv-setting}]
 # ---------------------------------------------------------------------------
 # Test-HostAdvSettingCheck
-# funzione data-driven per i controlli della sezione AdvancedSetting degli host ESXi.
+# funzione standardizzata per i controlli della sezione AdvancedSetting degli host ESXi.
 # Operatori: eq, le, notempty
 # ---------------------------------------------------------------------------
 function Test-HostAdvSettingCheck {
