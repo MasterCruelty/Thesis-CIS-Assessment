@@ -141,7 +141,7 @@ Una volta costruito il dataset, il passo successivo è stato andare a progettare
 Questo ordine di fasi di sviluppo è in funzione del fatto che la progettazione dell'architettura del framework dipende dalla struttura e dal formato del dataset prodotto durante la fase di studio dei documenti CIS e non il viceversa. \\
 In questa fase è stato definito anche il modello di scoring rispetto agli interventi di remediation per i controlli che risultano non conformi. \\
 Solo successivamente vi è stata la stesura del codice necessario all'implementazione. \\
-Concluso lo sviluppo del framework e testatane il suo funzionamento, vi è stata un'analisi dei risultati ottenuti e un resoconto di quanto realizzato.\\
+Concluso lo sviluppo del framework e testatone il suo funzionamento, vi è stata un'analisi dei risultati ottenuti e un resoconto di quanto realizzato.\\
 Come ultimo passo, l'intero prodotto è stato poi integrato all'interno della piattaforma Moon Cloud\cite{Anisetti2018}, così che possa essere utilizzato per un'analisi continua e automatica delle infrastrutture.
 
 
@@ -164,7 +164,7 @@ I sistemi coperti da questa organizzazione sono molteplici, tra i quali anche Mi
 
 
 
-Generalmente i documenti sono un'insieme di buone pratiche che se applicate, vanno a minimizzare il rischio di sicurezza sull'utilizzo dei propri sistemi. Ognuno dei tre documenti utilizzati è suddiviso in diverse sezioni in base alla tipologia di componenti infrastrutturali che vanno a trattare. \\
+Generalmente i documenti sono un insieme di buone pratiche che se applicate, vanno a minimizzare il rischio di sicurezza sull'utilizzo dei propri sistemi. Ognuno dei tre documenti utilizzati è suddiviso in diverse sezioni in base alla tipologia di componenti infrastrutturali che vanno a trattare. \\
 
 Di seguito si illustrano i principali campi presenti  nella struttura dei controlli di sicurezza del benchmark: \\
 \begin{itemize}
@@ -185,7 +185,7 @@ Qui semplicemente viene indicato qual è il valore di default che detiene la con
 \end{itemize}
 
 
-Ogni raccomandazione presente all'interno dei documenti CIS riporta inoltra il campo \emph{Assessment Status} che può essere \emph{Automated} oppure \emph{Manual}.
+Ogni raccomandazione presente all'interno dei documenti CIS riporta inoltre il campo \emph{Assessment Status} che può essere \emph{Automated} oppure \emph{Manual}.
 Nel primo caso si tratta di verifiche che possono essere sempre espresse tramite comandi eseguibili in automatico.
 Nel secondo caso invece è richiesta dell'interazione manuale come ad esempio la modifica di un impostazione esclusivamente da portale web dell'infrastruttura o la valutazione di una scelta architetturale differente.
 
@@ -239,7 +239,7 @@ Ensure that \textcolor{red}{"FtpsOnly"} or \textcolor{red}{"Disabled"} is return
 
 Nell'esempio mostrato si evidenziano due aspetti ricorrenti nei controlli all'interno del benchmark Azure.
 L'audit è descritto sia tramite portale web sia tramite Azure CLI e la verifica deve essere chiaramente ripetuta per ogni risorsa del tipo coinvolto.\\
-Per quanto riguarda i documenti VMware la struttura è la medesima, con la differenza che le modalità di verifica spaziano tra il vSphere CLient, PowerCLI ed ESXCLI.
+Per quanto riguarda i documenti VMware la struttura è la medesima, con la differenza che le modalità di verifica spaziano tra il vSphere Client, PowerCLI ed ESXCLI.
 
 I test eseguiti durante lo svolgimento del lavoro si sono limitati a tutti quei controlli compatibili con la sottoscrizione Azure a disposizione: Azure For Student. \\
 Per quanto riguarda invece VMware è stato possibile utilizzare ai fini del progetto un'infrastruttura di laboratorio aziendale presso Lutech S.p.A.
@@ -356,7 +356,7 @@ Una volta completati tutti i controlli, il software va a riepilogare a schermo i
 	\centering
 	\includegraphics[width=1.0\textwidth]{architettura_script_cis_VMware}
     \caption{Schema concettuale della funzionalità per VMware}
-    \label{fig:architettura_script_cis_Azure}
+    \label{fig:architettura_script_cis_VMware}
 \end{figure}
 
 
@@ -494,7 +494,7 @@ Come è possibile osservare il punto di ingresso iniziale è il main dell'ambien
 Come prima operazione viene richiamata una funzione di inizializzazione che procede a verificare l'esistenza di una sessione autenticata sull'infrastruttura da valutare e infine carica in memoria il dataset, il quale è indicizzato dall'identificativo del controllo CIS.
 
 Da questo momento, qualsiasi funzione può recuperare i dati di un controllo(nome, parametro da interrogare, valore atteso, operatore di confronto, remediation) a partire dall'identificativo come chiave. \\
-La stessa funzione di inizializzazione si occupa inoltre di creare un registro dei risultati, una struttura chiave-valore inzialmente vuota all'interno della quale verranno man mano registrati gli esiti dei controlli effettuati.
+La stessa funzione di inizializzazione si occupa inoltre di creare un registro dei risultati, una struttura chiave-valore inizialmente vuota all'interno della quale verranno man mano registrati gli esiti dei controlli effettuati.
 
 In un secondo momento, il main esegue in sequenza i moduli delle varie sezioni previste implementate. L'unica componente condivisa tra i moduli e il main è il sorgente \texttt{module\_utils}, il quale contiene funzioni di sistema come ad esempio le operazioni descritte poco fa e funzioni ausiliarie per rendere la logica di verifica dei controlli nei moduli meno complessa.\\
 Al termine dell'esecuzione di ogni controllo, come già anticipato, viene scritto l'esito nel registro dei risultati(Si rimanda al codice illustrato nell'Appendice~\ref{app:registro}) che per ogni identificativo salva quattro campi di informazione.
@@ -523,7 +523,7 @@ Per ogni controllo di conformità implementato, il flusso di esecuzione è mostr
 \end{figure}
 
 Si comincia con la stampa a schermo di un'intestazione costruita con i dati caricati in memoria dal dataset. In questo modo è sempre ben visibile quale controllo sta venendo effettuato e quali valori ci si aspetterebbe.\\
-A questo punto segue l'interrogazione da parte del tool verso l'ambiente infrastruttturale tramite Azure CLI o PowerCLI. Ogni oggetto coinvolto viene confrontato con il valore atteso indicato dal benchmark e tutti quelli che vengono rilevati come non conformi alla buona pratica vengono accumulati per essere mostrati nel dettaglio nel report finale.\\
+A questo punto segue l'interrogazione da parte del tool verso l'ambiente infrastrutturale tramite Azure CLI o PowerCLI. Ogni oggetto coinvolto viene confrontato con il valore atteso indicato dal benchmark e tutti quelli che vengono rilevati come non conformi alla buona pratica vengono accumulati per essere mostrati nel dettaglio nel report finale.\\
 Se al termine della computazione nessun oggetto è risultato non conforme, allora viene registrato lo stato di compliance per quel controllo. In caso contrario viene registrato lo stato di non conformità.\\
 Infine vi è la stampa a schermo di un piccolo riepilogo che mostra il numero di oggetti conformi rispetto al totale degli oggetti valutati per quella singola verifica, seguito da un suggerimento per quanto riguarda l'eventuale intervento di rimedio.
 
@@ -544,11 +544,11 @@ In figura~\ref{fig:datadriven}, qui di seguito, è illustrato come la distinzion
 \begin{figure}[H]
 	\centering
 	\includegraphics[width=\textwidth]{controlli_datadriven_custom}
-	\caption{Diagramma descrittivo di come l'esecuzione di un controllo venga instradato verso l'utilizzo di una funziona standard o una dedicata.}
+	\caption{Diagramma descrittivo di come l'esecuzione di un controllo venga instradato verso l'utilizzo di una funzione standard o una dedicata.}
 	\label{fig:datadriven}
 \end{figure}
 
-Come si può osservare dal precedente diagramma, se l'operatore assume un valore tra tra \texttt{eq}, \texttt{le} e \texttt{notempty}, allora l'esecuzione del controllo è affidato a una funzione standard (Appendice~\ref{app:generiche}) che necessita quasi solamente dell'identificativo senza bisogno di ulteriore logica codificata. Il nome della proprietà da verificare e il valore atteso rispetto al benchmark vengono ricavati in automatico dalla riga del dataset.\\
+Come si può osservare dal precedente diagramma, se l'operatore assume un valore tra \texttt{eq}, \texttt{le} e \texttt{notempty}, allora l'esecuzione del controllo è affidato a una funzione standard (Appendice~\ref{app:generiche}) che necessita quasi solamente dell'identificativo senza bisogno di ulteriore logica codificata. Il nome della proprietà da verificare e il valore atteso rispetto al benchmark vengono ricavati in automatico dalla riga del dataset.\\
 Le funzioni standard riguardano le impostazioni avanzate degli host ESXi, delle macchine virtuali e per le risorse Azure.
 
 Se l'operatore assume invece il valore \texttt{custom}, la verifica non è riconducibile a un confronto su una singola proprietà ed è richiesta una logica dedicata.\\
@@ -760,7 +760,7 @@ All'interno della sezione 2 \textbf{Base}, il caso rappresentativo è dato dal c
 Per effettuare tale controllo è necessario eseguire una chiamata diretta all'API ESXCLI contenuta all'interno del modulo PowerCLI, rendendo necessaria una funzione dedicata. \\
 
 All'interno della sezione 3 \textbf{Management}, il caso rappresentativo è dato dal controllo 3.3 \textit{((L1) Host must deactivate the ESXi Managed Object Browser (MOB) (Automated))}. \\
-Qui viene verificato che il Managed Object Browser sia disattivato. La documentazione CIS in merito dichiara che la sua eventuale disattivazione debba essere eseguite mediante l'interfaccia web vSphere Client, non possibile quindi tramite linea di comando. A tal proposito, la sola verifica della conformità è stata eseguita con PowerCLI. Per quanto riguarda il suggerimento per rimediare alla possibile non conformità, non è stato quindi possibile fornire un comando analogo per risolvere in maniera automatizzata, ma solamente un rimando a dover operare sull'interfaccia web. \\
+Qui viene verificato che il Managed Object Browser sia disattivato. La documentazione CIS in merito dichiara che la sua eventuale disattivazione debba essere eseguita mediante l'interfaccia web vSphere Client, non possibile quindi tramite linea di comando. A tal proposito, la sola verifica della conformità è stata eseguita con PowerCLI. Per quanto riguarda il suggerimento per rimediare alla possibile non conformità, non è stato quindi possibile fornire un comando analogo per risolvere in maniera automatizzata, ma solamente un rimando a dover operare sull'interfaccia web. \\
 All'interno della stessa sezione CIS vi sono i controlli 3.1 e 3.2 relativi ai servizi SSH ed ESXi Shell, i quali condividono la stessa struttura e sono stati implementati con una funzione ausiliaria comune.\\
 Un host è conforme se il servizio coinvolto non è attivo e la policy di avvio è disattivata.
 
@@ -863,7 +863,7 @@ Write-CheckFooter "6.3.1" "adapter"
 \end{lstlisting}
 
 All'interno della sezione 7 \textbf{Virtual Machines}, i casi rappresentativi sono dati dai controlli 7.13 e 7.14 \textit{((L1) Virtual machines must remove unnecessary serial port devices/parallel port devices (Automated))}. \\
-Questa serie di verifica puntano a valutare l'assenza di dispositivi porte seriali e porte parallele superflue sulle macchine virtuali presenti sugli host ESXi. \\
+Questa serie di verifiche puntano a valutare l'assenza di dispositivi porte seriali e porte parallele superflue sulle macchine virtuali presenti sugli host ESXi. \\
 
 Sono esempi rappresentativi poiché in questi casi PowerCLI non disponeva di comandi dedicati per l'interrogazione sulla presenza di questi dispositivi hardware. L'implementazione ha quindi richiesto un accesso diretto alla configurazione hardware della VM, andando a filtrare per tipo ad esempio \\ (\texttt{VMware.Vim.VirtualSerialPort},\texttt{VMware.Vim.VirtualParallelPort}).
 
@@ -913,7 +913,7 @@ Write-CheckFooter "7.14" "VM"
 
 
 
-La seguente figura \textbf{\ref{fig:screenshot-7-13-7-14}} mostra un esempio di esito dell'esecuzione dei controlli 7.13 e 7.14 effettuati sull'infrastruttura VMware a dispozione per questo progetto. \\
+La seguente figura \textbf{\ref{fig:screenshot-7-13-7-14}} mostra un esempio di esito dell'esecuzione dei controlli 7.13 e 7.14 effettuati sull'infrastruttura VMware a disposizione per questo progetto. \\
 Il controllo 7.13 rileva la presenza di una porta seriale non rimossa su due macchine virtuali, mentre il controllo 7.14 risulta conforme in assenza di porte parallele configurate.
 
 \begin{figure}[H]
@@ -955,7 +955,7 @@ function Test-VMDevice {
 \section{Decisioni implementative rilevanti}
 
 In questo paragrafo vengono evidenziate alcune scelte implementative rilevanti adottate durante lo sviluppo della soluzione. \\
-Come citato alla fine del paragrafo precedente, è stato scelto di distinguere lo stato di non applicabilità del controllo rispetto alla conformità a prescindere. \\
+Come citato nel paragrafo precedente(controllo 6.3.1), è stato scelto di distinguere lo stato di non applicabilità del controllo rispetto alla conformità a prescindere. \\
 Questa distinzione è resa esplicita nel report tramite un terzo stato dedicato, distinto da conforme e non conforme, ed escluso dal calcolo del tasso di conformità complessivo.\\
 Questo perché essenzialmente il fatto di non avere nella propria infrastruttura oggetti valutabili per quello specifico controllo non implica la conformità o non conformità rispetto alla documentazione CIS. \\
 Il risultato è che il tasso di conformità non venga ridotto artificialmente da controlli che non hanno prodotto una valutazione reale. \\
@@ -1247,7 +1247,7 @@ Il secondo comando riportato si rende necessario nella casistica in cui l'accoun
 Su VMware invece il comando è il seguente:
 
 \begin{lstlisting}[style=azcli]
-Connect-VIServer -Server <fqdn-vCenter> _User <username> -Password <password>
+Connect-VIServer -Server <fqdn-vCenter> -User <username> -Password <password>
 .\main_vmware.ps1
 \end{lstlisting}
 
@@ -1260,9 +1260,9 @@ In questo modo è possibile accorgersi fin da subito se si è collegati all'ambi
 La console, durante l'esecuzione, mostra a schermo diverse informazioni nel seguente ordine:
 
 \begin{enumerate}
-\item l'esito della valutazione di ciascun controllo, raggruppato per modulo (si veda la Figura 4 nel capitolo 4 per un esempio).
+\item l'esito della valutazione di ciascun controllo, raggruppato per modulo (si veda la Figura 9 nel capitolo 4 per un esempio).
 \item Un riepilogo complessivo sullo stato della situazione a controlli eseguiti, nel formato \texttt{RIEPILOGO: x/y COMPLIANT}.
-\item l'output a seguito della computazione dello scoring. Viene mostrato l'elenco dei controlli per categoria con stato di conformità ed effort (Per un esempio rivedere le Figure 5 e 6 nel capitolo 6). In coda, vi è anche l'elenco delle non conformità ordinato per valore decrescente di $E_i$.
+\item l'output a seguito della computazione dello scoring. Viene mostrato l'elenco dei controlli per categoria con stato di conformità ed effort (Per un esempio rivedere le Figure 10 e 11 nel capitolo 6). In coda, vi è anche l'elenco delle non conformità ordinato per valore decrescente di $E_i$.
 \end{enumerate}
 
 
@@ -1336,7 +1336,7 @@ La seguente tabella riporta e descrive le colonne presenti all'interno del repor
 \label{tab:colonne}
 \end{table}
 
-Un dettaglio rilevante riguarda il valore di stato \texttt{UNKNOWN}. Tale statement viene assegnato nel caso in cui la valutazione di un controllo di conformità non ha registrato alcun risultato. Questo può succedere quando il modulo in questione è stato saltato e non eseguito(ad esempio se la logica di audit di un controllo richiedesse una verifica manuale).\\
+Un dettaglio rilevante riguarda il valore di stato \texttt{UNKNOWN}. Tale stato viene assegnato nel caso in cui la valutazione di un controllo di conformità non ha registrato alcun risultato. Questo può succedere quando il modulo in questione è stato saltato e non eseguito(ad esempio se la logica di audit di un controllo richiedesse una verifica manuale).\\
 Diversa è la semantica rispetto a \texttt{N/A}, il quale ci indica che il controllo è stato eseguito ma all'interno dell'infrastruttura non vi era alcun oggetto da valutare.
 
 Le colonne relative alla metrica di Effort vengono valorizzate in modo significativo solo per i controlli che sono risultati non conformi. 
@@ -1381,14 +1381,14 @@ Questo problema non si pone nell'ambito dell'integrazione del framework sulla pi
 \section{Contesto e obiettivo}
 
 Una volta che è stato ultimato il framework finora presentato, è stato possibile effettuare la sua integrazione con l'ambiente Moon Cloud.\\
-Moon cloud~\cite{Anisetti2018} è una piattaforma dedicata per la verifica della conformità di applicazioni e infrastrutture in grado di eseguire una valutazione continua durante il loro intero ciclo di vita.
+Moon Cloud~\cite{Anisetti2018} è una piattaforma dedicata per la verifica della conformità di applicazioni e infrastrutture in grado di eseguire una valutazione continua durante il loro intero ciclo di vita.
 
 Questa piattaforma esegue periodicamente delle \textit{sonde} (\textit{probe}), quindi componenti software indipendenti, ciascuna incaricata di verificare la conformità di uno specifico aspetto di sicurezza su un componente target(applicazione o infrastruttura), restituendo al termine un esito strutturato dei controlli eseguiti.
 
 In questo modo il framework per la valutazione di conformità agli standard CIS, oltre ad essere eseguibile localmente, può anche fare parte di un processo di monitoraggio continuo dell'infrastruttura.
 Chiaramente l'obiettivo qui non è stato la riscrittura dell'intero strumento in funzione di Moon Cloud, bensì la costruzione di un adattatore che ne rispetti i requisiti di funzionalità, andando a riutilizzare la stessa logica di audit e di scoring già sviluppata.
 
-Un ulteriore precisazione è che l'integrazione del framework verso questo ambiente è stata realizzata solamente per quanto riguarda le funzionalità sviluppate per Microsoft Azure. 
+Un'ulteriore precisazione è che l'integrazione del framework verso questo ambiente è stata realizzata solamente per quanto riguarda le funzionalità sviluppate per Microsoft Azure. 
 
 \section{Le specifiche di Moon Cloud: la sonda come macchina a stati}
 
@@ -1512,7 +1512,7 @@ Al termine, viene prodotto un file JSON con l'esito della valutazione.
 
 
 
-I successivi quattro paragrafi vanno a decrivere ciascun atomo che compone la sonda.
+I successivi quattro sottoparagrafi vanno a descrivere ciascun atomo che compone la sonda.
 
 \subsection{init: validazione dell'input}
 
@@ -1591,7 +1591,7 @@ Ad esempio, come possibile input, si riporta di seguito un insieme di valori di 
 
 Il secondo atomo si occupa dell'autenticazione verso una sottoscrizione valida su Azure mediante l'utilizzo di un service principal con il comando \texttt{az login}. Una volta stabilita la sessione avendo fatto login correttamente, essa viene condivisa dal processo PowerShell invocato nel successivo atomo della sonda. 
 
-Se l'autenticazione dovesse fallire o la sottoscrizione risultasse non valida, viene sollevata un eccezione mappata sul codice di esito \texttt{TARGET\_CONNECTION\_ERROR} (Tabella~\ref{tab:esiti}), distinto dagli errori di esecuzione del framework in sè.
+Se l'autenticazione dovesse fallire o la sottoscrizione risultasse non valida, viene sollevata un'eccezione mappata sul codice di esito \texttt{TARGET\_CONNECTION\_ERROR} (Tabella~\ref{tab:esiti}), distinto dagli errori di esecuzione del framework in sè.
 
 
 \subsection{run\_audit: invocazione del framework esistente}
@@ -1700,22 +1700,22 @@ $ErrorActionPreference = 'Stop'
 [System.Threading.Thread]::CurrentThread.CurrentUICulture = [System.Globalization.CultureInfo]::InvariantCulture
 \end{lstlisting}
 
-Una volta risolti i percorsi del dataset e dei moduli a partire da \texttt{\$FrameworkRoot}, lo script esegue esclusivamente il modulo di valutazione della conformità corrispondente al valore di \texttt{\$Section} ricevuto, quindi invoca \texttt{module\_scoring.ps1} con lo switch \texttt{-ExportJson}, descritto nella sezione seguente.
+Una volta risolti i percorsi del dataset e dei moduli a partire da \texttt{\$FrameworkRoot}, lo script esegue esclusivamente il modulo di valutazione della conformità corrispondente al valore di \texttt{\$Section} ricevuto, quindi invoca \texttt{module\_scoring.ps1} con lo switch \texttt{-ExportJson}, descritto successivamente.
 
 
 \subsection{make\_result: produzione esito in output}
 
-L'ultimo passo ha il compito tradurre il contenuto del file JSON prodotto dal framework nel formato atteso dal driver Moon Cloud.
+L'ultimo passo ha il compito di tradurre il contenuto del file JSON prodotto dal framework nel formato atteso dal driver Moon Cloud.
 Vengono quindi popolati i campi \texttt{integer\_result}, \texttt{pretty\_result} ed \texttt{extra\_data} dell'oggetto Result.\\
 Coerentemente con la documentazione fornita sulla piattaforma, l'ultimo passo fornisce sempre un esito booleano.
 Viene restituito \texttt{TRUE} se tutti i controlli valutati risultano conformi o se nessun controllo risulta applicabile, \texttt{FALSE} in presenza di almeno una violazione di conformità.
 
-Nel caso in cui nessu controllo risulti applicabile, essenzialmente perché non vi sono risorse presenti sulla sottoscrizione utilizzata per la sezione CIS in valutazione, l'esito è \texttt{TRUE}.
+Nel caso in cui nessun controllo risulti applicabile, essenzialmente perché non vi sono risorse presenti sulla sottoscrizione utilizzata per la sezione CIS in valutazione, l'esito è \texttt{TRUE}.
 Siccome non ci sono oggetti da verificare, non vi è alcuna violazione da segnalare.
 
 \section{Adattamenti al framework esistente}
 
-Per poter integrare lo strumento sviluppato, si è reso necessario introdurre un nuovo script \texttt{probe\_runner.ps1} già descritto nella sezione precedente e uno switch opzionale per l'esportazione nel file sorgente dello scoring.
+Per poter integrare lo strumento sviluppato, si è reso necessario introdurre un nuovo script \texttt{probe\_runner.ps1} già descritto nel sottoparagrafo 8.4.4  e uno switch opzionale per l'esportazione nel file sorgente dello scoring.
 La logica di verifica delle conformità non ha dovuto subire modifiche.
 
 La modifica effettuata ha impattato il file relativo allo scoring, all'interno del quale è stato aggiunto uno switch opzionale per l'esportazione in formato json. Essenzialmente vengono serializzati gli stessi dati già calcolati in un formato riutilizzato poi dalla sonda per popolare l'esito che viene restituito al driver.
@@ -2012,7 +2012,7 @@ function Get-CheckData {
 \section{Intestazione e riepilogo di un controllo}
 \label{app:output}
 
-Qui si riportano le funzioni \texttt{Write-CheckHeader} e \texttt{Write-CheckFooter}, le quali si occupano di aprire e chiudere graficamente l'esecuzione di ogni controllo stampando a console un'intestazione iniziale e un riepilogo di fine esecuzione, come descritto nel paragrafo 3.4.
+Qui si riportano le funzioni \texttt{Write-CheckHeader} e \texttt{Write-CheckFooter}, le quali si occupano di aprire e chiudere graficamente l'esecuzione di ogni controllo stampando a console un'intestazione iniziale e un riepilogo di fine esecuzione, come descritto nel paragrafo 3.4.2 e 3.4.3.
 
 \begin{lstlisting}[style=azcli, caption={Funzione \texttt{Write-CheckHeader}}, label={lst:write-check-header}]
 # ---------------------------------------------------------------------------
