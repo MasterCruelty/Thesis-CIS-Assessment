@@ -1922,6 +1922,7 @@ Conclusa la fase di sviluppo di questo progetto, si riepilogano di seguito i pri
 \begin{itemize}
 \item È stato formalizzato un sottoinsieme di buone pratiche dello standard di sicurezza CIS in forma eseguibile mediante l'utilizzo di un tool automatico di valutazione della conformità.
 \item È stato sviluppato un modello di scoring in grado di quantificare lo sforzo necessario alla risoluzione delle non conformità rilevate dalla valutazione dello strumento prodotto.
+\item Il framework sviluppato è stato integrato anche nella piattaforma Moon Cloud, per le sole funzionalità legate all'ambiente Azure. L'integrazione è avvenuta mediante il riutilizzo del codice adattando il software all'architettura delle sonde Moon Cloud. In questo modo la valutazione delle conformità può essere eseguita anche in modo continuo e automatico.
 \end{itemize}
 
 Dunque è stato realizzato un framework di audit automatizzato su due piattaforme differenti con condivisione del modello di funzionamento.\\
@@ -1936,6 +1937,10 @@ A partire dal dataset costruito, un limite piuttosto evidente è l'assegnazione 
 Tuttavia, questo giudizio potrebbe differire e di conseguenza cambiare il punteggio della valutazione di conformità.\\
 
 Un altro limite riscontrato è legato alla struttura dei controlli, per i quali non essendo tutti puramente parametrici, non è stato possibile rendere la logica di verifica riducibile totalmente a un confronto parametrico.\\
+ 
+Il dataset è inoltre legato alle versioni dei documenti CIS utilizzati. A seguito del rilascio di nuove versioni dei benchmark, i campi relativi agli identificativi, parametri e valori attesi dovranno necessariamente essere rivisti prima di poter riutilizzare lo strumento.\\
+ 
+Inoltre l'integrazione con Moon Cloud è stata realizzata solo per le funzionalità di Azure. La valutazione continua su VMware non è quindi attualmente disponibile all'interno della piattaforma.\\
 
 Infine, il confronto del tasso di conformità tra i due ambienti non è comparabile a causa della loro natura e della dimensione delle rispettive infrastrutture utilizzate in fase di test dello strumento.
 
@@ -1945,11 +1950,14 @@ Si conclude illustrando alcune possibili migliorie che potrebbero essere apporta
 
 Il modello di scoring proposto, basato su una combinazione lineare pesata di tre dimensioni, potrebbe essere esteso adottando un metodo di decisione multi-criterio più articolato, così da essere in grado di gestire simultaneamente più assi di prioritizzazione oltre a effort e impatto. Ad esempio si potrebbe includere il costo economico della remediation oppure il grado di esposizione al rischio del controllo interessato, il quale possa indicare quanto è pericoloso mantenere tale componente non conforme al benchmark CIS. \\
 
-Un'altra possibile miglioria riguarda l'esecuzione periodica del framework su una stessa infrastruttura, il che consentirebbe di introdurre un'analisi temporale dei risultati. Tale pratica sarebbe finalizzata al rilevamento di eventuale \textit{drift} di configurazione.
+Un'altra possibile miglioria riguarda l'esecuzione periodica del framework su una stessa infrastruttura, il che consentirebbe di introdurre un'analisi temporale dei risultati. Tale pratica sarebbe finalizzata al rilevamento di eventuale \textit{drift} di configurazione. Questa miglioria nel particolare, è parzialmente già implementata con l'integrazione in Moon Cloud.
 Eventuali variazioni nello stato di conformità di un controllo tra un'esecuzione e la successiva potrebbero segnalare modifiche non autorizzate o non documentate sull'infrastruttura. \\
 
+Ulteriormente sarebbe possibile estendere il perimetro dei controlli implementati. Le sezioni dei benchmark non ancora coperte, possono essere aggiunte seguendo lo stesso schema all'interno del dataset.\\
 
-
+Per quanto riguarda invece l'integrazione realizzata con Moon Cloud, un naturale proseguimento sarebbe l'integrazione anche della funzionalità VMware, così che sia possibile la valutazione continua e automatica su entrambe le piattaforme.\\
+ 
+Infine, per ridurre la soggettività dell'assegnazione dei parametri C/D/R discussa nei limiti, i valori potrebbero essere validati confrontandoli con il giudizio di amministratori che gestiscono le infrastrutture, oppure con i tempi di intervento effettivamente misurati. Lo stesso confronto consentirebbe di scegliere i pesi e le soglie del modello su basi empiriche, invece di affidarsi a valori predefiniti.
 
 
 
