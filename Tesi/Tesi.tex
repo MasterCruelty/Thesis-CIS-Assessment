@@ -121,7 +121,7 @@ Da qui nasce la necessità di introdurre una metrica di effort normalizzata per 
 Questo porta a poter confrontare gli oggetti e dare un livello di priorità diverso tra i diversi interventi.\\
 Quanto detto sopra è chiaramente in funzione del fatto che si riesca ad avere un output finale ben strutturato in modo tale che sia consultabile da chi deve poi andare a eseguire i suddetti interventi. \\
 
-Gli ambienti presi in considerazione durante questo lavoro sono Microsoft Azure per la parte Cloud e VMware per la parte on-premises.
+Gli ambienti presi in considerazione durante questo lavoro sono Microsoft Azure per la parte Cloud e VMware per la parte on-premise.
 
 \section{Struttura del lavoro svolto}
 
@@ -315,6 +315,70 @@ I dettagli implementativi sono rimandati nel capitolo 4.
 \label{tab:sez-vmw}
 \end{table}
 
+\subsection{Contenuto dei benchmark Azure}
+
+Azure Foundations benchmark risulta essere il documento che si propone come punto di partenza consigliato per mettere in sicurezza la propria infrastruttura Azure.\\
+Al suo interno la versione 5.0.0 utilizzata durante questo progetto contiene oltre 150 raccomandazioni distribuite in sette sezioni diverse.\\
+La sezione relativa ai servizi di identità è la più popolata con oltre 40 raccomandazioni, segue la sezione Security Services con 38 buone pratiche da seguire, Management and Governance Services con 25, Storage Services con 21, Networking Services con 16 e infine Analytics Services con 11. Di seguito vengono descritte le sezioni più rilevanti.
+
+\begin{itemize}
+\item \textbf{Management and Governance Services (Sezione 6).}\\
+La parte più corposa si ritrova nell'area Logging and Monitoring, divisa a sua volta in \textit{Configuring diagnostic settings (6.1.1)}, \textit{Monitoring using Activity Log Alerts (6.1.2)} e \textit{Configuring Application Insights (6.1.3)}.
+\item \textbf{Networking Services (Sezione 7).}\\
+Qui il contenuto riguarda le verifiche sull'esposizione dell'ambiente verso Internet delle diverse porte dedicate ai servizi di rete come ad esempio RDP, SSH o UDP. Vi sono verifiche anche sull'associazione delle subnet ai network security group e sulla configurazione di Application Gateway e Web Application Firewall.
+\item \textbf{Security Services (Sezione 8).}\\
+In questa sezione sono raccolte le impostazioni di Microsoft Defender for Cloud con un piano di protezione per ciascuna categoria di risorse presenti in Azure, oltre a verifiche riguardanti il Key Vault e la protezione da attacchi DDoS.
+\end{itemize}
+
+Il documento Compute Services nella versione 2.0.0 contiene invece poco meno di 100 raccomandazioni, concentrate per la maggior parte in due sezioni: \textit{App Service} e \textit{Virtual Machines}.
+Qui sono presenti pratiche consigliate specifiche che si applicano ai servizi che sono effettivamente in uso nel proprio ambiente Azure. Ulteriori sezioni contenute all'interno di questo secondo documento sono \textit{Azure Container Instances}, \textit{Azure CycleCloud} e \textit{Batch}.
+Sono presenti anche altre sezioni, ma compaiono solo come riferimenti a risorse di approfondimento.\\
+
+La sezione App Service è divisa in quattro gruppi di buone pratiche di sicurezza paralleli.
+\begin{itemize}
+\item App Service Apps.
+\item App Service Deployment Slots.
+\item Functions Apps.
+\item Function Deployment Slots.
+\end{itemize}
+
+La sezione riguardante le virtual machines è invece focalizzata sui dischi, la loro cifratura, il Trusted Launch e la cifratura a livello di host.
+
+
+
+\subsection{Contenuto del benchmark VMware ESXi}
+
+Relativamente alla parte VMware, l'unico documento di benchmark utilizzato nella versione 1.2.0, fornisce indicazioni per configurare in maniera sicura VMware ESXi 8.0. L'ambito dichiarato dalla documentazione riguarda solo gli host ESXi e le macchine virtuali eseguite su di essi. Il vCenter quindi è solo lo strumento di accesso e non è oggetto di alcuna raccomandazione descritta dal benchmark.\\
+Le raccomandazioni presenti sono distribuite in otto sezioni diverse.
+
+\begin{itemize}
+\item \textbf{Hardware (Sezione 1).}\\
+Firmware, UEFI Secure Boot, TPM 2.0 e sicurezza dei controller di gestione hardware.
+\item \textbf{Base (Sezione 2).}\\
+Versione e aggiornamenti del software, Secure Boot, VIB firmati, sincronizzazione dell'orario e impostazioni a livello di sistema.
+\item \textbf{Management (Sezione 3).}\\
+Disattivazione di servizi non necessari sugli host(SSH, ESXi shell, Managed Object Browser), timeout delle sessioni, criteri sulle password, lockdown mode, banner di accesso e versione di TLS.
+\item \textbf{Logging (Sezione 4).}\\
+Posizione persistente dei log, invio a un collettore remoto e conservazione dei record di audit.
+\item \textbf{Network (Sezione 5).}\\
+Firewall dell'host, filtraggio dei pacchetti BPDU, interfacce di gestione e impostazioni di sicurezza degli standard virtual switch.
+\item \textbf{Features (Sezione 6).}\\
+Servizi opzionali dell'host: CIM, storage di base, iSCSI, SNMP e SSH.
+\item \textbf{Virtual Machine (Sezione 7).}\\
+Rimozione dei dispositivi non necessari, limiti sulle sessioni di console, abilitazione copia e incolla, e altre impostazioni avanzate delle macchine virtuali.
+\item \textbf{VMware Tools (Sezione 8).}\\
+Configurazione di VMware Tools all'interno delle macchine virtuali.
+\end{itemize}
+
+All'interno di questo documento il numero di verifiche segnalate come Automated è elevato, nonostante le sezioni Hardware e VMware Tools siano interamente manuali.\\
+Di seguito si riporta un esempio di raccomandazione estratta dal benchmark VMware che si assicura di limitare le sessioni di console remota di una macchina virtuale.
+
+\begin{lstlisting}[style=azcli]
+7.6 (L1) Virtual machines must limit console sharing. (Automated)
+Audit: confirm that RemoteDisplay.maxConnections is set to 1.
+  Get-VM | Get-AdvancedSetting -Name "RemoteDisplay.maxConnections" |
+    Select Entity, Name, Value
+\end{lstlisting}
 
 \section{Tecnologie}
 
@@ -1013,7 +1077,7 @@ L'assegnazione dei valori per ogni controllo CIS implementato è avvenuta median
 \textit{Analogamente, si riportano tre casi rappresentativi tratti dal dataset VMware.} \\
 
 
-\textbf{Controllo 4.2 -- Host must transmit system logs to a remote log collector ($C=1$, $D=0$, $R=1$)}: la configurazione di un syslog remoto è un intervento che richiede tipicamente di configurare più impostazioni coordinate sull'host. L'operazione è priva di impatto sulla disponibilità delle macchine virtuali e immediatamente reversibile rimuovendo la configurazione impostata. \\
+\textbf{Controllo 4.2 -- Host must transmit system logs to a remote log collector ($C=2$, $D=0$, $R=1$)}: la configurazione di un syslog remoto è un intervento che richiede tipicamente di configurare più impostazioni coordinate sull'host. L'operazione è priva di impatto sulla disponibilità delle macchine virtuali e immediatamente reversibile rimuovendo la configurazione impostata. \\
 
 \textbf{Controllo 6.3.1 -- Host iSCSI client, if enabled, must employ bidirectional/mutual CHAP authentication ($C=2$, $D=1$, $R=2$)}: questo intervento richiede la configurazione coordinata delle credenziali sia sull'host ESXi sia sul target storage ($C=2$). La documentazione CIS segnala esplicitamente il rischio di interruzioni della comunicazione iSCSI qualora le credenziali configurate sui due lati non coincidano ($D=1$); il ripristino della configurazione precedente richiede una procedura strutturata di verifica su entrambi i lati della connessione ($R=2$). \\
 
@@ -1110,6 +1174,7 @@ In questa casistica specifica possiamo evincere che la maggioranza degli interve
     \label{fig:report_azure}
 \end{figure}
 
+Lo screenshot di esecuzione qui sopra riportato è stato effettuato prima di una revisione finale dei valori C,D,R contenuti nel dataset. Pertanto, il numero di controlli nelle tre fasce di effort potrebbero differire da quanto sarà riportato in un paragrafo successivo dedicato all'analisi dell'influenza dei parametri sul valore della metrica di effort e di conseguenza della fascia corrispondente.\\
 
 Per quanto riguarda invece l'esecuzione su VMware, sono stati valutati una totalità di 39 controlli sempre previsti dal dataset costruito inizialmente. Qui è stato registrato un tasso di conformità del 41\%, con 16 controlli conformi su 39.\\
 Anche in questo la maggior parte degli interventi necessari sono rientrati nella fascia BASSO, con solo due non conformità nella fascia MEDIO e uno su ALTO.\\ 
@@ -1299,7 +1364,7 @@ Oppure
 powershell -ExecutionPolicy Bypass -File ".\main_vmware.ps1"
 \end{lstlisting}
 
-Dal momento che il software si limita solo a leggere la configurazione dell'ambiente, l'account utilizzato non necessita di permessi di scrittura sulle risorse di cui va a valutare la conformità rispetto al benchmark.\\
+Dal momento che il software si limita solo a leggere la configurazione dell'ambiente, l'account utilizzato non necessita di permessi di scrittura sulle risorse di cui va a valutare la conformità rispetto al benchmark. Nonostante ciò, per VMware è consigliato comunque accedere con delle credenziali di amministratore qualora qualche componente necessiti di più privilegi per poter essere interrogato.\\
 I comandi mostrati in output relativi alle remediation provengono dal dataset e sono riportati solo come suggerimento, non vengono mai eseguiti.
 
 \section{Avvio esecuzione}
@@ -1377,7 +1442,7 @@ Di seguito vengono mostrati quindi alcuni esempi di invocazione:
 Alla conclusione dell'esecuzione vengono prodotti fino a tre file, descritti di seguito.
 
 \begin{itemize}
-\item il \textbf{log di sessione}, con nome \texttt{cis\_azure\_log\_<data\_ora>.txt} oppure \texttt{cis\_vmware\_log\_<data\_ora>.txt}, solo se è stata usata l'opzione \texttt{-ExportLog}.
+\item il \textbf{log di sessione}, con nome \texttt{cis\_azure\_log\_<data\_ora>.txt} oppure\\ \texttt{cis\_vmware\_log\_<data\_ora>.txt}, solo se è stata usata l'opzione \texttt{-ExportLog}.
 \item il \textbf{report dei controlli}, \texttt{cis\_scoring\_report\_<data\_ora>.csv}, con una riga per ciascun controllo del dataset.
 \item il \textbf{riepilogo}, con lo stesso nome del report seguito da \texttt{\_summary}, composto da una sola riga.
 \end{itemize}
@@ -2142,7 +2207,6 @@ Dunque leggono dal dataset il nome della proprietà da verificare, valore atteso
 # funzione standardizzata per i controlli sulle risorse via Azure CLI.
 # Delega intestazione, footer e registrazione alle funzioni condivise Write-CheckHeader / Write-CheckFooter / Set-CheckResult.
 # $Resources     : array di oggetti su cui effettuare il controllo
-# $GetValueScript: scriptblock che riceve $_ e restituisce il valore da verificare
 # $Operator      : opearatore di confronto per il controllo. eq | le | notempty  (custom = logica inline nel modulo chiamante)
 # ---------------------------------------------------------------------------
 function Test-AzPropertyCheck {
