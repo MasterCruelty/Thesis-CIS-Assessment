@@ -1198,9 +1198,7 @@ Siccome $E_{max}-E_{min}=2$ per qualsiasi scelta dei parametri dei pesi, possiam
 E_{norm} = w_c \cdot \frac{C-1}{2} + w_d \cdot \frac{D}{2} + w_r \cdot \frac{R-1}{2}
 \end{equation}
 
-Ognuna delle tre dimensioni è quindi riportata nell'intervallo $[0,1]$ e $E_{norm}$ ne è la media pesata. Quando le dimensioni coincidono, si ottiene la proprietà vista nel capitolo 5, altrimenti i pesi decidono quale dimensione prevale.\\
-Ad esempio un controllo con $(C,D,R)=(2,0,2)$ ha $E_{norm}=(1-w_d)/2$, mentre uno con $(2,2,2)$ ha $E_{norm}=(1+w_d)/2$. In entrambi i casi quello che conta è il peso sull'indisponibilità di servizio.
-
+Ognuna delle tre dimensioni è quindi riportata nell'intervallo $[0,1]$ e $E_{norm}$ ne è la media pesata. Quando le dimensioni coincidono, si ottiene la proprietà vista nel capitolo 5, altrimenti i pesi decidono quale dimensione influisce sul risultato.\\
 
 \subsection{Casi analizzati e risultati}
 
@@ -1227,9 +1225,10 @@ $(0.20,\,0.60,\,0.20)$ & 49--8--3 & 9 & 31--6--2 & 6 \\ \hline
 $(0.20,\,0.20,\,0.60)$ & 41--17--2 & 0 & 29--9--1 & 3 \\
 \hline
 \end{tabular}
-\caption{Effetto dei pesi sulla classificazione. BASSO / MEDIO / ALTO indica il numero di controlli nelle fasce corrispondenti. Variazioni indica quanti controlli cambiano fascia di effort rispetto ai pesi di riferimento (la prima riga).}
+\caption{Effetto dei pesi sulla classificazione. BASSO/MEDIO/ALTO indica il numero di controlli nelle fasce corrispondenti. Variazioni indica quanti controlli cambiano fascia di effort rispetto ai pesi di riferimento (la prima riga).}
 \label{tab:sens-pesi}
 \end{table}
+
 È possibile osservare come i controlli con effort alto restino gli stessi, ad esempio su Azure il 20.1 e il 20.10 mentre su VMware il 3.21. Vi è un unico controllo che si aggiunge nella fascia di effort alto nel momento in cui $w_d\geq0.4$, trattasi del controllo con id 20.11 su Azure e 7.7 su VMware.
 
 Si nota che cambiano fascia al più 9 controlli su 60 nel caso di Azure e al più 6 su 39 nel caso di VMware, quasi sempre tra la fascia bassa e media.\\
@@ -1256,7 +1255,8 @@ $(0.40,\,0.75)$ & 49-9-2 & 34-4-1 \\
 Si può osservare che anche in questo caso viene modificata la fascia al più di 8 controlli su 60 per Azure e 4 su VMware. Una buona parte dei controlli ha $E_{norm}=0$ (paragrafo 6.3) e non è influenzata da nessuna soglia.
 
 Andando a concludere l'analisi, il modello si dimostra stabile per i controlli con fascia di effort più alta mentre quelli con fascia di intervento intermedio dipendono dalla scelta dei pesi e delle soglie.\\
-I valori delle soglie andrebbero scelti in funzione dei possibili valori di $E_{norm}$ nei profili più frequenti all'interno del dataset.
+I valori delle soglie andrebbero scelti in funzione dei possibili valori di $E_{norm}$ nei profili più frequenti all'interno del dataset.\\
+Chiaramente l'analisi è limitata ai due dataset così costruiti, i cui risultati sono quindi indicativi di questo specifico caso di studio.
 
 %			CAPITOLO 7: Guida operativa passo passo
 \chapter{Guida operativa all'utilizzo}
